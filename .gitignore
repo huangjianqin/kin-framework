@@ -1,0 +1,16 @@
+
+.idea/*
+*/.idea/*
+*.iml
+*/*.iml
+target/*
+*/target/*
+*/*/target/*
+*/*/*/target/*
+*.csv
+*.jar
+*.txt
+*.class
+*.DS_Store
+logs/*
+data/*
