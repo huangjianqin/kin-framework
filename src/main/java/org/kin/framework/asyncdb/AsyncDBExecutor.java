@@ -4,10 +4,14 @@ import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.SimpleThreadFactory;
 import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by huangjianqin on 2019/4/1.
@@ -17,6 +21,7 @@ public class AsyncDBExecutor implements Closeable {
     private final AsyncDBEntity POISON = new AsyncDBEntity() {
     };
     private static final int WAITTING_OPR_NUM_THRESHOLD = 500;
+    private static final int LOG_STATE_INTERVAL = 60;
 
 
     private ThreadManager threadManager;
@@ -26,9 +31,8 @@ public class AsyncDBExecutor implements Closeable {
 
     void init(int num, AsyncDBStrategy asyncDBStrategy) {
         threadManager = new ThreadManager(
-                new ThreadPoolExecutor(0, num, 60L, TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<Runnable>(), new SimpleThreadFactory("asyncDB")),
-                new ScheduledThreadPoolExecutor(1, new SimpleThreadFactory("asyncDB-monitor")));
+                new ThreadPoolExecutor(0, num + 1, 60L, TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<Runnable>(), new SimpleThreadFactory("asyncDB")));
         this.asyncDBStrategy = asyncDBStrategy;
         asyncDBOperators = new AsyncDBOperator[num];
         for (int i = 0; i < num; i++) {
@@ -36,24 +40,32 @@ public class AsyncDBExecutor implements Closeable {
             threadManager.execute(asyncDBOperator);
             asyncDBOperators[i] = asyncDBOperator;
         }
-        threadManager.scheduleAtFixedRate(() -> {
-            int totalTaskOpredNum = 0;
-            int totalWaittingOprNum = 0;
-            for (AsyncDBOperator asyncDBOperator : asyncDBOperators) {
-                SyncState syncState = asyncDBOperator.getSyncState();
-                log.info("{} -> taskOpredNum: {}, taittingOprNum: {}, taskOpredPeriodNum: {}",
-                        syncState.getThreadName(), syncState.getSyncNum(), syncState.getWaittingOprNum(),
-                        syncState.getSyncPeriodNum());
-                totalTaskOpredNum += syncState.getSyncNum();
-                totalWaittingOprNum += syncState.getWaittingOprNum();
-            }
-            if (totalWaittingOprNum > WAITTING_OPR_NUM_THRESHOLD) {
-                log.warn("totalTaskOpredNum: {}, totalWaittingOprNum: {}", totalTaskOpredNum, totalWaittingOprNum);
-            } else {
-                log.info("totalTaskOpredNum: {}, totalWaittingOprNum: {}", totalTaskOpredNum, totalWaittingOprNum);
-            }
+        threadManager.execute(() -> {
+            while(!isStopped){
+                long sleepTime = LOG_STATE_INTERVAL - TimeUtils.timestamp() % LOG_STATE_INTERVAL;
+                try {
+                    TimeUnit.SECONDS.sleep(sleepTime);
+                } catch (InterruptedException e) {
 
-        }, 5, 5, TimeUnit.MINUTES);
+                }
+
+                int totalTaskOpredNum = 0;
+                int totalWaittingOprNum = 0;
+                for (AsyncDBOperator asyncDBOperator : asyncDBOperators) {
+                    SyncState syncState = asyncDBOperator.getSyncState();
+                    log.info("{} -> taskOpredNum: {}, taittingOprNum: {}, taskOpredPeriodNum: {}",
+                            syncState.getThreadName(), syncState.getSyncNum(), syncState.getWaittingOprNum(),
+                            syncState.getSyncPeriodNum());
+                    totalTaskOpredNum += syncState.getSyncNum();
+                    totalWaittingOprNum += syncState.getWaittingOprNum();
+                }
+                if (totalWaittingOprNum > WAITTING_OPR_NUM_THRESHOLD) {
+                    log.warn("totalTaskOpredNum: {}, totalWaittingOprNum: {}", totalTaskOpredNum, totalWaittingOprNum);
+                } else {
+                    log.info("totalTaskOpredNum: {}, totalWaittingOprNum: {}", totalTaskOpredNum, totalWaittingOprNum);
+                }
+            }
+        });
     }
 
     @Override

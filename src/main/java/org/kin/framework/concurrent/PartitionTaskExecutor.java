@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.kin.framework.concurrent.domain.PartitionTaskReport;
 import org.kin.framework.concurrent.impl.HashPartitioner;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,8 @@ import java.util.concurrent.*;
  */
 public class PartitionTaskExecutor<K> {
     private static final Logger log = LoggerFactory.getLogger("concurrent");
+    private static final int REPORT_INTERVAL = 30;
+
     //分区数
     private volatile int partitionNum;
 
@@ -30,6 +33,10 @@ public class PartitionTaskExecutor<K> {
     //所有分区执行线程实例
     //lazy init
     private volatile PartitionTask[] partitionTasks;
+    //report 线程
+    private ThreadManager reportThread = new ThreadManager(new ThreadPoolExecutor(1, 1,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(), new SimpleThreadFactory("partition-task-reporter")));
 
     public PartitionTaskExecutor() {
         this(5);
@@ -40,14 +47,14 @@ public class PartitionTaskExecutor<K> {
     }
 
     public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner) {
-        this(partitionNum, partitioner, new SimpleThreadFactory("default-partition-task"));
+        this(partitionNum, partitioner, new SimpleThreadFactory("partition-task-executor"));
     }
 
     public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, ThreadFactory threadFactory) {
         this.partitionNum = partitionNum;
 
-        this.threadManager = new ThreadManager(Executors.newCachedThreadPool(threadFactory),
-                Executors.newSingleThreadScheduledExecutor());
+        this.threadManager = new ThreadManager(new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(), threadFactory));
 
         this.partitioner = partitioner;
         this.partitionTasks = new PartitionTaskExecutor.PartitionTask[this.partitionNum];
@@ -61,7 +68,7 @@ public class PartitionTaskExecutor<K> {
     public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, ThreadPoolExecutor threadPool) {
         this.partitionNum = partitionNum;
         this.partitioner = partitioner;
-        this.threadManager = new ThreadManager(threadPool, Executors.newSingleThreadScheduledExecutor());
+        this.threadManager = new ThreadManager(threadPool);
         this.partitionTasks = new PartitionTaskExecutor.PartitionTask[this.partitionNum];
 
         report();
@@ -69,7 +76,16 @@ public class PartitionTaskExecutor<K> {
 
     //------------------------------------------------------------------------------------------------------------------
     private void report(){
-        threadManager.scheduleAtFixedRate(() -> report0(), 30, 30, TimeUnit.SECONDS);
+        reportThread.execute(() -> {
+            long sleepTime = REPORT_INTERVAL - TimeUtils.timestamp() % REPORT_INTERVAL;
+            try {
+                TimeUnit.SECONDS.sleep(sleepTime);
+            } catch (InterruptedException e) {
+
+            }
+
+            report0();
+        });
     }
 
     private void report0(){
