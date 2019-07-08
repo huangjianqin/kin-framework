@@ -51,6 +51,8 @@ public class PartitionTaskExecutor<K> {
 
         this.partitioner = partitioner;
         this.partitionTasks = new PartitionTaskExecutor.PartitionTask[this.partitionNum];
+
+        report();
     }
 
     /**
@@ -61,14 +63,16 @@ public class PartitionTaskExecutor<K> {
         this.partitioner = partitioner;
         this.threadManager = new ThreadManager(threadPool, Executors.newSingleThreadScheduledExecutor());
         this.partitionTasks = new PartitionTaskExecutor.PartitionTask[this.partitionNum];
+
+        report();
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    private void heartbeat(){
-        threadManager.scheduleAtFixedRate(() -> heartbeat0(), 30, 30, TimeUnit.SECONDS);
+    private void report(){
+        threadManager.scheduleAtFixedRate(() -> report0(), 30, 30, TimeUnit.SECONDS);
     }
 
-    private void heartbeat0(){
+    private void report0(){
         PartitionTask[] copy = partitionTasks;
         List<PartitionTaskReport> reports = new ArrayList<>(copy.length);
         for(PartitionTask partitionTask: copy){
