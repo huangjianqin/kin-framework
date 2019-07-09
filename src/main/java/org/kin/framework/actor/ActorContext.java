@@ -140,31 +140,41 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     }
 
     <T> void receive(T arg) {
-        Mail<AA> mail = new ReceiveMailImpl<T>(arg);
-        mailBox.add(mail);
-        tryRun();
+        if(isStarted && !isStopped){
+            Mail<AA> mail = new ReceiveMailImpl<T>(arg);
+            mailBox.add(mail);
+            tryRun();
+        }
     }
 
     void receive(Message<AA> message) {
-        Mail<AA> mail = new MessageMailImpl(message);
-        mailBox.add(mail);
-        tryRun();
+        if(isStarted && !isStopped){
+            Mail<AA> mail = new MessageMailImpl(message);
+            mailBox.add(mail);
+            tryRun();
+        }
     }
 
     Future<?> receiveSchedule(Message<AA> message, long delay, TimeUnit unit) {
-        Future future = actorSystem.getThreadManager().schedule(() -> {
-            receive(message);
-        }, delay, unit);
-        addFuture(future);
-        return future;
+        if(isStarted && !isStopped){
+            Future future = actorSystem.getThreadManager().schedule(() -> {
+                receive(message);
+            }, delay, unit);
+            addFuture(future);
+            return future;
+        }
+        return null;
     }
 
     Future<?> receiveFixedRateSchedule(Message<AA> message, long initialDelay, long period, TimeUnit unit) {
-        Future future = actorSystem.getThreadManager().scheduleAtFixedRate(() -> {
-            receive(message);
-        }, initialDelay, period, unit);
-        addFuture(future);
-        return future;
+        if(isStarted && !isStopped){
+            Future future = actorSystem.getThreadManager().scheduleAtFixedRate(() -> {
+                receive(message);
+            }, initialDelay, period, unit);
+            addFuture(future);
+            return future;
+        }
+        return null;
     }
 
     /**
