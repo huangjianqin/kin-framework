@@ -1,6 +1,6 @@
 package org.kin.framework.actor.domain;
 
-import org.kin.framework.actor.impl.ActorSystem;
+import org.kin.framework.actor.ActorSystem;
 
 /**
  * Created by huangjianqin on 2018/6/5.

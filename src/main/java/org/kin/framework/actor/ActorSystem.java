@@ -1,4 +1,4 @@
-package org.kin.framework.actor.impl;
+package org.kin.framework.actor;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.JvmCloseCleaner;

@@ -2,7 +2,6 @@ package org.kin.framework.actor;
 
 
 import org.kin.framework.actor.domain.ActorPath;
-import org.kin.framework.actor.impl.AbstractActor;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;

@@ -1,8 +1,5 @@
-package org.kin.framework.actor.impl;
+package org.kin.framework.actor;
 
-import org.kin.framework.actor.Actor;
-import org.kin.framework.actor.Message;
-import org.kin.framework.actor.Receive;
 import org.kin.framework.actor.domain.ActorPath;
 import org.kin.framework.actor.domain.PoisonPill;
 
