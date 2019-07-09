@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * Actor行为抽象
  * Actor的行为分派调度由具体的业务系统自身定义
  */
-public interface Actor<AA extends AbstractActor<AA>> {
+public interface Actor<AA extends Actor<AA>> {
     /**
      * 消息匹配对应预定义方法并执行
      */
