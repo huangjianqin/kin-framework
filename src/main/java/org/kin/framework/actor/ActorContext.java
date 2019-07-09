@@ -49,7 +49,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
         receive = self.createReceiver();
         self.postStart();
         isStarted = true;
-        //每12h清楚已结束的调度
+        //每1h清楚已结束的调度
         receiveFixedRateSchedule(actor -> clearFinishedFutures(), 0, 1, TimeUnit.HOURS);
     }
 
@@ -226,8 +226,8 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     private void addFuture(Future<?> future) {
         Queue<Future> queue;
         while ((queue = futures.putIfAbsent(this, new ConcurrentLinkedQueue<>())) == null) {
-            queue.add(future);
         }
+        queue.add(future);
     }
 
     private void clearFutures() {
