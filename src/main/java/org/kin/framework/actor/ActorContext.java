@@ -60,7 +60,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
         }
         this.currentThread = Thread.currentThread();
 
-        while (isStarted && !isStopped && this.currentThread != null && !this.currentThread.isInterrupted()) {
+        while (isStarted && !isStopped && !this.currentThread.isInterrupted()) {
             Mail<AA> mail = mailBox.poll();
             if (mail == null) {
                 break;
