@@ -2,6 +2,7 @@ package org.kin.framework.actor;
 
 import org.kin.framework.actor.domain.ActorPath;
 import org.kin.framework.actor.domain.PoisonPill;
+import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +68,11 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
             }
 
             long st = System.currentTimeMillis();
-            mail.handle(self);
+            try{
+                mail.handle(self);
+            }catch (Exception e){
+                ExceptionUtils.log(e);
+            }
             long cost = System.currentTimeMillis() - st;
 
             profileLog.info("handle mail({}) cost {} ms", mail.name(), cost);

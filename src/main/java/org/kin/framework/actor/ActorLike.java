@@ -4,6 +4,7 @@ import org.kin.framework.JvmCloseCleaner;
 import org.kin.framework.actor.domain.ActorPath;
 import org.kin.framework.concurrent.SimpleThreadFactory;
 import org.kin.framework.concurrent.ThreadManager;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +120,12 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
             }
 
             long st = System.currentTimeMillis();
-            message.handle(this);
+            try{
+                message.handle(this);
+            }
+            catch (Exception e){
+                ExceptionUtils.log(e);
+            }
             long cost = System.currentTimeMillis() - st;
 
             profileLog.info("handle mail({}) cost {} ms", message, cost);
