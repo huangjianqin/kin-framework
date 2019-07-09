@@ -171,17 +171,19 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
      * Actor线程执行
      */
     void close() {
-        isStopped = true;
-        actorSystem.remove(actorPath);
-        self.preStop();
-        try {
-            clearFutures();
-            boxSize.set(0);
-            mailBox.clear();
-            //help GC
-            this.currentThread = null;
-        } finally {
-            self.postStop();
+        if(isStarted && !isStopped){
+            isStopped = true;
+            actorSystem.remove(actorPath);
+            self.preStop();
+            try {
+                clearFutures();
+                boxSize.set(0);
+                mailBox.clear();
+                //help GC
+                this.currentThread = null;
+            } finally {
+                self.postStop();
+            }
         }
     }
 
@@ -190,23 +192,25 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
      * ps: 停止当前执行线程, 另外开
      */
     void closeNow() {
-        isStopped = true;
-        actorSystem.remove(actorPath);
-        if (this.currentThread != null) {
-            this.currentThread.interrupt();
-            //help GC
-            this.currentThread = null;
-        }
-        actorSystem.getThreadManager().execute(() -> {
-            self.preStop();
-            try {
-                clearFutures();
-                boxSize.set(0);
-                mailBox.clear();
-            } finally {
-                self.postStop();
+        if(isStarted && !isStopped){
+            isStopped = true;
+            actorSystem.remove(actorPath);
+            if (this.currentThread != null) {
+                this.currentThread.interrupt();
+                //help GC
+                this.currentThread = null;
             }
-        });
+            actorSystem.getThreadManager().execute(() -> {
+                self.preStop();
+                try {
+                    clearFutures();
+                    boxSize.set(0);
+                    mailBox.clear();
+                } finally {
+                    self.postStop();
+                }
+            });
+        }
     }
 
     private void addFuture(Future<?> future) {
