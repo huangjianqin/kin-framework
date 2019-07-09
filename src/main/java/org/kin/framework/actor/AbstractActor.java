@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * 业务Actor必须继承该类并根据需求实现业务逻辑
  * 每个Actor实例必须并定一个ActorSystem
  */
-public abstract class AbstractActor<AA extends Actor<AA>> implements Actor<AA>, Comparable<AA> {
+public abstract class AbstractActor<A extends Actor<?>> implements Actor<A>, Comparable<A> {
     private ActorContext actorContext;
 
     public AbstractActor(ActorPath actorPath, ActorSystem actorSystem) {
@@ -30,17 +30,17 @@ public abstract class AbstractActor<AA extends Actor<AA>> implements Actor<AA>, 
     }
 
     @Override
-    public final void tell(Message<AA> message) {
+    public final void tell(Message<A> message) {
         actorContext.receive(message);
     }
 
     @Override
-    public final Future<?> schedule(Message<AA> message, long delay, TimeUnit unit) {
+    public final Future<?> schedule(Message<A> message, long delay, TimeUnit unit) {
         return actorContext.receiveSchedule(message, delay, unit);
     }
 
     @Override
-    public final Future<?> scheduleAtFixedRate(Message<AA> message, long initialDelay, long period, TimeUnit unit) {
+    public final Future<?> scheduleAtFixedRate(Message<A> message, long initialDelay, long period, TimeUnit unit) {
         return actorContext.receiveFixedRateSchedule(message, initialDelay, period, unit);
     }
 

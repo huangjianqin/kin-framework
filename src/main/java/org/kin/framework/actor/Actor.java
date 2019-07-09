@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * Actor行为抽象
  * Actor的行为分派调度由具体的业务系统自身定义
  */
-public interface Actor<AA extends Actor<AA>> {
+public interface Actor<A extends Actor<?>> {
     /**
      * 消息匹配对应预定义方法并执行
      */
@@ -21,17 +21,17 @@ public interface Actor<AA extends Actor<AA>> {
     /**
      * 执行@message 方法
      */
-    void tell(Message<AA> message);
+    void tell(Message<A> message);
 
     /**
      * 调度执行@message 方法
      */
-    Future<?> schedule(Message<AA> message, long delay, TimeUnit unit);
+    Future<?> schedule(Message<A> message, long delay, TimeUnit unit);
 
     /**
      * 周期性调度执行@message 方法
      */
-    Future<?> scheduleAtFixedRate(Message<AA> message, long initialDelay, long period, TimeUnit unit);
+    Future<?> scheduleAtFixedRate(Message<A> message, long initialDelay, long period, TimeUnit unit);
 
     /**
      * 相当于receive PoisonPill.instance()
