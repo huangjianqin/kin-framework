@@ -37,15 +37,27 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
         });
     }
 
+    private ThreadManager threads;
+
     private final Queue<Message<AL>> messageBox = new LinkedBlockingDeque<>();
     private final AtomicInteger boxSize = new AtomicInteger();
     private volatile Thread currentThread;
     private volatile boolean isStopped = false;
 
     public ActorLike() {
+        this(THREADS);
+    }
+
+    public ActorLike(ThreadManager threads) {
+        this.threads = threads;
         //每1h清楚已结束的调度
         scheduleAtFixedRate(actor -> clearFinishedFutures(), 0, 1, TimeUnit.HOURS);
     }
+
+    public ActorLike(ExecutorService executorService, ScheduledExecutorService scheduledExecutorService) {
+        this(new ThreadManager(executorService, scheduledExecutorService));
+    }
+
 
     @Override
     public <T> void receive(T message) {
@@ -71,7 +83,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
     @Override
     public Future<?> schedule(Message<AL> message, long delay, TimeUnit unit) {
         if(!isStopped){
-            Future future = THREADS.schedule(() -> {
+            Future future = threads.schedule(() -> {
                 receive(message);
             }, delay, unit);
             addFuture(future);
@@ -83,7 +95,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
     @Override
     public Future<?> scheduleAtFixedRate(Message<AL> message, long initialDelay, long period, TimeUnit unit) {
         if(!isStopped){
-            Future future = THREADS.scheduleAtFixedRate(() -> {
+            Future future = threads.scheduleAtFixedRate(() -> {
                 receive(message);
             }, initialDelay, period, unit);
             addFuture(future);
@@ -139,7 +151,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
 
     private void tryRun() {
         if (!isStopped && boxSize.incrementAndGet() == 1) {
-            THREADS.execute(this);
+            threads.execute(this);
         }
     }
 
