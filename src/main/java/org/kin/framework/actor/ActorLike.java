@@ -31,6 +31,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
             new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum() * 2 - 1,
                     new SimpleThreadFactory("actorlike-schedule")));
     private static Map<ActorLike<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
+
     static {
         JvmCloseCleaner.DEFAULT().add(() -> {
             THREADS.shutdown();
@@ -61,12 +62,11 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
 
     @Override
     public <T> void receive(T message) {
-        if(!isStopped){
-            if(message instanceof Message){
+        if (!isStopped) {
+            if (message instanceof Message) {
                 messageBox.add((Message<AL>) message);
                 tryRun();
-            }
-            else{
+            } else {
                 throw new UnsupportedOperationException();
             }
         }
@@ -74,7 +74,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
 
     @Override
     public void tell(Message<AL> message) {
-        if(!isStopped){
+        if (!isStopped) {
             messageBox.add(message);
             tryRun();
         }
@@ -82,7 +82,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
 
     @Override
     public Future<?> schedule(Message<AL> message, long delay, TimeUnit unit) {
-        if(!isStopped){
+        if (!isStopped) {
             Future future = threads.schedule(() -> {
                 receive(message);
             }, delay, unit);
@@ -94,7 +94,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
 
     @Override
     public Future<?> scheduleAtFixedRate(Message<AL> message, long initialDelay, long period, TimeUnit unit) {
-        if(!isStopped){
+        if (!isStopped) {
             Future future = threads.scheduleAtFixedRate(() -> {
                 receive(message);
             }, initialDelay, period, unit);
@@ -111,7 +111,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
 
     @Override
     public void stopNow() {
-        if(!isStopped){
+        if (!isStopped) {
             isStopped = true;
             clearFutures();
         }
@@ -132,10 +132,9 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
             }
 
             long st = System.currentTimeMillis();
-            try{
+            try {
                 message.handle(this);
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 ExceptionUtils.log(e);
             }
             long cost = System.currentTimeMillis() - st;
