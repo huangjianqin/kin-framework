@@ -6,7 +6,10 @@ import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.utils.ExceptionUtils;
 
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author huangjianqin
@@ -61,6 +64,27 @@ public class Keeper {
     //api
     public static void keep(KeeperAction keeperAction){
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(keeperAction);
+        THREADS.execute(runnableKeeperAction);
+        RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
+    }
+
+    public static void keep(Runnable runnable){
+        RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(new KeeperAction() {
+            @Override
+            public void preAction() {
+
+            }
+
+            @Override
+            public void action() {
+                runnable.run();
+            }
+
+            @Override
+            public void postAction() {
+
+            }
+        });
         THREADS.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
     }
