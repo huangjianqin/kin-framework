@@ -61,14 +61,21 @@ public class Keeper {
         }
     }
 
+    @FunctionalInterface
+    public interface KeeperCloser{
+        void closeKeeper();
+    }
+
     //api
-    public static void keep(KeeperAction keeperAction){
+    public static KeeperCloser keep(KeeperAction keeperAction){
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(keeperAction);
         THREADS.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
+
+        return () -> runnableKeeperAction.stop();
     }
 
-    public static void keep(Runnable runnable){
+    public static KeeperCloser keep(Runnable runnable){
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(new KeeperAction() {
             @Override
             public void preAction() {
@@ -87,5 +94,7 @@ public class Keeper {
         });
         THREADS.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
+
+        return () -> runnableKeeperAction.stop();
     }
 }
