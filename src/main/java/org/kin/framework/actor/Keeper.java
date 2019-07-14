@@ -62,12 +62,12 @@ public class Keeper {
     }
 
     @FunctionalInterface
-    public interface KeeperCloser{
-        void closeKeeper();
+    public interface KeeperStopper {
+        void stopKeeper();
     }
 
     //api
-    public static KeeperCloser keep(KeeperAction keeperAction){
+    public static KeeperStopper keep(KeeperAction keeperAction){
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(keeperAction);
         THREADS.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
@@ -75,7 +75,7 @@ public class Keeper {
         return () -> runnableKeeperAction.stop();
     }
 
-    public static KeeperCloser keep(Runnable runnable){
+    public static KeeperStopper keep(Runnable runnable){
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(new KeeperAction() {
             @Override
             public void preAction() {
