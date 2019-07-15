@@ -14,41 +14,41 @@ public class Log4jLoggerBinder {
     private Properties properties = new Properties();
 
     //example: [INFO] 2017-02-09 22:54:30 774 [main] | LogTest.main(10) : testing
-    public static String DEFAULT_PATTERN = "[%p] %d{yyyy-MM-dd HH\\:mm\\:ss SSS} [%t] | %C.%M(%L) : %m %n";
-    public static String DEFAULT_DATEPATTERN = "'.'yyyy-MM-dd";
+    public static final String DEFAULT_PATTERN = "[%p] %d{yyyy-MM-dd HH\\:mm\\:ss SSS} [%t] | %C.%M(%L) : %m %n";
+    public static final String DEFAULT_DATEPATTERN = "'.'yyyy-MM-dd";
 
-    public static String DEFAULT_CONSOLE_APPENDER_NAME = "console";
-    public static String DEFAULT_STDOUT_APPENDER_NAME = "stdout";
-    public static String DEFAULT_ERROR_APPENDER_NAME = "error";
+    public static final String DEFAULT_CONSOLE_APPENDER_NAME = "console";
+    public static final String DEFAULT_STDOUT_APPENDER_NAME = "stdout";
+    public static final String DEFAULT_ERROR_APPENDER_NAME = "error";
 
     //common
-    public static String ROOT_CATEGORY = "log4j.rootCategory";
-    public static String ROOT_LOGGER = "log4j.rootLogger";
-    public static String APPENDER = "log4j.appender.%s";
-    public static String LOGGER = "log4j.logger.%s";
+    public static final String ROOT_CATEGORY = "log4j.rootCategory";
+    public static final String ROOT_LOGGER = "log4j.rootLogger";
+    public static final String APPENDER = "log4j.appender.%s";
+    public static final String LOGGER = "log4j.logger.%s";
 
     //layout
-    public static String LAYOUT = "log4j.appender.%s.layout";
-    public static String LAYOUT_CONVERSIONPATTERN = "log4j.appender.%s.layout.ConversionPattern";
+    public static final String LAYOUT = "log4j.appender.%s.layout";
+    public static final String LAYOUT_CONVERSIONPATTERN = "log4j.appender.%s.layout.ConversionPattern";
 
     //file log
-    public static String FILE = "log4j.appender.%s.File";
-    public static String APPEND = "log4j.appender.%s.Append";
-    public static String THRESHOLD = "log4j.appender.%s.Threshold";
-    public static String DATEPATTERN = "log4j.appender.%s.DatePattern";
+    public static final String FILE = "log4j.appender.%s.File";
+    public static final String APPEND = "log4j.appender.%s.Append";
+    public static final String THRESHOLD = "log4j.appender.%s.Threshold";
+    public static final String DATEPATTERN = "log4j.appender.%s.DatePattern";
 
     //Appender
-    public static String CONSOLE_APPENDER = "org.apache.log4j.ConsoleAppender";
-    public static String DAILY_ROLLING_FILE_APPENDER = "org.apache.log4j.DailyRollingFileAppender";
-    public static String FILE_APPENDER = "org.apache.log4j.FileAppender";
-    public static String ROLLING_FILE_APPENDER = "org.apache.log4j.RollingFileAppender";
-    public static String WRITER_APPENDER = "org.apache.log4j.WriterAppender";
+    public static final String CONSOLE_APPENDER = "org.apache.log4j.ConsoleAppender";
+    public static final String DAILY_ROLLING_FILE_APPENDER = "org.apache.log4j.DailyRollingFileAppender";
+    public static final String FILE_APPENDER = "org.apache.log4j.FileAppender";
+    public static final String ROLLING_FILE_APPENDER = "org.apache.log4j.RollingFileAppender";
+    public static final String WRITER_APPENDER = "org.apache.log4j.WriterAppender";
 
     //Layout
-    public static String PATTERN_LAYOUT = "org.apache.log4j.PatternLayout";
-    public static String HTML_LAYOUT = "org.apache.log4j.HTMLLayout";
-    public static String SIMPLE_LAYOUT = "org.apache.log4j.SimpleLayout";
-    public static String TTCC_LAYOUT = "org.apache.log4j.TTCCLayout";
+    public static final String PATTERN_LAYOUT = "org.apache.log4j.PatternLayout";
+    public static final String HTML_LAYOUT = "org.apache.log4j.HTMLLayout";
+    public static final String SIMPLE_LAYOUT = "org.apache.log4j.SimpleLayout";
+    public static final String TTCC_LAYOUT = "org.apache.log4j.TTCCLayout";
 
     public static Boolean exist(String logger) {
         return LogManager.exists(logger) != null;
