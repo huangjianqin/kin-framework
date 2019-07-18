@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * 支持多线程操作
  */
 public abstract class AsyncDBEntity implements Serializable{
-    private static final Logger log = LoggerFactory.getLogger("asyncDB");
+    private static final Logger log = LoggerFactory.getLogger(AsyncDBEntity.class);
 
     private volatile AtomicReference<DBStatus> status = new AtomicReference<>(DBStatus.NORMAL);
     private volatile DBSynchronzier DBSynchronzier;

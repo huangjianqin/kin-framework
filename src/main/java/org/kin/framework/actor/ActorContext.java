@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     private static final Logger log = LoggerFactory.getLogger("actor");
-    private static final Logger profileLog = LoggerFactory.getLogger("actorProfile");
 
     //唯一标识该ActorSystem下的这个Actor
     private final ActorPath actorPath;
@@ -75,7 +74,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
             }
             long cost = System.currentTimeMillis() - st;
 
-            profileLog.info("handle mail({}) cost {} ms", mail.name(), cost);
+            log.info("handle mail({}) cost {} ms", mail.name(), cost);
 
             if (boxSize.decrementAndGet() <= 0) {
                 break;

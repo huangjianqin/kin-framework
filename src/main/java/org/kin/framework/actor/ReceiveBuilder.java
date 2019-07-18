@@ -16,7 +16,7 @@ import java.util.function.Predicate;
  * 预定义方法匹配builder
  */
 public class ReceiveBuilder {
-    private static final Logger log = LoggerFactory.getLogger("actor");
+    private static final Logger log = LoggerFactory.getLogger(ReceiveBuilder.class);
     //match和matchEqual根据定义顺序排序,matchAny总是在match和matchEqual之后执行，并且也是根据定义顺序排序
     private List<AbstractFuncWrapper> funcWrappers = new ArrayList<>();
 

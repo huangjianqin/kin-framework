@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * 支持多线程事件处理
  */
 public class AsyncDispatcher extends AbstractService implements Dispatcher {
-    private static Logger log = LoggerFactory.getLogger("event");
+    private static Logger log = LoggerFactory.getLogger(AsyncDispatcher.class);
     private static final int TOO_MUCH_EVENTS_THRESHOLD = 100;
 
     //缓存所有待分发的时间

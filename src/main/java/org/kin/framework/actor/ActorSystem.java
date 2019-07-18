@@ -19,7 +19,7 @@ import java.util.concurrent.*;
  * Created by huangjianqin on 2018/6/5.
  */
 public class ActorSystem implements Closeable{
-    private static final Logger log = LoggerFactory.getLogger("actor");
+    private static final Logger log = LoggerFactory.getLogger(ActorSystem.class);
     private static final Map<String, ActorSystem> NAME2ACTORSYSTEM = new ConcurrentHashMap<>();
     private static final String DEFAULT_AS_NAME = "default";
 

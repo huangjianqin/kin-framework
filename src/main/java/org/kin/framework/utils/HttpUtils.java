@@ -36,7 +36,7 @@ import java.util.*;
  * Created by huangjianqin on 2019/6/18.
  */
 public class HttpUtils {
-    private static final Logger log = LoggerFactory.getLogger("http");
+    private static final Logger log = LoggerFactory.getLogger(HttpUtils.class);
     private static final Charset UTF8 = Charset.forName("utf-8");
     //http
     private static final SocketConfig DEFAULT_HTTP_SOCKET_CONFIG = SocketConfig.custom().setTcpNoDelay(true)

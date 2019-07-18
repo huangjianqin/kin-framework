@@ -20,8 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2019/7/9
  */
 public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
-    private static final Logger log = LoggerFactory.getLogger("actor");
-    private static final Logger profileLog = LoggerFactory.getLogger("actorProfile");
+    private static final Logger log = LoggerFactory.getLogger(ActorLike.class);
 
     private static final ThreadManager THREADS = new ThreadManager(
             new ThreadPoolExecutor(0, SysUtils.getSuitableThreadNum() * 2 - 1,
@@ -139,7 +138,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
             }
             long cost = System.currentTimeMillis() - st;
 
-            profileLog.info("handle mail({}) cost {} ms", message, cost);
+            log.info("handle mail({}) cost {} ms", message, cost);
 
             if (boxSize.decrementAndGet() <= 0) {
                 break;

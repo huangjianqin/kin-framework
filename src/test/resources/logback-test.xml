@@ -62,20 +62,6 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="actorProfileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender" >
-        <Append>true</Append>
-        <encoder>
-            <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] |  %C.%M\(%L\) : %msg%n%ex</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/%d{yyyy-MM-dd}/actorProfile.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <!--<maxHistory>30</maxHistory>-->
-        </rollingPolicy>
-    </appender>
-
     <appender name="asyncDBAppender" class="ch.qos.logback.core.rolling.RollingFileAppender" >
         <Append>true</Append>
         <encoder>
@@ -163,10 +149,6 @@
         <appender-ref ref="actorAppender"/>
     </appender>
 
-    <appender name="asyncActorProfileAppender" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="actorProfileAppender"/>
-    </appender>
-
     <appender name="asyncAsyncDBAppender" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="asyncDBAppender"/>
     </appender>
@@ -188,37 +170,32 @@
         <appender-ref ref="asyncERROR"/>
     </logger>
 
-    <logger name="hotSwap" level="INFO" additivity="false">
+    <logger name="org.kin.framework.hotswap" level="INFO" additivity="false">
         <appender-ref ref="asyncHotSwapAppender"/>
         <appender-ref ref="asyncERROR" level="ERROR"/>
     </logger>
 
-    <logger name="actor" level="INFO" additivity="false">
+    <logger name="org.kin.framework.actor" level="INFO" additivity="false">
         <appender-ref ref="asyncActor"/>
         <appender-ref ref="asyncERROR" level="ERROR"/>
     </logger>
 
-    <logger name="actorProfile" level="INFO" additivity="false">
-        <appender-ref ref="asyncActorProfile"/>
-        <appender-ref ref="asyncERROR" level="ERROR"/>
-    </logger>
-
-    <logger name="asyncDB" level="INFO" additivity="false">
+    <logger name="org.kin.framework.asyncdb" level="INFO" additivity="false">
         <appender-ref ref="asyncAsyncDBAppender"/>
         <appender-ref ref="asyncERROR" level="ERROR"/>
     </logger>
 
-    <logger name="concurrent" level="INFO" additivity="false">
+    <logger name="org.kin.framework.concurrent" level="INFO" additivity="false">
         <appender-ref ref="asyncConcurrentAppender"/>
         <appender-ref ref="asyncERROR" level="ERROR"/>
     </logger>
 
-    <logger name="event" level="INFO" additivity="false">
+    <logger name="org.kin.framework.event" level="INFO" additivity="false">
         <appender-ref ref="asyncEventAppender"/>
         <appender-ref ref="asyncERROR" level="ERROR"/>
     </logger>
 
-    <logger name="http" level="INFO" additivity="false">
+    <logger name="org.kin.framework.utils.HttpUtils" level="INFO" additivity="false">
         <appender-ref ref="asyncHttpAppender"/>
         <appender-ref ref="asyncERROR" level="ERROR"/>
     </logger>

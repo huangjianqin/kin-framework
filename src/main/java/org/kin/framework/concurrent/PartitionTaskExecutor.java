@@ -20,7 +20,7 @@ import java.util.concurrent.*;
  * 对于需要 严格 保证task顺序执行的Executor, 则不能扩大或减少Executor的Parallism(不支持重排序)
  */
 public class PartitionTaskExecutor<K> {
-    private static final Logger log = LoggerFactory.getLogger("concurrent");
+    private static final Logger log = LoggerFactory.getLogger(PartitionTaskExecutor.class);
     private static final int REPORT_INTERVAL = 30;
 
     //分区数

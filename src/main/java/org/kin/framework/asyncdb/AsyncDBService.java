@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class AsyncDBService implements ApplicationContextAware, Closeable{
-    private static final Logger log = LoggerFactory.getLogger("asyncDB");
+    private static final Logger log = LoggerFactory.getLogger(AsyncDBService.class);
     private ApplicationContext springContext;
     private static AsyncDBService instance;
 
