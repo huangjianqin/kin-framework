@@ -429,4 +429,42 @@ public class ClassUtils {
 
         return false;
     }
+
+    public static Object string2Obj(Field field, String value) {
+        Class<?> fieldType = field.getType();
+
+        if(StringUtils.isBlank(value)){
+            return null;
+        }
+
+        value = value.trim();
+
+        try{
+            if (String.class.equals(fieldType)) {
+                return value;
+            } else if (Boolean.class.equals(fieldType) || Boolean.TYPE.equals(fieldType)) {
+                return Boolean.valueOf(value);
+            } else if (Byte.class.equals(fieldType) || Byte.TYPE.equals(fieldType)) {
+                return Byte.valueOf(value);
+            }  else if (Character.class.equals(fieldType) || Character.TYPE.equals(fieldType)) {
+                return value.toCharArray()[0];
+            } else if (Short.class.equals(fieldType) || Short.TYPE.equals(fieldType)) {
+                return Short.valueOf(value);
+            } else if (Integer.class.equals(fieldType) || Integer.TYPE.equals(fieldType)) {
+                return Integer.valueOf(value);
+            } else if (Long.class.equals(fieldType) || Long.TYPE.equals(fieldType)) {
+                return Long.valueOf(value);
+            } else if (Float.class.equals(fieldType) || Float.TYPE.equals(fieldType)) {
+                return Float.valueOf(value);
+            } else if (Double.class.equals(fieldType) || Double.TYPE.equals(fieldType)) {
+                return Double.valueOf(value);
+            } else {
+                throw new RuntimeException("illeagal data type, type=" + fieldType);
+            }
+        }catch (Exception e){
+            ExceptionUtils.log(e);
+        }
+
+        return null;
+    }
 }
