@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by huangjianqin on 2019/3/1.
@@ -16,7 +17,7 @@ import java.util.*;
 public class SimpleListenerManager implements ApplicationContextAware {
     private static SimpleListenerManager defalut;
 
-    private Map<Class<?>, List<Object>> listeners = new HashMap<>();
+    private Map<Class<?>, List<ListenerDetail>> listeners = new HashMap<>();
 
     public static SimpleListenerManager instance() {
         return defalut;
@@ -29,57 +30,70 @@ public class SimpleListenerManager implements ApplicationContextAware {
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    private void register0(Object bean) {
-        Class claxx = bean.getClass();
+    private class ListenerDetail{
+        private Object instance;
+        private int order;
+
+        public ListenerDetail(Object instance, int order) {
+            this.instance = instance;
+            this.order = order;
+        }
+
+        //getter
+        public Object getInstance() {
+            return instance;
+        }
+
+        public int getOrder() {
+            return order;
+        }
+    }
+
+    private void register0(Object o) {
+        Class claxx = o.getClass();
         while (claxx != null) {
             for (Class interfaceClass : claxx.getInterfaces()) {
                 if (interfaceClass.isAnnotationPresent(Listener.class)) {
-                    List<Object> list = listeners.get(interfaceClass);
-                    if (list == null) {
+                    List<ListenerDetail> list = listeners.get(interfaceClass);
+                    if(list == null){
                         list = new ArrayList<>();
-                        listeners.put(interfaceClass, list);
                     }
-                    list.add(bean);
+                    else{
+                        list = new ArrayList<>(list);
+                    }
+
+                    int order = ((Listener) interfaceClass.getAnnotation(Listener.class)).order();
+                    ListenerDetail listenerDetail = new ListenerDetail(o, order);
+
+                    list.add(listenerDetail);
+                    listeners.put(interfaceClass, list);
                 }
             }
             claxx = claxx.getSuperclass();
         }
     }
 
-    public void register(Object bean) {
+    public synchronized void register(Object bean) {
         register0(bean);
         sortAll();
     }
 
-    private int getOrder(Class<?> key, Object o) {
-        Class claxx = o.getClass();
-        while (claxx != null) {
-            if (claxx.isAnnotationPresent(Listener.class)) {
-                //子类有注解, 直接使用子类注解的order
-                return ((Listener) claxx.getAnnotation(Listener.class)).order();
-            }
-            //继续从父类寻找@Listener注解
-            claxx = claxx.getSuperclass();
-        }
-
-        //取key接口的order
-        return ((Listener) key.getAnnotation(Listener.class)).order();
-    }
-
-    private void sort(Class<?> key) {
-        List<Object> list = listeners.get(key);
+    private void sort(Map<Class<?>, List<ListenerDetail>> listeners, Class<?> key) {
+        List<ListenerDetail> list = listeners.get(key);
         if (list != null && !list.isEmpty()) {
             list = new ArrayList<>(list);
-            list.sort(Comparator.comparingInt(o -> -getOrder(key, o)));
+            list.sort(Comparator.comparingInt(o -> o.getOrder()));
             listeners.put(key, list);
         }
     }
 
-    private void sortAll() {
+    private synchronized void sortAll() {
         //排序
+        Map<Class<?>, List<ListenerDetail>> listeners = new HashMap<>(this.listeners);
         for (Class<?> key : listeners.keySet()) {
-            sort(key);
+            sort(listeners, key);
         }
+        this.listeners = listeners;
     }
 
     @Override
@@ -92,8 +106,9 @@ public class SimpleListenerManager implements ApplicationContextAware {
         sortAll();
     }
 
-    public  <T> List<T> getListener(Class<T> listenerClass) {
-        return (List<T>) listeners.getOrDefault(listenerClass, Collections.emptyList());
+    public <T> List<T> getListener(Class<T> listenerClass) {
+        return (List<T>) listeners.getOrDefault(listenerClass, Collections.emptyList())
+                .stream().map(ListenerDetail::getInstance).collect(Collectors.toList());
     }
 
     //------------------------------------------------------------------------------------------------------------------

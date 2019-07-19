@@ -21,6 +21,7 @@ public class SimpleListenerManagerTest {
         for (Listener1 listener1 : listener1s) {
             listener1.call();
         }
+        System.exit(0);
     }
 
     public static SimpleListenerManager getListenerManager() {

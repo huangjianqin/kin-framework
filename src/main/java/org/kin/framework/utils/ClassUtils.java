@@ -415,4 +415,18 @@ public class ClassUtils {
 
         return null;
     }
+
+    public static boolean isInterfaceAnnotationPresent(Object o, Class annotation){
+        Class claxx = o.getClass();
+        while (claxx != null) {
+            for (Class interfaceClass : claxx.getInterfaces()) {
+                if (interfaceClass.isAnnotationPresent(annotation)) {
+                    return true;
+                }
+            }
+            claxx = claxx.getSuperclass();
+        }
+
+        return false;
+    }
 }
