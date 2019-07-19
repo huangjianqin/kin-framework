@@ -14,7 +14,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.ContextStartedEvent;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -23,18 +22,21 @@ import java.util.Map;
 /**
  * Created by huangjianqin on 2019/3/1.
  */
-@Component
+//不想引用该jar并使用spring时, 自动加载项目不使用的bean. 想用的话, 继承并使用@Component
+//@Component
 public class SpringAsyncDispatcher extends AsyncDispatcher implements ApplicationContextAware, ApplicationListener {
-    private static SpringAsyncDispatcher defalut;
+    private static SpringAsyncDispatcher DEFALUT;
 
     //setter && getter
     public static SpringAsyncDispatcher instance() {
-        return defalut;
-    }
-
-    @Autowired
-    public void setDefalut(SpringAsyncDispatcher defalut) {
-        SpringAsyncDispatcher.defalut = defalut;
+        if(DEFALUT == null){
+            synchronized (SpringAsyncDispatcher.class){
+                if(DEFALUT == null){
+                    DEFALUT = new SpringAsyncDispatcher();
+                }
+            }
+        }
+        return DEFALUT;
     }
 
     //------------------------------------------------------------------------------------------------------------------
