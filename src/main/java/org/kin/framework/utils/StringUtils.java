@@ -43,11 +43,9 @@ public class StringUtils {
             for (E e : collection) {
                 sb.append(e + separator);
             }
-            sb.replace(sb.length() - 1, sb.length(), "");
-
+            sb.deleteCharAt(sb.length() - 1);
             return sb.toString();
         }
-
         return "";
     }
 
@@ -61,7 +59,7 @@ public class StringUtils {
             for (Map.Entry<K, V> entry : map.entrySet()) {
                 sb.append("(" + entry.getKey() + "-" + entry.getValue() + ")" + separator);
             }
-            sb.replace(sb.length() - separator.length(), sb.length(), "");
+            sb.deleteCharAt(sb.length() - 1);
             return sb.toString();
         }
         return "";
