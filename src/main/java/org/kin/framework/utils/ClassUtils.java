@@ -138,13 +138,28 @@ public class ClassUtils {
         return Collections.emptySet();
     }
 
-    public static <T> Set<Class<T>> scanClasspathAndFindMatch(String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar) {
+    public static <T> Set<Class<T>> scanClasspathAndFindMatch(String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar){
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        ClassLoader staticClassLoader = ClassUtils.class.getClassLoader();
+        ClassLoader[] classLoaders = contextClassLoader != null?
+                (staticClassLoader != null && contextClassLoader != staticClassLoader?
+                        new ClassLoader[]{contextClassLoader, staticClassLoader}:new ClassLoader[]{contextClassLoader})
+                :new ClassLoader[0];
+
         Set<Class<T>> subClasses = Sets.newLinkedHashSet();
-        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+        for(int i =0; i < classLoaders.length; i++){
+            subClasses.addAll(scanClasspathAndFindMatch(classLoaders[i], packageName, c, matcher, isIncludeJar));
+        }
+
+        return subClasses;
+    }
+
+    public static <T> Set<Class<T>> scanClasspathAndFindMatch(ClassLoader contextClassLoader, String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar) {
+        Set<Class<T>> subClasses = Sets.newLinkedHashSet();
 
         String packageResource = packageName.replaceAll("\\.", "/");
         try {
-            Enumeration<URL> urls = currentClassLoader.getResources(packageResource);
+            Enumeration<URL> urls = contextClassLoader.getResources(packageResource);
             while (urls.hasMoreElements()) {
                 URL url = urls.nextElement();
                 if ("file".equals(url.getProtocol())) {
@@ -153,16 +168,28 @@ public class ClassUtils {
                     Set<Class<T>> classes = stream.filter(p -> !Files.isDirectory(p) && p.toString().endsWith(CLASS_SUFFIX))
                             .map(p -> {
                                 URI uri = p.toUri();
-                                String origin = uri.toString().replaceAll("/", ".");
-                                int startIndex = origin.indexOf(packageName);
-                                int endIndex = origin.lastIndexOf(CLASS_SUFFIX);
+                                String origin = uri.getPath();
+                                //空包名要去掉root路径, 不然会解析出来的包名会包含部分classpath路径, 也就是无效了
+                                //如果指定包名, 下面lastIndexOf(packageName)会过滤掉部分classpath路径
+                                String className;
+                                if(StringUtils.isBlank(packageName)){
+                                    origin = origin.substring(origin.indexOf(url.getPath()) + url.getPath().length());
+                                    int endIndex = origin.lastIndexOf(CLASS_SUFFIX);
+                                    className = origin.substring(0, endIndex);
+                                }
+                                else{
+                                    int startIndex = origin.lastIndexOf(packageName);
+                                    int endIndex = origin.lastIndexOf(CLASS_SUFFIX);
+                                    className = origin.substring(startIndex, endIndex);
+                                }
+                                //把/替换成.
+                                className = className.replaceAll("/", ".");
 
-                                String className = origin.substring(startIndex, endIndex);
                                 if (StringUtils.isNotBlank(className) &&
                                         !INNER_PATTERN.matcher(className).find() &&
                                         !(className.indexOf("$") > 0)) {
                                     try {
-                                        return (Class<T>) currentClassLoader.loadClass(className);
+                                        return (Class<T>) contextClassLoader.loadClass(className);
                                     } catch (ClassNotFoundException e) {
 
                                     }
@@ -194,7 +221,7 @@ public class ClassUtils {
 
                         String className = entryName.replaceAll("/", ".");
                         try {
-                            Class<T> claxx = (Class<T>) currentClassLoader.loadClass(className);
+                            Class<T> claxx = (Class<T>) contextClassLoader.loadClass(className);
                             if (matcher.match(c, claxx)) {
                                 subClasses.add(claxx);
                             }
