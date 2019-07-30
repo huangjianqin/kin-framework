@@ -11,8 +11,6 @@ import javax.annotation.PostConstruct;
  * @author huangjianqin
  * @date 2019/7/19
  */
-//不想引用该jar并使用spring时, 自动加载项目不使用的bean. 想用的话, 继承并使用@Component
-//@Component
 public class SpringAsyncDBService extends AsyncDBService implements ApplicationContextAware {
     private ApplicationContext springContext;
 
