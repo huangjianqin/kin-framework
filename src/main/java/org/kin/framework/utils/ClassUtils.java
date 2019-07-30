@@ -176,14 +176,16 @@ public class ClassUtils {
                                     origin = origin.substring(origin.indexOf(url.getPath()) + url.getPath().length());
                                     int endIndex = origin.lastIndexOf(CLASS_SUFFIX);
                                     className = origin.substring(0, endIndex);
+                                    //把/替换成.
+                                    className = className.replaceAll("/", ".");
                                 }
                                 else{
+                                    //把/替换成.
+                                    origin = origin.replaceAll("/", ".");
                                     int startIndex = origin.lastIndexOf(packageName);
                                     int endIndex = origin.lastIndexOf(CLASS_SUFFIX);
                                     className = origin.substring(startIndex, endIndex);
                                 }
-                                //把/替换成.
-                                className = className.replaceAll("/", ".");
 
                                 if (StringUtils.isNotBlank(className) &&
                                         !INNER_PATTERN.matcher(className).find() &&
