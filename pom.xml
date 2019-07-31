@@ -42,8 +42,8 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.4</version>
-            <scope>${junit.version</scope>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
 
 
@@ -159,6 +159,7 @@
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
             <version>${jmh.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
@@ -172,6 +173,7 @@
             <groupId>org.jyaml</groupId>
             <artifactId>jyaml</artifactId>
             <version>${jyaml.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- 解析json-->
@@ -179,6 +181,7 @@
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- http请求-->
