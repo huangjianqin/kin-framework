@@ -27,7 +27,7 @@ public class PartitionTaskExecutor<K> {
     private volatile int partitionNum;
 
     //分区算法
-    private Partitioner<K> partitioner;
+    private volatile Partitioner<K> partitioner;
     //执行线程池
     private ThreadManager threadManager;
     //所有分区执行线程实例
