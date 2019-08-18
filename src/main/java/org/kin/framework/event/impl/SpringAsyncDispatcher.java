@@ -6,7 +6,6 @@ import org.kin.framework.event.EventHandlerAOT;
 import org.kin.framework.event.HandleEvent;
 import org.kin.framework.utils.ExceptionUtils;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;

@@ -26,9 +26,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
             new ThreadPoolExecutor(0, SysUtils.getSuitableThreadNum() * 2 - 1,
                     60L, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<>(),
-                    new SimpleThreadFactory("actorlike")),
-            new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum() * 2 - 1,
-                    new SimpleThreadFactory("actorlike-schedule")));
+                    new SimpleThreadFactory("actorlike")), new SimpleThreadFactory("actorlike-schedule"));
     private static Map<ActorLike<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
 
     static {
@@ -54,8 +52,8 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
         scheduleAtFixedRate(actor -> clearFinishedFutures(), 0, 1, TimeUnit.HOURS);
     }
 
-    public ActorLike(ExecutorService executorService, ScheduledExecutorService scheduledExecutorService) {
-        this(new ThreadManager(executorService, scheduledExecutorService));
+    public ActorLike(ExecutorService executorService, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
+        this(new ThreadManager(executorService, scheduleCoreNum, scheduleThreadFactory));
     }
 
 

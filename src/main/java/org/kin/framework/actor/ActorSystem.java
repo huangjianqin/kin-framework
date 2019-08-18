@@ -6,14 +6,16 @@ import org.kin.framework.actor.domain.ActorPath;
 import org.kin.framework.concurrent.SimpleThreadFactory;
 import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by huangjianqin on 2018/6/5.
@@ -46,8 +48,7 @@ public class ActorSystem implements Closeable{
         this.threadManager = new ThreadManager(
                 new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(), new SimpleThreadFactory("actor-system-executor" + name)),
-                new ScheduledThreadPoolExecutor(
-                        SysUtils.getSuitableThreadNum(), new SimpleThreadFactory("actor-system-schedule" + name)));
+                new SimpleThreadFactory("actor-system-schedule" + name));
 
         monitorJVMClose();
     }

@@ -18,14 +18,17 @@ public class ThreadManager implements ScheduledExecutorService {
     public static ThreadManager DEFAULT;
     public static final ExecutorType DEFAULT_EXECUTOR_TYPE;
 
+    private static int getScheduleCoreNum(){
+        return SysUtils.getSuitableThreadNum() / 10 + 1;
+    }
     static {
         String executorTypeStr = System.getenv(Constants.DEFAULT_EXECUTOR);
         if (StringUtils.isNotBlank(executorTypeStr)) {
             DEFAULT_EXECUTOR_TYPE = ExecutorType.getByName(executorTypeStr);
-            DEFAULT = new ThreadManager(DEFAULT_EXECUTOR_TYPE.getExecutor(), getDefaultScheduledExecutor());
+            DEFAULT = new ThreadManager(DEFAULT_EXECUTOR_TYPE.getExecutor(), getScheduleCoreNum());
         } else {
             DEFAULT_EXECUTOR_TYPE = ExecutorType.THREADPOOL;
-            DEFAULT = new ThreadManager(DEFAULT_EXECUTOR_TYPE.getExecutor(), getDefaultScheduledExecutor());
+            DEFAULT = new ThreadManager(DEFAULT_EXECUTOR_TYPE.getExecutor(), getScheduleCoreNum());
         }
 
         JvmCloseCleaner.DEFAULT().add(() -> {
@@ -37,67 +40,73 @@ public class ThreadManager implements ScheduledExecutorService {
     private ExecutorService executor;
     //调度线程
     private ScheduledExecutorService scheduleExecutor;
-
-    private ThreadManager() {
-    }
+    private volatile boolean isStopped;
 
     public ThreadManager(ExecutorService executor) {
-        this(executor, null);
+        this(executor, 1);
     }
 
-    public ThreadManager(ScheduledExecutorService scheduleExecutor) {
-        this(null, scheduleExecutor);
-    }
-
-    public ThreadManager(ExecutorService executor, ScheduledExecutorService scheduleExecutor) {
+    public ThreadManager(ExecutorService executor, int scheduleCoreNum) {
         this.executor = executor;
-        this.scheduleExecutor = scheduleExecutor;
+        this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleCoreNum,
+                new SimpleThreadFactory("default-schedule-thread-manager"));
+    }
+
+    public ThreadManager(ExecutorService executor, ThreadFactory scheduleThreadFactory) {
+        this.executor = executor;
+        this.scheduleExecutor = new ScheduledThreadPoolExecutor(getScheduleCoreNum(), scheduleThreadFactory);
+    }
+
+    public ThreadManager(ExecutorService executor, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
+        this.executor = executor;
+        this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleCoreNum, scheduleThreadFactory);
     }
 
     public static ThreadManager forkJoinPoolThreadManager() {
         return new ThreadManager(ExecutorType.FORKJOIN.getExecutor());
     }
 
-    public static ThreadManager forkJoinPoolThreadManagerWithScheduled() {
-        return new ThreadManager(ExecutorType.FORKJOIN.getExecutor(), getDefaultScheduledExecutor());
+    public static ThreadManager forkJoinPoolThreadManagerWithScheduled(int scheduleCoreNum) {
+        return new ThreadManager(ExecutorType.FORKJOIN.getExecutor(), scheduleCoreNum);
     }
 
     public static ThreadManager commonThreadManager() {
         return new ThreadManager(ExecutorType.THREADPOOL.getExecutor());
     }
 
-    public static ThreadManager commonThreadManagerWithScheduled() {
-        return new ThreadManager(ExecutorType.THREADPOOL.getExecutor(), getDefaultScheduledExecutor());
+    public static ThreadManager commonThreadManagerWithScheduled(int scheduleCoreNum) {
+        return new ThreadManager(ExecutorType.THREADPOOL.getExecutor(), scheduleCoreNum);
     }
 
     //--------------------------------------------------------------------------------------------
 
     @Override
     public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-        Preconditions.checkNotNull(scheduleExecutor);
-        return scheduleExecutor.schedule(command, delay, unit);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
+        return scheduleExecutor.schedule(() -> execute(command), delay, unit);
     }
 
     @Override
     public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-        Preconditions.checkNotNull(scheduleExecutor);
-        return scheduleExecutor.schedule(callable, delay, unit);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
+        return scheduleExecutor.schedule(() -> submit(callable).get(), delay, unit);
     }
 
     @Override
     public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-        Preconditions.checkNotNull(scheduleExecutor);
-        return scheduleExecutor.scheduleAtFixedRate(command, initialDelay, period, unit);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
+        return scheduleExecutor.scheduleAtFixedRate(() -> execute(command), initialDelay, period, unit);
     }
 
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-        Preconditions.checkNotNull(scheduleExecutor);
-        return scheduleExecutor.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
+        return scheduleExecutor.scheduleWithFixedDelay(() -> execute(command), initialDelay, delay, unit);
     }
 
     @Override
     public void shutdown() {
+        isStopped = true;
         if(executor != null){
             executor.shutdown();
         }
@@ -108,6 +117,7 @@ public class ThreadManager implements ScheduledExecutorService {
 
     @Override
     public List<Runnable> shutdownNow() {
+        isStopped = true;
         List<Runnable> tasks = Lists.newArrayList();
         if(executor != null){
             tasks.addAll(executor.shutdownNow());
@@ -120,12 +130,12 @@ public class ThreadManager implements ScheduledExecutorService {
 
     @Override
     public boolean isShutdown() {
-        return (executor == null || executor.isShutdown()) && (scheduleExecutor == null || scheduleExecutor.isShutdown());
+        return isStopped;
     }
 
     @Override
     public boolean isTerminated() {
-        return (executor == null || executor.isTerminated()) && (scheduleExecutor == null || scheduleExecutor.isTerminated());
+        return isStopped;
     }
 
     @Override
@@ -142,49 +152,49 @@ public class ThreadManager implements ScheduledExecutorService {
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
         return executor.submit(task);
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
         return executor.submit(task, result);
     }
 
     @Override
     public Future<?> submit(Runnable task) {
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
         return executor.submit(task);
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
         return executor.invokeAll(tasks);
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
         return executor.invokeAll(tasks, timeout, unit);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
         return executor.invokeAny(tasks);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
         return executor.invokeAny(tasks, timeout, unit);
     }
 
     @Override
     public void execute(Runnable command) {
-        Preconditions.checkNotNull(executor);
+        Preconditions.checkArgument(isStopped, "threads is stopped");
         executor.execute(command);
     }
 
@@ -193,7 +203,7 @@ public class ThreadManager implements ScheduledExecutorService {
         /**
          * ForkJoin线程池
          */
-        FORKJOIN("ForkJoin") {
+        FORKJOIN("forkjoin") {
             @Override
             public ExecutorService getExecutor() {
                 return new ForkJoinPool();
@@ -202,7 +212,7 @@ public class ThreadManager implements ScheduledExecutorService {
         /**
          * 普通线程池
          */
-        THREADPOOL("ThreadPool") {
+        THREADPOOL("threadpool") {
             @Override
             public ExecutorService getExecutor() {
                 return new ThreadPoolExecutor(0, SysUtils.getSuitableThreadNum(), 60L, TimeUnit.SECONDS,
@@ -219,7 +229,7 @@ public class ThreadManager implements ScheduledExecutorService {
 
         static ExecutorType getByName(String name) {
             for (ExecutorType type : values()) {
-                if (type.getName().toLowerCase().equals(name.toLowerCase())) {
+                if (type.getName().equals(name.toLowerCase())) {
                     return type;
                 }
             }
@@ -236,10 +246,5 @@ public class ThreadManager implements ScheduledExecutorService {
                 super(message);
             }
         }
-    }
-
-    private static ScheduledExecutorService getDefaultScheduledExecutor(){
-        return new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum(),
-                new SimpleThreadFactory("default-schedule-thread-manager"));
     }
 }
