@@ -70,12 +70,29 @@ public class ThreadManager implements ScheduledExecutorService {
         return new ThreadManager(ExecutorType.FORKJOIN.getExecutor(), scheduleCoreNum);
     }
 
+    public static ThreadManager forkJoinPoolThreadManagerWithScheduled(int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
+        return new ThreadManager(ExecutorType.FORKJOIN.getExecutor(), scheduleCoreNum, scheduleThreadFactory);
+    }
+
+    public static ThreadManager forkJoinPoolThreadManagerWithScheduled(ThreadFactory scheduleThreadFactory) {
+        return new ThreadManager(ExecutorType.FORKJOIN.getExecutor(), 1, scheduleThreadFactory);
+    }
+
+
     public static ThreadManager commonThreadManager() {
         return new ThreadManager(ExecutorType.THREADPOOL.getExecutor());
     }
 
     public static ThreadManager commonThreadManagerWithScheduled(int scheduleCoreNum) {
         return new ThreadManager(ExecutorType.THREADPOOL.getExecutor(), scheduleCoreNum);
+    }
+
+    public static ThreadManager commonThreadManagerWithScheduled(int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
+        return new ThreadManager(ExecutorType.THREADPOOL.getExecutor(), scheduleCoreNum, scheduleThreadFactory);
+    }
+
+    public static ThreadManager commonThreadManagerWithScheduled(ThreadFactory scheduleThreadFactory) {
+        return new ThreadManager(ExecutorType.THREADPOOL.getExecutor(), 1, scheduleThreadFactory);
     }
 
     //--------------------------------------------------------------------------------------------
