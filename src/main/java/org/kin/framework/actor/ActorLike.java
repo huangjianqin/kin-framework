@@ -26,7 +26,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
             new ThreadPoolExecutor(0, SysUtils.getSuitableThreadNum() * 2 - 1,
                     60L, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<>(),
-                    new SimpleThreadFactory("actorlike")), new SimpleThreadFactory("actorlike-schedule"));
+                    new SimpleThreadFactory("actorlike")), 5, new SimpleThreadFactory("actorlike-schedule"));
     private static Map<ActorLike<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
 
     static {

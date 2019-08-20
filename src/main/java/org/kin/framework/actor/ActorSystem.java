@@ -48,7 +48,7 @@ public class ActorSystem implements Closeable{
         this.threadManager = new ThreadManager(
                 new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
                         new LinkedBlockingQueue<>(), new SimpleThreadFactory("actor-system-executor" + name)),
-                new SimpleThreadFactory("actor-system-schedule" + name));
+                5, new SimpleThreadFactory("actor-system-schedule" + name));
 
         monitorJVMClose();
     }
