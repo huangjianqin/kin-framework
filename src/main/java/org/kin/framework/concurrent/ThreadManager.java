@@ -43,15 +43,11 @@ public class ThreadManager implements ScheduledExecutorService {
     private volatile boolean isStopped;
 
     public ThreadManager(ExecutorService executor) {
-        this(executor, 1);
+        this(executor, 0);
     }
 
     public ThreadManager(ExecutorService executor, int scheduleCoreNum) {
         this(executor, scheduleCoreNum, new SimpleThreadFactory("default-schedule-thread-manager"));
-    }
-
-    public ThreadManager(ExecutorService executor, ThreadFactory scheduleThreadFactory) {
-        this(executor, getScheduleCoreNum(), scheduleThreadFactory);
     }
 
     public ThreadManager(ExecutorService executor, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
@@ -73,10 +69,6 @@ public class ThreadManager implements ScheduledExecutorService {
         return new ThreadManager(ExecutorType.FORKJOIN.getExecutor(), scheduleCoreNum, scheduleThreadFactory);
     }
 
-    public static ThreadManager forkJoinPoolThreadManagerWithScheduled(ThreadFactory scheduleThreadFactory) {
-        return new ThreadManager(ExecutorType.FORKJOIN.getExecutor(), 1, scheduleThreadFactory);
-    }
-
 
     public static ThreadManager commonThreadManager() {
         return new ThreadManager(ExecutorType.THREADPOOL.getExecutor());
@@ -88,10 +80,6 @@ public class ThreadManager implements ScheduledExecutorService {
 
     public static ThreadManager commonThreadManagerWithScheduled(int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
         return new ThreadManager(ExecutorType.THREADPOOL.getExecutor(), scheduleCoreNum, scheduleThreadFactory);
-    }
-
-    public static ThreadManager commonThreadManagerWithScheduled(ThreadFactory scheduleThreadFactory) {
-        return new ThreadManager(ExecutorType.THREADPOOL.getExecutor(), 1, scheduleThreadFactory);
     }
 
     //--------------------------------------------------------------------------------------------
