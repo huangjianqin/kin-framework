@@ -47,19 +47,18 @@ public class ThreadManager implements ScheduledExecutorService {
     }
 
     public ThreadManager(ExecutorService executor, int scheduleCoreNum) {
-        this.executor = executor;
-        this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleCoreNum,
-                new SimpleThreadFactory("default-schedule-thread-manager"));
+        this(executor, scheduleCoreNum, new SimpleThreadFactory("default-schedule-thread-manager"));
     }
 
     public ThreadManager(ExecutorService executor, ThreadFactory scheduleThreadFactory) {
-        this.executor = executor;
-        this.scheduleExecutor = new ScheduledThreadPoolExecutor(getScheduleCoreNum(), scheduleThreadFactory);
+        this(executor, getScheduleCoreNum(), scheduleThreadFactory);
     }
 
     public ThreadManager(ExecutorService executor, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
         this.executor = executor;
-        this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleCoreNum, scheduleThreadFactory);
+        if(scheduleCoreNum > 0){
+            this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleCoreNum, scheduleThreadFactory);
+        }
     }
 
     public static ThreadManager forkJoinPoolThreadManager() {
@@ -99,24 +98,28 @@ public class ThreadManager implements ScheduledExecutorService {
 
     @Override
     public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+        Preconditions.checkNotNull(scheduleExecutor);
         Preconditions.checkArgument(isStopped, "threads is stopped");
         return scheduleExecutor.schedule(() -> execute(command), delay, unit);
     }
 
     @Override
     public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
+        Preconditions.checkNotNull(scheduleExecutor);
         Preconditions.checkArgument(isStopped, "threads is stopped");
         return scheduleExecutor.schedule(() -> submit(callable).get(), delay, unit);
     }
 
     @Override
     public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+        Preconditions.checkNotNull(scheduleExecutor);
         Preconditions.checkArgument(isStopped, "threads is stopped");
         return scheduleExecutor.scheduleAtFixedRate(() -> execute(command), initialDelay, period, unit);
     }
 
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+        Preconditions.checkNotNull(scheduleExecutor);
         Preconditions.checkArgument(isStopped, "threads is stopped");
         return scheduleExecutor.scheduleWithFixedDelay(() -> execute(command), initialDelay, delay, unit);
     }
@@ -124,9 +127,7 @@ public class ThreadManager implements ScheduledExecutorService {
     @Override
     public void shutdown() {
         isStopped = true;
-        if(executor != null){
-            executor.shutdown();
-        }
+        executor.shutdown();
         if(scheduleExecutor != null){
             scheduleExecutor.shutdown();
         }
@@ -136,9 +137,7 @@ public class ThreadManager implements ScheduledExecutorService {
     public List<Runnable> shutdownNow() {
         isStopped = true;
         List<Runnable> tasks = Lists.newArrayList();
-        if(executor != null){
-            tasks.addAll(executor.shutdownNow());
-        }
+        tasks.addAll(executor.shutdownNow());
         if(scheduleExecutor != null){
             tasks.addAll(scheduleExecutor.shutdownNow());
         }
@@ -157,10 +156,7 @@ public class ThreadManager implements ScheduledExecutorService {
 
     @Override
     public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-        boolean result = true;
-        if(executor != null){
-            result &= executor.awaitTermination(timeout, unit);
-        }
+        boolean result = executor.awaitTermination(timeout, unit);
         if(scheduleExecutor != null){
             result &= scheduleExecutor.awaitTermination(timeout, unit);
         }
