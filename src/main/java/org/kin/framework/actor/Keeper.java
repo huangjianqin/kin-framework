@@ -35,6 +35,7 @@ public class Keeper {
     private static class RunnableKeeperAction implements Runnable {
         private volatile boolean isStopped;
         private KeeperAction target;
+        private Thread bindThread;
 
         public RunnableKeeperAction(KeeperAction target) {
             this.target = target;
@@ -44,11 +45,17 @@ public class Keeper {
             isStopped = true;
         }
 
+        public void stopInterruptly(){
+            stop();
+            bindThread.interrupt();
+        }
+
         @Override
         public void run() {
+            bindThread = Thread.currentThread();
             target.preAction();
             try{
-                while(!isStopped){
+                while(!isStopped && !Thread.currentThread().isInterrupted()){
                     try {
                         target.action();
                     } catch (Exception e) {
