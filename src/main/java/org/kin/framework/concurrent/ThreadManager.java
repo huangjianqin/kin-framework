@@ -87,28 +87,28 @@ public class ThreadManager implements ScheduledExecutorService {
     @Override
     public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
         Preconditions.checkNotNull(scheduleExecutor);
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return scheduleExecutor.schedule(() -> execute(command), delay, unit);
     }
 
     @Override
     public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
         Preconditions.checkNotNull(scheduleExecutor);
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return scheduleExecutor.schedule(() -> submit(callable).get(), delay, unit);
     }
 
     @Override
     public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
         Preconditions.checkNotNull(scheduleExecutor);
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return scheduleExecutor.scheduleAtFixedRate(() -> execute(command), initialDelay, period, unit);
     }
 
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
         Preconditions.checkNotNull(scheduleExecutor);
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return scheduleExecutor.scheduleWithFixedDelay(() -> execute(command), initialDelay, delay, unit);
     }
 
@@ -153,25 +153,25 @@ public class ThreadManager implements ScheduledExecutorService {
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return executor.submit(task);
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return executor.submit(task, result);
     }
 
     @Override
     public Future<?> submit(Runnable task) {
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return executor.submit(task);
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return executor.invokeAll(tasks);
     }
 
@@ -183,19 +183,19 @@ public class ThreadManager implements ScheduledExecutorService {
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return executor.invokeAny(tasks);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         return executor.invokeAny(tasks, timeout, unit);
     }
 
     @Override
     public void execute(Runnable command) {
-        Preconditions.checkArgument(isStopped, "threads is stopped");
+        Preconditions.checkArgument(!isStopped, "threads is stopped");
         executor.execute(command);
     }
 
