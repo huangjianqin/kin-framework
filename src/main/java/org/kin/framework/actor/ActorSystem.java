@@ -123,12 +123,9 @@ public class ActorSystem implements Closeable{
         for (AbstractActor actor : path2Actors.values()) {
             actor.stop();
         }
-        //延迟10s关闭线程池
-        ThreadManager.DEFAULT.schedule(() -> {
-            path2Actors = null;
-            threadManager.shutdown();
-            threadManager = null;
-        }, 10, TimeUnit.SECONDS);
+        path2Actors = null;
+        threadManager.shutdown();
+        threadManager = null;
     }
 
     //getter
