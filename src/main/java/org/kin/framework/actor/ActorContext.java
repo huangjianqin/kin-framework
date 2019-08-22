@@ -74,7 +74,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
             }
             long cost = System.currentTimeMillis() - st;
 
-            log.info("handle mail({}) cost {} ms", mail.name(), cost);
+            log.debug("handle mail({}) cost {} ms", mail.name(), cost);
 
             if (boxSize.decrementAndGet() <= 0) {
                 break;

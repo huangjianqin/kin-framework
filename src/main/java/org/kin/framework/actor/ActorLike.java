@@ -136,7 +136,9 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
             }
             long cost = System.currentTimeMillis() - st;
 
-            log.info("handle mail({}) cost {} ms", message, cost);
+            if(cost >= getWarnMsgCostTime()){
+                log.warn("handle mail({}) cost {} ms", message, cost);
+            }
 
             if (boxSize.decrementAndGet() <= 0) {
                 break;
@@ -180,5 +182,13 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
                 }
             }
         }
+    }
+
+    /**
+     * 获取每条消息处理时间上限, 如果超过该上限就会打warn日志
+     * @return
+     */
+    protected int getWarnMsgCostTime(){
+        return 200;
     }
 }
