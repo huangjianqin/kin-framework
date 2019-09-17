@@ -36,7 +36,7 @@ public class ClassUtils {
          * @param target 目标
          * @return true表示匹配
          */
-        boolean match(Class<T> c, Class<T> target);
+        boolean match(Class<? extends T> c, Class<? extends T> target);
     }
 
     /**
@@ -104,7 +104,7 @@ public class ClassUtils {
     /**
      * 获取某个类的所有子类, 但不包括该类
      */
-    public static <T> Set<Class<T>> getSubClass(String packageName, Class<T> parent, boolean isIncludeJar) {
+    public static <T> Set<Class<? extends T>> getSubClass(String packageName, Class<T> parent, boolean isIncludeJar) {
         return scanClasspathAndFindMatch(packageName, parent,
                 (c, target) -> !c.equals(target) && c.isAssignableFrom(target), isIncludeJar);
     }
@@ -112,7 +112,7 @@ public class ClassUtils {
     /**
      * 获取出现某注解的所有类, 包括抽象类和接口
      */
-    public static <T> Set<Class<T>> getAnnotationedClass(String packageName, Class<T> annotationClass, boolean isIncludeJar) {
+    public static <T> Set<Class<? extends T>> getAnnotationedClass(String packageName, Class<T> annotationClass, boolean isIncludeJar) {
         if (annotationClass.isAnnotation()) {
             return scanClasspathAndFindMatch(packageName, annotationClass,
                     (c, target) -> {
@@ -138,16 +138,16 @@ public class ClassUtils {
         return Collections.emptySet();
     }
 
-    public static <T> Set<Class<T>> scanClasspathAndFindMatch(String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar){
+    public static <T> Set<Class<? extends T>> scanClasspathAndFindMatch(String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar) {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         ClassLoader staticClassLoader = ClassUtils.class.getClassLoader();
-        ClassLoader[] classLoaders = contextClassLoader != null?
-                (staticClassLoader != null && contextClassLoader != staticClassLoader?
-                        new ClassLoader[]{contextClassLoader, staticClassLoader}:new ClassLoader[]{contextClassLoader})
-                :new ClassLoader[0];
+        ClassLoader[] classLoaders = contextClassLoader != null ?
+                (staticClassLoader != null && contextClassLoader != staticClassLoader ?
+                        new ClassLoader[]{contextClassLoader, staticClassLoader} : new ClassLoader[]{contextClassLoader})
+                : new ClassLoader[0];
 
-        Set<Class<T>> subClasses = Sets.newLinkedHashSet();
-        for(int i =0; i < classLoaders.length; i++){
+        Set<Class<? extends T>> subClasses = Sets.newLinkedHashSet();
+        for (int i = 0; i < classLoaders.length; i++) {
             subClasses.addAll(scanClasspathAndFindMatch(classLoaders[i], packageName, c, matcher, isIncludeJar));
         }
 
@@ -172,14 +172,13 @@ public class ClassUtils {
                                 //空包名要去掉root路径, 不然会解析出来的包名会包含部分classpath路径, 也就是无效了
                                 //如果指定包名, 下面lastIndexOf(packageName)会过滤掉部分classpath路径
                                 String className;
-                                if(StringUtils.isBlank(packageName)){
+                                if (StringUtils.isBlank(packageName)) {
                                     origin = origin.substring(origin.indexOf(url.getPath()) + url.getPath().length());
                                     int endIndex = origin.lastIndexOf(CLASS_SUFFIX);
                                     className = origin.substring(0, endIndex);
                                     //把/替换成.
                                     className = className.replaceAll("/", ".");
-                                }
-                                else{
+                                } else {
                                     //把/替换成.
                                     origin = origin.replaceAll("/", ".");
                                     int startIndex = origin.lastIndexOf(packageName);
@@ -445,7 +444,7 @@ public class ClassUtils {
         return null;
     }
 
-    public static boolean isInterfaceAnnotationPresent(Object o, Class annotation){
+    public static boolean isInterfaceAnnotationPresent(Object o, Class annotation) {
         Class claxx = o.getClass();
         while (claxx != null) {
             for (Class interfaceClass : claxx.getInterfaces()) {
@@ -462,20 +461,20 @@ public class ClassUtils {
     public static Object string2Obj(Field field, String value) {
         Class<?> fieldType = field.getType();
 
-        if(StringUtils.isBlank(value)){
+        if (StringUtils.isBlank(value)) {
             return null;
         }
 
         value = value.trim();
 
-        try{
+        try {
             if (String.class.equals(fieldType)) {
                 return value;
             } else if (Boolean.class.equals(fieldType) || Boolean.TYPE.equals(fieldType)) {
                 return Boolean.valueOf(value);
             } else if (Byte.class.equals(fieldType) || Byte.TYPE.equals(fieldType)) {
                 return Byte.valueOf(value);
-            }  else if (Character.class.equals(fieldType) || Character.TYPE.equals(fieldType)) {
+            } else if (Character.class.equals(fieldType) || Character.TYPE.equals(fieldType)) {
                 return value.toCharArray()[0];
             } else if (Short.class.equals(fieldType) || Short.TYPE.equals(fieldType)) {
                 return Short.valueOf(value);
@@ -490,7 +489,7 @@ public class ClassUtils {
             } else {
                 throw new RuntimeException("illeagal data type, type=" + fieldType);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             ExceptionUtils.log(e);
         }
 

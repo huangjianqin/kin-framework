@@ -92,7 +92,9 @@ public class PartitionTaskExecutor<K> {
         PartitionTask[] copy = partitionTasks;
         List<PartitionTaskReport> reports = new ArrayList<>(copy.length);
         for(PartitionTask partitionTask: copy){
-            reports.add(partitionTask.report());
+            if(partitionTask != null){
+                reports.add(partitionTask.report());
+            }
         }
 
         StringBuilder sb = new StringBuilder();
@@ -166,7 +168,9 @@ public class PartitionTaskExecutor<K> {
         //先关闭执行线程实例再关闭线程池
         //关闭并移除分区执行线程实例,且缓存
         for (PartitionTask task : partitionTasks) {
-            task.close();
+            if(task != null){
+                task.close();
+            }
         }
         threadManager.shutdown();
         //help gc
@@ -179,7 +183,9 @@ public class PartitionTaskExecutor<K> {
         //先关闭执行线程实例再关闭线程池
         //关闭并移除分区执行线程实例,且缓存
         for (PartitionTask task : partitionTasks) {
-            task.close();
+            if(task != null){
+                task.close();
+            }
         }
         threadManager.shutdownNow();
         //help gc
