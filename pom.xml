@@ -287,9 +287,9 @@
                     <archive>
                         <manifest>
                             <!-- 添加依赖路径-->
-                            <addClasspath>true</addClasspath>
+<!--                            <addClasspath>true</addClasspath>-->
                             <!-- 依赖路径前缀-->
-                            <classpathPrefix>lib/</classpathPrefix>
+<!--                            <classpathPrefix>lib/</classpathPrefix>-->
                             <!--<mainClass>spark.demo.run.Service</mainClass>-->
                         </manifest>
                         <manifestEntries>
