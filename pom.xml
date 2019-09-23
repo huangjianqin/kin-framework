@@ -275,14 +275,13 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
                 <executions>
-                    <execution>
-                        <id>jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <!-- 打包同时触发打包测试类, 此处再多一个<goal>jar</goal>的话, 会触发两次打包, 而且包名与默认的一样, 会导致包名冲突报错-->
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
+<!--                    <execution>-->
+<!--                        <id>jar</id>-->
+<!--                        <goals>-->
+<!--                            &lt;!&ndash; 打包同时触发打包测试类, 此处再多一个<goal>jar</goal>的话, 会触发两次打包, 而且包名与默认的一样, 会导致包名冲突报错&ndash;&gt;-->
+<!--                            <goal>test-jar</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
                 </executions>
                 <configuration>
                     <archive>
@@ -311,14 +310,13 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.5.5</version>
                 <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <!-- 会把依赖直接写进jar包-->
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
+<!--                    <execution>-->
+<!--                        <id>make-assembly</id>-->
+<!--                        <goals>-->
+<!--                            &lt;!&ndash; 会把依赖直接写进jar包&ndash;&gt;-->
+<!--                            <goal>single</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
                 </executions>
                 <configuration>
                     <archive>
