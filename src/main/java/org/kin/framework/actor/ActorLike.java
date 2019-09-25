@@ -22,11 +22,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ActorLike.class);
 
-    private static final ThreadManager THREADS = new ThreadManager(
-            new ThreadPoolExecutor(0, SysUtils.getSuitableThreadNum() * 2 - 1,
-                    60L, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(),
-                    new SimpleThreadFactory("actorlike")), 5, new SimpleThreadFactory("actorlike-schedule"));
+    private static final ThreadManager THREADS;
+    static {
+        int THREAD_NUM = SysUtils.getSuitableThreadNum() * 2 - 1;
+        THREADS = new ThreadManager(
+                new ThreadPoolExecutor(THREAD_NUM, THREAD_NUM,
+                        60L, TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<>(),
+                        new SimpleThreadFactory("actorlike")), 5, new SimpleThreadFactory("actorlike-schedule"));
+    }
     private static Map<ActorLike<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
 
     static {
@@ -136,7 +140,7 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
             }
             long cost = System.currentTimeMillis() - st;
 
-            if(cost >= getWarnMsgCostTime()){
+            if (cost >= getWarnMsgCostTime()) {
                 log.warn("handle mail({}) cost {} ms", message, cost);
             }
 
@@ -186,9 +190,10 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
 
     /**
      * 获取每条消息处理时间上限, 如果超过该上限就会打warn日志
+     *
      * @return
      */
-    protected int getWarnMsgCostTime(){
+    protected int getWarnMsgCostTime() {
         return 200;
     }
 }

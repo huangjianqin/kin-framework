@@ -78,7 +78,7 @@ public class AsyncDispatcher extends AbstractService implements Dispatcher {
         }
 
         ThreadPoolExecutor pool = new ThreadPoolExecutor(
-                1,
+                this.THREADS_LIMIT,
                 this.THREADS_LIMIT,
                 60L,
                 TimeUnit.SECONDS,
@@ -128,26 +128,25 @@ public class AsyncDispatcher extends AbstractService implements Dispatcher {
      * 检查处理器处理的事件类型与@param eventType是否一致
      */
     private static boolean check(Class<? extends Enum> eventType, EventHandler handler) {
-        if(handler instanceof SpringAsyncDispatcher.MethodAnnotationEventHandler){
+        if (handler instanceof SpringAsyncDispatcher.MethodAnnotationEventHandler) {
             //无法从MethodAnnotationEventHandler获取到eventType类型
             SpringAsyncDispatcher.MethodAnnotationEventHandler methodAnnotationEventHandler = (SpringAsyncDispatcher.MethodAnnotationEventHandler) handler;
             return checkEventClass(eventType, methodAnnotationEventHandler.getEventClass());
-        }
-        else{
+        } else {
             //要实例化后才能获取
             Type eventHandlerInterfaceType = null;
-            for(Type type: handler.getClass().getGenericInterfaces()){
-                if(type instanceof ParameterizedType && ((ParameterizedType)type).getRawType().equals(EventHandler.class)){
+            for (Type type : handler.getClass().getGenericInterfaces()) {
+                if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(EventHandler.class)) {
                     eventHandlerInterfaceType = type;
                     break;
                 }
-                if(type instanceof Class && type.equals(EventHandler.class)){
+                if (type instanceof Class && type.equals(EventHandler.class)) {
                     eventHandlerInterfaceType = type;
                     break;
                 }
             }
 
-            if(eventHandlerInterfaceType != null){
+            if (eventHandlerInterfaceType != null) {
                 return checkEventClass(eventType, ((ParameterizedType) eventHandlerInterfaceType).getActualTypeArguments()[0]);
             }
         }

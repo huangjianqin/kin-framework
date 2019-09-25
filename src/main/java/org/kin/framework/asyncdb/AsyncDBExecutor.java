@@ -31,7 +31,7 @@ public class AsyncDBExecutor implements Closeable {
 
     void init(int num, AsyncDBStrategy asyncDBStrategy) {
         threadManager = new ThreadManager(
-                new ThreadPoolExecutor(0, num + 1, 60L, TimeUnit.MILLISECONDS,
+                new ThreadPoolExecutor(num + 1, num + 1, 60L, TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<Runnable>(), new SimpleThreadFactory("asyncDB")));
         this.asyncDBStrategy = asyncDBStrategy;
         asyncDBOperators = new AsyncDBOperator[num];
@@ -41,7 +41,7 @@ public class AsyncDBExecutor implements Closeable {
             asyncDBOperators[i] = asyncDBOperator;
         }
         threadManager.execute(() -> {
-            while(!isStopped){
+            while (!isStopped) {
                 long sleepTime = LOG_STATE_INTERVAL - TimeUtils.timestamp() % LOG_STATE_INTERVAL;
                 try {
                     TimeUnit.SECONDS.sleep(sleepTime);

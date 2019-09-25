@@ -13,14 +13,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by huangjianqin on 2018/6/5.
  */
-public class ActorSystem implements Closeable{
+public class ActorSystem implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(ActorSystem.class);
     private static final Map<String, ActorSystem> NAME2ACTORSYSTEM = new ConcurrentHashMap<>();
     private static final String DEFAULT_AS_NAME = "default";
@@ -47,7 +47,7 @@ public class ActorSystem implements Closeable{
         }
         this.threadManager = new ThreadManager(
                 new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-                        new LinkedBlockingQueue<>(), new SimpleThreadFactory("actor-system-executor" + name)),
+                        new SynchronousQueue<>(), new SimpleThreadFactory("actor-system-executor" + name)),
                 5, new SimpleThreadFactory("actor-system-schedule" + name));
 
         monitorJVMClose();

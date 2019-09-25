@@ -7,7 +7,7 @@ import org.kin.framework.utils.ExceptionUtils;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -19,13 +19,14 @@ public class Keeper {
     private static final ThreadManager THREADS = new ThreadManager(
             new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                     0L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>(),
+                    new SynchronousQueue<>(),
                     new SimpleThreadFactory("keeper")));
     private static final Set<RunnableKeeperAction> RUNNABLE_KEEPER_ACTIONS = new CopyOnWriteArraySet<>();
+
     static {
         JvmCloseCleaner.DEFAULT().add(() -> {
             THREADS.shutdown();
-            for(RunnableKeeperAction runnableKeeperAction: RUNNABLE_KEEPER_ACTIONS){
+            for (RunnableKeeperAction runnableKeeperAction : RUNNABLE_KEEPER_ACTIONS) {
                 runnableKeeperAction.stop();
             }
             RUNNABLE_KEEPER_ACTIONS.clear();
@@ -41,11 +42,11 @@ public class Keeper {
             this.target = target;
         }
 
-        public void stop(){
+        public void stop() {
             isStopped = true;
         }
 
-        public void stopInterruptly(){
+        public void stopInterruptly() {
             stop();
             bindThread.interrupt();
         }
@@ -54,15 +55,15 @@ public class Keeper {
         public void run() {
             bindThread = Thread.currentThread();
             target.preAction();
-            try{
-                while(!isStopped && !Thread.currentThread().isInterrupted()){
+            try {
+                while (!isStopped && !Thread.currentThread().isInterrupted()) {
                     try {
                         target.action();
                     } catch (Exception e) {
                         ExceptionUtils.log(e);
                     }
                 }
-            }finally {
+            } finally {
                 target.postAction();
             }
         }
@@ -74,7 +75,7 @@ public class Keeper {
     }
 
     //api
-    public static KeeperStopper keep(KeeperAction keeperAction){
+    public static KeeperStopper keep(KeeperAction keeperAction) {
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(keeperAction);
         THREADS.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
@@ -82,7 +83,7 @@ public class Keeper {
         return () -> runnableKeeperAction.stop();
     }
 
-    public static KeeperStopper keep(Runnable runnable){
+    public static KeeperStopper keep(Runnable runnable) {
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(new KeeperAction() {
             @Override
             public void preAction() {

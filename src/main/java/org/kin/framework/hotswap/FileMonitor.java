@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * 异步热加载文件 同步类热更新
  */
-public class FileMonitor extends Thread implements Closeable{
+public class FileMonitor extends Thread implements Closeable {
     private static final Logger log = LoggerFactory.getLogger("hotSwap");
     //默认实现
     private static final FileMonitor COMMON = new FileMonitor();
@@ -84,7 +84,7 @@ public class FileMonitor extends Thread implements Closeable{
 //        }
         if (threadManager == null) {
             //默认设置
-            ExecutorService executorService = new ThreadPoolExecutor(0, 5, 60L, TimeUnit.SECONDS,
+            ExecutorService executorService = new ThreadPoolExecutor(5, 5, 60L, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<>(), new SimpleThreadFactory("file-monitor"));
             this.threadManager = new ThreadManager(executorService);
         }
@@ -127,9 +127,6 @@ public class FileMonitor extends Thread implements Closeable{
 //            ExceptionUtils.log(e);
 //        }
 //    }
-
-
-
     @Override
     public synchronized void start() {
         init();
