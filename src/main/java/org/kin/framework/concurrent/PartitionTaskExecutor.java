@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 /**
@@ -93,7 +94,10 @@ public class PartitionTaskExecutor<K> {
         List<PartitionTaskReport> reports = new ArrayList<>(copy.length);
         for(PartitionTask partitionTask: copy){
             if(partitionTask != null){
-                reports.add(partitionTask.report());
+                PartitionTaskReport report = partitionTask.report();
+                if(Objects.nonNull(report)){
+                    reports.add(report);
+                }
             }
         }
 
@@ -286,10 +290,10 @@ public class PartitionTaskExecutor<K> {
         //任务队列
         private BlockingQueue<Task> queue = new LinkedBlockingQueue<>();
         //绑定的线程
-        private Thread bind;
+        private volatile Thread bind;
 
-        private boolean isStopped = false;
-        private boolean isTerminated = false;
+        private volatile boolean isStopped = false;
+        private volatile boolean isTerminated = false;
 
         private long finishedTaskNum;
 
@@ -330,7 +334,11 @@ public class PartitionTaskExecutor<K> {
         }
 
         public PartitionTaskReport report(){
-            return new PartitionTaskReport(bind.getName(), queue.size(), finishedTaskNum);
+            if(Objects.nonNull(bind)){
+                return new PartitionTaskReport(bind.getName(), queue.size(), finishedTaskNum);
+            }
+
+            return null;
         }
     }
 }
