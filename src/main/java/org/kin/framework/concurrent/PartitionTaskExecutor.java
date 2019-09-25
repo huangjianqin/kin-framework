@@ -320,7 +320,11 @@ public class PartitionTaskExecutor<K> {
                         task1.run();
                         finishedTaskNum++;
                     }
-                } catch (Exception e) {
+                }
+                catch (InterruptedException e){
+                    //do nothing
+                }
+                catch (Exception e) {
                     ExceptionUtils.log(e);
                 }
 
