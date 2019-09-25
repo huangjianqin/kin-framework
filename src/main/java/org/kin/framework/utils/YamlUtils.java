@@ -5,6 +5,8 @@ import org.ho.yaml.Yaml;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -12,18 +14,32 @@ import java.util.*;
  * @date 2019/7/6
  */
 public class YamlUtils {
-    public static YamlConfig loadYamlL(String configPath) {
-        try {
+    public static YamlConfig loadYaml(String configPath) {
+        //从classpath寻找
+        URL url = Thread.currentThread().getContextClassLoader().getResource(configPath);
+        if(url != null){
             //返回多层嵌套map
-            return new YamlConfig((Map<String, Object>) Yaml.load(new File(configPath)));
-        } catch (FileNotFoundException e) {
-            ExceptionUtils.log(e);
+            try {
+                return new YamlConfig((Map<String, Object>) Yaml.load(url.openStream()));
+            } catch (IOException e) {
+                ExceptionUtils.log(e);
+            }
         }
+        else{
+            //从file path寻找
+            try {
+                //返回多层嵌套map
+                return new YamlConfig((Map<String, Object>) Yaml.load(new File(configPath)));
+            } catch (FileNotFoundException e) {
+                ExceptionUtils.log(e);
+            }
+        }
+
         return YamlConfig.empty();
     }
 
     public static Properties loadYaml2Properties(String configPath) {
-        return loadYamlL(configPath).toProperties();
+        return loadYaml(configPath).toProperties();
     }
 
     public static String transfer2YamlStr(Properties config) {
