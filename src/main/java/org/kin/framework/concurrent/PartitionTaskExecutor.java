@@ -115,7 +115,7 @@ public class PartitionTaskExecutor<K> {
 
     //------------------------------------------------------------------------------------------------------------------
     private PartitionTask getOrCreatePartitionTask(int partition) {
-        if (0 < partition && partition < partitionTasks.length) {
+        if (0 <= partition && partition < partitionTasks.length) {
             PartitionTask partitionTask = partitionTasks[partition];
             if (partitionTask == null) {
                 partitionTask = new PartitionTask();
