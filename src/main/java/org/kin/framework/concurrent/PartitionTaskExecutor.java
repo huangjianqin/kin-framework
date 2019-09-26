@@ -89,7 +89,7 @@ public class PartitionTaskExecutor<K> {
             try {
                 TimeUnit.SECONDS.sleep(sleepTime);
             } catch (InterruptedException e) {
-
+                //do nothing
             }
 
             report0();
@@ -122,6 +122,7 @@ public class PartitionTaskExecutor<K> {
 
     //------------------------------------------------------------------------------------------------------------------
     public Future<?> execute(K key, Runnable task) {
+        Preconditions.checkNotNull(partitionTasks);
         PartitionTask partitionTask = partitionTasks[partitioner.toPartition(key, partitionNum)];
         if (partitionTask != null) {
             FutureTask futureTask = new FutureTask(task, null);
@@ -135,6 +136,7 @@ public class PartitionTaskExecutor<K> {
     }
 
     public <T> Future<T> execute(K key, Runnable task, T value) {
+        Preconditions.checkNotNull(partitionTasks);
         PartitionTask partitionTask = partitionTasks[partitioner.toPartition(key, partitionNum)];
         if (partitionTask != null) {
             FutureTask futureTask = new FutureTask(task, value);
@@ -148,6 +150,7 @@ public class PartitionTaskExecutor<K> {
     }
 
     public <T> Future<T> execute(K key, Callable<T> task) {
+        Preconditions.checkNotNull(partitionTasks);
         PartitionTask partitionTask = partitionTasks[partitioner.toPartition(key, partitionNum)];
         if (partitionTask != null) {
             FutureTask<T> futureTask = new FutureTask(task);
@@ -161,6 +164,9 @@ public class PartitionTaskExecutor<K> {
     }
 
     public void shutdown() {
+        if(partitionTasks == null){
+            return;
+        }
         //先关闭执行线程实例再关闭线程池
         //关闭并移除分区执行线程实例,且缓存
         for (PartitionTask task : partitionTasks) {
@@ -176,6 +182,9 @@ public class PartitionTaskExecutor<K> {
     }
 
     public void shutdownNow() {
+        if(partitionTasks == null){
+            return;
+        }
         //先关闭执行线程实例再关闭线程池
         //关闭并移除分区执行线程实例,且缓存
         for (PartitionTask task : partitionTasks) {
@@ -191,6 +200,7 @@ public class PartitionTaskExecutor<K> {
     }
 
     public void expandTo(int newPartitionNum) {
+        Preconditions.checkNotNull(partitionTasks);
         Preconditions.checkArgument(newPartitionNum > partitionNum, "param newPartitionNum '{}' must be greater than maxPartition '{}'", newPartitionNum, partitionNum);
 
         //对partitionTasks加锁并扩容, 然后更新numPartition
@@ -212,6 +222,7 @@ public class PartitionTaskExecutor<K> {
     }
 
     private void shutdownTask(int num) {
+        Preconditions.checkNotNull(partitionTasks);
         Preconditions.checkArgument(num > 0, "the number of tasks need to be shutdowned must be positive");
         List<PartitionTask> removedPartitionTasks = new ArrayList<>();
         //关闭并移除分区执行线程实例,且缓存
@@ -231,7 +242,7 @@ public class PartitionTaskExecutor<K> {
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
-                        ExceptionUtils.log(e);
+                        //do nothing
                     }
                 }
                 //重新执行被移除线程但还没执行的tasks
@@ -297,7 +308,7 @@ public class PartitionTaskExecutor<K> {
             try {
                 queue.put(task);
             } catch (InterruptedException e) {
-                ExceptionUtils.log(e);
+                //do nothing
             }
         }
 
