@@ -6,6 +6,6 @@ package org.kin.framework.utils;
  */
 public class IPUtilsTest {
     public static void main(String[] args) {
-        System.out.println(IPUtils.getIp());
+        System.out.println(NetUtils.getIp());
     }
 }
