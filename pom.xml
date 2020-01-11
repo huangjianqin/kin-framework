@@ -52,21 +52,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- scala unit test-->
-        <dependency>
-            <groupId>org.specs</groupId>
-            <artifactId>specs</artifactId>
-            <version>${specs.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_${scala.version.head}</artifactId>
-            <version>${scalatest.version}</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- 异步日志-->
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -397,31 +382,6 @@
                     </sources>
                 </configuration>
             </plugin>
-
-            <!-- scala scalastyle插件-->
-            <!--<plugin>-->
-                <!--<groupId>org.scalastyle</groupId>-->
-                <!--<artifactId>scalastyle-maven-plugin</artifactId>-->
-                <!--<version>0.8.0</version>-->
-                <!--<configuration>-->
-                    <!--<verbose>false</verbose>-->
-                    <!--<failOnViolation>true</failOnViolation>-->
-                    <!--<includeTestSourceDirectory>false</includeTestSourceDirectory>-->
-                    <!--<failOnWarning>false</failOnWarning>-->
-                    <!--<sourceDirectory>${basedir}/src/main/scala</sourceDirectory>-->
-                    <!--<testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>-->
-                    <!--<configLocation>scalastyle-config.xml</configLocation>-->
-                    <!--<outputFile>${basedir}/target/scalastyle-output.xml</outputFile>-->
-                    <!--<inputEncoding>${project.build.sourceEncoding}</inputEncoding>-->
-                <!--</configuration>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<goals>-->
-                            <!--<goal>check</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
 
             <!-- jmh插件, install时会触发-->
             <!--<plugin>-->
