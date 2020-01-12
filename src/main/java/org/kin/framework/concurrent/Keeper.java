@@ -1,9 +1,8 @@
-package org.kin.framework.actor;
+package org.kin.framework.concurrent;
 
 import org.kin.framework.JvmCloseCleaner;
-import org.kin.framework.concurrent.SimpleThreadFactory;
-import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.SysUtils;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -17,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Keeper {
     private static final ThreadManager THREADS = new ThreadManager(
-            new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+            new ThreadPoolExecutor(0, SysUtils.CPU_NUM,
                     0L, TimeUnit.MILLISECONDS,
                     new SynchronousQueue<>(),
                     new SimpleThreadFactory("keeper")));

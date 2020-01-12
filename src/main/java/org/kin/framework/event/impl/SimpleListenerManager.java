@@ -1,6 +1,6 @@
 package org.kin.framework.event.impl;
 
-import org.kin.framework.event.Listener;
+import org.kin.framework.event.annotation.Listener;
 
 import java.util.*;
 import java.util.stream.Collectors;

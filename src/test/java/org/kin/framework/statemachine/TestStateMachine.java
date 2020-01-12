@@ -4,7 +4,8 @@ package org.kin.framework.statemachine;
 import org.kin.framework.event.EventHandler;
 import org.kin.framework.event.dispatcher.FirstEvent;
 import org.kin.framework.event.dispatcher.FirstEventType;
-import org.kin.framework.event.impl.AsyncDispatcher;
+import org.kin.framework.event.impl.EventDispatcher;
+import org.kin.framework.utils.SysUtils;
 
 import java.util.EnumSet;
 import java.util.Random;
@@ -47,22 +48,22 @@ class NumberTransition implements SingleArcTransition<Impl, FirstEvent> {
 }
 
 class Impl implements EventHandler<FirstEvent> {
-    private AsyncDispatcher dispatcher;
+    private EventDispatcher dispatcher;
 
     public Impl() {
-        this.dispatcher = new AsyncDispatcher();
-        dispatcher.register(FirstEventType.class, new FirstEventHandler());
+        this.dispatcher = new EventDispatcher(SysUtils.getSuitableThreadNum());
+        dispatcher.register(FirstEvent.class, new FirstEventHandler(), FirstEventHandler.class.getMethods()[0]);
         dispatcher.serviceInit();
         dispatcher.start();
     }
 
     @Override
     public void handle(FirstEvent event) {
-        dispatcher.getEventHandler().handle(event);
+        dispatcher.dispatch(event);
     }
 
     public NumberState handle2(FirstEvent event) {
-        dispatcher.getEventHandler().handle(event);
+        dispatcher.dispatch(event);
         return (NumberState) EnumSet.of(NumberState.THREE, NumberState.FOUR, NumberState.FIVE).toArray()[new Random().nextInt(3)];
     }
 

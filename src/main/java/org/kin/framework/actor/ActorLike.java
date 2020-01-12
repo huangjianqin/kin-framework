@@ -22,38 +22,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ActorLike.class);
 
-    private static final ThreadManager THREADS;
-    static {
-        int THREAD_NUM = SysUtils.getSuitableThreadNum() * 2 - 1;
-        THREADS = new ThreadManager(
-                new ThreadPoolExecutor(THREAD_NUM, THREAD_NUM,
-                        60L, TimeUnit.SECONDS,
-                        new LinkedBlockingQueue<>(),
-                        new SimpleThreadFactory("actorlike")), 5, new SimpleThreadFactory("actorlike-schedule"));
-    }
     private static Map<ActorLike<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
 
-    static {
-        JvmCloseCleaner.DEFAULT().add(() -> {
-            THREADS.shutdown();
-        });
-    }
-
     private ThreadManager threads;
-
     private final Queue<Message<AL>> messageBox = new LinkedBlockingDeque<>();
     private final AtomicInteger boxSize = new AtomicInteger();
     private volatile Thread currentThread;
     private volatile boolean isStopped = false;
 
-    public ActorLike() {
-        this(THREADS);
-    }
-
     public ActorLike(ThreadManager threads) {
         this.threads = threads;
         //每1h清楚已结束的调度
         scheduleAtFixedRate(actor -> clearFinishedFutures(), 0, 1, TimeUnit.HOURS);
+
+        JvmCloseCleaner.DEFAULT().add(() -> threads.shutdown());
     }
 
     public ActorLike(ExecutorService executorService, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {

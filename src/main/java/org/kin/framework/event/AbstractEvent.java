@@ -4,7 +4,7 @@ package org.kin.framework.event;
  * Created by 健勤 on 2017/8/8.
  * 事件的抽象
  */
-public abstract class AbstractEvent<TYPE extends Enum<TYPE>> implements Event<TYPE> {
+public abstract class AbstractEvent<TYPE extends Enum<TYPE>>{
     private final TYPE type;
     private final long timestamp;
 
@@ -13,12 +13,9 @@ public abstract class AbstractEvent<TYPE extends Enum<TYPE>> implements Event<TY
         timestamp = System.currentTimeMillis();
     }
 
-    @Override
-    public final TYPE getType() {
+    public TYPE getType() {
         return type;
     }
-
-    @Override
     public long getTimestamp() {
         return timestamp;
     }

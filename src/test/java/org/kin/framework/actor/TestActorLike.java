@@ -1,6 +1,9 @@
 package org.kin.framework.actor;
 
+import org.kin.framework.concurrent.ThreadManager;
+
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -30,5 +33,8 @@ public class TestActorLike {
 
     static class SimpleActorLike extends ActorLike<SimpleActorLike>{
 
+        public SimpleActorLike() {
+            super(new ThreadManager(ForkJoinPool.commonPool()));
+        }
     }
 }

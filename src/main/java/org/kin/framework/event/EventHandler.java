@@ -5,6 +5,6 @@ package org.kin.framework.event;
  * 事件处理器接口
  */
 @FunctionalInterface
-public interface EventHandler<T extends Event> {
+public interface EventHandler<T extends AbstractEvent> {
     void handle(T event);
 }

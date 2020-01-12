@@ -2,45 +2,27 @@ package org.kin.framework.event.dispatcher;
 
 
 import org.kin.framework.event.EventHandler;
-import org.kin.framework.event.impl.AsyncDispatcher;
+import org.kin.framework.event.impl.EventDispatcher;
+import org.kin.framework.utils.SysUtils;
 
 /**
  * Created by 健勤 on 2017/8/10.
  */
 public class TestDispatcher {
-    public static void main(String[] args) {
-        AsyncDispatcher dispatcher = new AsyncDispatcher();
-//        dispatcher.register(FirstEventType.class, new FirstEventHandler());
-        dispatcher.register(SecondEventType.class, new SecondEventHandler());
-        dispatcher.register(ThirdEventType.class, new ThirdEventHandler());
+    public static void main(String[] args) throws InterruptedException {
+        EventDispatcher dispatcher = new EventDispatcher(SysUtils.getSuitableThreadNum(), true);
+//        dispatcher.register(FirstEvent.class, new FirstEventHandler(), FirstEventHandler.class.getMethods()[0]);
+        dispatcher.register(SecondEvent.class, new SecondEventHandler(), SecondEventHandler.class.getMethods()[0]);
+        dispatcher.register(ThirdEvent.class, new ThirdEventHandler(), ThirdEventHandler.class.getMethods()[0]);
 
         dispatcher.serviceInit();
         dispatcher.serviceStart();
-        dispatcher.getEventHandler().handle(new FirstEvent(FirstEventType.E));
+        dispatcher.asyncDispatch(new SecondEvent(SecondEventType.S));
+        dispatcher.dispatch(new SecondEvent(SecondEventType.C));
+        dispatcher.dispatch(new SecondEvent(SecondEventType.D));
+
+        Thread.sleep(2000);
+
         dispatcher.serviceStop();
-    }
-}
-
-class FirstEventHandler implements EventHandler<FirstEvent> {
-
-    @Override
-    public void handle(FirstEvent event) {
-        System.out.println("handle " + event);
-    }
-}
-
-class SecondEventHandler implements EventHandler<SecondEvent> {
-
-    @Override
-    public void handle(SecondEvent event) {
-        System.out.println("handle " + event);
-    }
-}
-
-class ThirdEventHandler implements EventHandler<ThirdEvent> {
-
-    @Override
-    public void handle(ThirdEvent event) {
-        System.out.println("handle " + event);
     }
 }

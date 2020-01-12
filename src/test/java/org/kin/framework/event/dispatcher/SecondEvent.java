@@ -1,22 +1,19 @@
 package org.kin.framework.event.dispatcher;
 
-import org.kin.framework.event.Event;
+import org.kin.framework.event.annotation.Event;
 
 /**
  * Created by 健勤 on 2017/8/9.
  */
-public class SecondEvent implements Event<SecondEventType> {
-    public SecondEvent(SecondEventType secondEventType) {
+@Event
+public class SecondEvent {
+    private SecondEventType type;
 
+    public SecondEvent(SecondEventType type) {
+        this.type = type;
     }
 
-    @Override
     public SecondEventType getType() {
-        return SecondEventType.S;
-    }
-
-    @Override
-    public long getTimestamp() {
-        return 0;
+        return type;
     }
 }

@@ -3,10 +3,10 @@ package org.kin.framework.event;
 import java.lang.reflect.Method;
 
 /**
- * Created by 健勤 on 2017/8/8.
- * 事件分发接口
+ * @author huangjianqin
+ * @date 2020-01-11
  */
-public interface Dispatcher {
+public interface ActorLikeDispatcher {
     /**
      * 注册事件处理器
      */
@@ -15,11 +15,11 @@ public interface Dispatcher {
     /**
      * 根据事件类型分发给对应的事件处理器
      */
-    void dispatch(Object event, Object... params);
+    void dispatch(int partitionId, Object event, Object... params);
 
     /**
      * 根据事件类型分发给对应的事件处理器
      * 异步
      */
-    void asyncDispatch(Object event, Object... params);
+    void asyncDispatch(int partitionId, Object event, Object... params);
 }

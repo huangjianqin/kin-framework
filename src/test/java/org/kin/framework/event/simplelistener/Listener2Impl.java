@@ -1,6 +1,6 @@
 package org.kin.framework.event.simplelistener;
 
-import org.kin.framework.event.Listener;
+import org.kin.framework.event.annotation.Listener;
 import org.springframework.stereotype.Component;
 
 /**

@@ -1,5 +1,6 @@
 package org.kin.framework.actor;
 
+import com.google.common.base.Preconditions;
 import org.kin.framework.Closeable;
 import org.kin.framework.JvmCloseCleaner;
 import org.kin.framework.actor.domain.ActorPath;
@@ -25,15 +26,6 @@ public class ActorSystem implements Closeable {
     private static final Map<String, ActorSystem> NAME2ACTORSYSTEM = new ConcurrentHashMap<>();
     private static final String DEFAULT_AS_NAME = "default";
 
-    static {
-        ActorSystem defaultActorSystem = new ActorSystem(DEFAULT_AS_NAME);
-        NAME2ACTORSYSTEM.put(DEFAULT_AS_NAME, defaultActorSystem);
-
-        JvmCloseCleaner.DEFAULT().add(() -> {
-            defaultActorSystem.shutdown();
-        });
-    }
-
     private final String name;
     //该actor system下的actor
     private Map<String, AbstractActor> path2Actors = new ConcurrentHashMap<>();
@@ -41,6 +33,7 @@ public class ActorSystem implements Closeable {
     private ThreadManager threadManager;
 
     private ActorSystem(String name) {
+        Preconditions.checkArgument(!DEFAULT_AS_NAME.equals(name));
         this.name = name;
         if (name.toLowerCase().equals(DEFAULT_AS_NAME) && NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
             throw new IllegalStateException("actor system named '" + name + "' has exists!!!");
@@ -59,6 +52,20 @@ public class ActorSystem implements Closeable {
     }
 
     public static ActorSystem create() {
+        if(!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)){
+            synchronized (DEFAULT_AS_NAME){
+                if(!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)){
+                    ActorSystem defaultActorSystem = new ActorSystem(DEFAULT_AS_NAME);
+                    NAME2ACTORSYSTEM.put(DEFAULT_AS_NAME, defaultActorSystem);
+
+                    JvmCloseCleaner.DEFAULT().add(() -> {
+                        defaultActorSystem.shutdown();
+                    });
+
+                    return defaultActorSystem;
+                }
+            }
+        }
         return NAME2ACTORSYSTEM.get(DEFAULT_AS_NAME);
     }
 
@@ -67,6 +74,9 @@ public class ActorSystem implements Closeable {
     }
 
     public static ActorSystem create(String name, ThreadManager threadManager) {
+        if(DEFAULT_AS_NAME.equals(name)){
+            return create();
+        }
         ActorSystem actorSystem = new ActorSystem(name, threadManager);
         NAME2ACTORSYSTEM.put(name, actorSystem);
         return actorSystem;

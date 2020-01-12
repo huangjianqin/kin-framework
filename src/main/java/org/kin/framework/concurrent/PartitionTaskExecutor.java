@@ -3,6 +3,7 @@ package org.kin.framework.concurrent;
 import com.google.common.base.Preconditions;
 import org.kin.framework.concurrent.domain.PartitionTaskReport;
 import org.kin.framework.concurrent.impl.HashPartitioner;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.TimeUtils;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import java.util.concurrent.*;
 public class PartitionTaskExecutor<K> {
     private static final Logger log = LoggerFactory.getLogger(PartitionTaskExecutor.class);
     private static final int REPORT_INTERVAL = 30;
+    private static final int BATCH_MAX_NUM = 100;
 
     //分区数
     private volatile int partitionNum;
@@ -35,13 +37,15 @@ public class PartitionTaskExecutor<K> {
     private ThreadManager reportThread = new ThreadManager(new ThreadPoolExecutor(1, 1,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(), new SimpleThreadFactory("partition-task-reporter")));
+    //每批处理任务最大数
+    private final int batchMaxNum;
 
     public PartitionTaskExecutor() {
         this(5);
     }
 
     public PartitionTaskExecutor(int partitionNum) {
-        this(partitionNum, new HashPartitioner<>());
+        this(partitionNum, HashPartitioner.INSTANCE);
     }
 
     public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner) {
@@ -49,29 +53,42 @@ public class PartitionTaskExecutor<K> {
     }
 
     public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, ThreadFactory threadFactory) {
-        this.partitionNum = partitionNum;
-
-        this.threadManager = new ThreadManager(new ThreadPoolExecutor(partitionNum, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-                new SynchronousQueue(), threadFactory));
-
-        this.partitioner = partitioner;
-        this.partitionTasks = new PartitionTaskExecutor.PartitionTask[this.partitionNum];
-
-        init();
-        report();
+        this(partitionNum, partitioner, BATCH_MAX_NUM,
+                new ThreadManager(new ThreadPoolExecutor(partitionNum, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+                        new SynchronousQueue(), threadFactory)));
     }
 
     /**
      * @param threadPool 如果最小线程数 < @param partitionNum, 则真实的@param partitionNum=@param threadPool的最大线程数
      */
     public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, ThreadPoolExecutor threadPool) {
+        this(partitionNum, partitioner, BATCH_MAX_NUM, new ThreadManager(threadPool));
+    }
+
+    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, int batchMaxNum, ThreadFactory threadFactory) {
+        this(partitionNum, partitioner, batchMaxNum,
+                new ThreadManager(new ThreadPoolExecutor(partitionNum, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+                        new SynchronousQueue(), threadFactory)));
+    }
+
+    /**
+     * @param threadPool 如果最小线程数 < @param partitionNum, 则真实的@param partitionNum=@param threadPool的最大线程数
+     */
+    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, int batchMaxNum, ThreadPoolExecutor threadPool) {
+        this(partitionNum, partitioner, batchMaxNum, new ThreadManager(threadPool));
+    }
+
+    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, int batchMaxNum, ThreadManager threadManager) {
+        Preconditions.checkArgument(batchMaxNum > 0, "batchMaxNum field must be greater then 0");
+
         this.partitionNum = partitionNum;
         this.partitioner = partitioner;
-        this.threadManager = new ThreadManager(threadPool);
+        this.threadManager = threadManager;
+        this.batchMaxNum = batchMaxNum;
+
         this.partitionTasks = new PartitionTaskExecutor.PartitionTask[this.partitionNum];
 
         init();
-        report();
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -81,22 +98,28 @@ public class PartitionTaskExecutor<K> {
             partitionTasks[i] = partitionTask;
             threadManager.execute(partitionTask);
         }
+        report();
     }
 
     private void report() {
         reportThread.execute(() -> {
-            long sleepTime = REPORT_INTERVAL - TimeUtils.timestamp() % REPORT_INTERVAL;
-            try {
-                TimeUnit.SECONDS.sleep(sleepTime);
-            } catch (InterruptedException e) {
-                //do nothing
-            }
+            while (CollectionUtils.isNonEmpty(partitionTasks)) {
+                long sleepTime = REPORT_INTERVAL - TimeUtils.timestamp() % REPORT_INTERVAL;
+                try {
+                    TimeUnit.SECONDS.sleep(sleepTime);
+                } catch (InterruptedException e) {
+                    //do nothing
+                }
 
-            report0();
+                report0();
+            }
         });
     }
 
     private void report0() {
+        if (partitionTasks == null) {
+            return;
+        }
         PartitionTask[] copy = partitionTasks;
         List<PartitionTaskReport> reports = new ArrayList<>(copy.length);
         for (PartitionTask partitionTask : copy) {
@@ -163,8 +186,8 @@ public class PartitionTaskExecutor<K> {
         }
     }
 
-    public void shutdown() {
-        if(partitionTasks == null){
+    private void shutdown0() {
+        if (partitionTasks == null) {
             return;
         }
         //先关闭执行线程实例再关闭线程池
@@ -175,28 +198,20 @@ public class PartitionTaskExecutor<K> {
             }
         }
         threadManager.shutdown();
+        reportThread.shutdown();
         //help gc
         partitionTasks = null;
         threadManager = null;
         partitioner = null;
+        reportThread = null;
+    }
+
+    public void shutdown() {
+        shutdown0();
     }
 
     public void shutdownNow() {
-        if(partitionTasks == null){
-            return;
-        }
-        //先关闭执行线程实例再关闭线程池
-        //关闭并移除分区执行线程实例,且缓存
-        for (PartitionTask task : partitionTasks) {
-            if (task != null) {
-                task.close();
-            }
-        }
-        threadManager.shutdownNow();
-        //help gc
-        partitionTasks = null;
-        threadManager = null;
-        partitioner = null;
+        shutdown0();
     }
 
     public void expandTo(int newPartitionNum) {
@@ -290,14 +305,10 @@ public class PartitionTaskExecutor<K> {
      * task 执行
      */
     private class PartitionTask implements Runnable {
-        private static final int MAX_WAITTING_TASK_NUM = 10;
-
         //任务队列
         private BlockingQueue<Task> queue = new LinkedBlockingQueue<>();
         //绑定的线程
         private volatile Thread bind;
-        //任务队列2 => 从等待队列拿出来待处理tasks
-        private Collection<Task> waittingTasks = new ArrayList<>(MAX_WAITTING_TASK_NUM);
 
         private volatile boolean isStopped = false;
         private volatile boolean isTerminated = false;
@@ -319,27 +330,37 @@ public class PartitionTaskExecutor<K> {
             }
         }
 
+        private void run0(Collection<Task> waittingTasks) {
+            for (Task task1 : waittingTasks) {
+                try {
+                    task1.run();
+                    finishedTaskNum++;
+                } catch (Exception e) {
+                    ExceptionUtils.log(e);
+                }
+            }
+            waittingTasks.clear();
+        }
+
         @Override
         public void run() {
             bind = Thread.currentThread();
-            while (!isStopped && !Thread.currentThread().isInterrupted()) {
-                try {
-                    Task task = queue.take();
-                    waittingTasks.add(task);
-                    queue.drainTo(waittingTasks, MAX_WAITTING_TASK_NUM - 1);
-                    for (Task task1 : waittingTasks) {
-                        task1.run();
-                        finishedTaskNum++;
+            try {
+                while (!isStopped && !Thread.currentThread().isInterrupted()) {
+                    try {
+                        Task task = queue.take();
+                        Collection<Task> waittingTasks = new ArrayList<>(batchMaxNum);
+                        waittingTasks.add(task);
+                        queue.drainTo(waittingTasks, batchMaxNum - 1);
+                        run0(waittingTasks);
+                    } catch (InterruptedException e) {
+                        //do nothing
                     }
                 }
-                catch (InterruptedException e){
-                    //do nothing
-                }
-                catch (Exception e) {
-                    ExceptionUtils.log(e);
-                }
-
-                waittingTasks.clear();
+            } finally {
+                Collection<Task> waittingTasks = new ArrayList<>(batchMaxNum);
+                queue.drainTo(waittingTasks);
+                run0(waittingTasks);
             }
             isTerminated = true;
         }

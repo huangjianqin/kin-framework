@@ -1,4 +1,4 @@
-package org.kin.framework.actor;
+package org.kin.framework.concurrent;
 
 /**
  * @author huangjianqin
@@ -6,6 +6,8 @@ package org.kin.framework.actor;
  */
 public interface KeeperAction {
     void preAction();
+
     void action();
+
     void postAction();
 }

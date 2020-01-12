@@ -1,4 +1,4 @@
-package org.kin.framework.event;
+package org.kin.framework.event.annotation;
 
 import java.lang.annotation.*;
 
@@ -11,5 +11,4 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Inherited
 public @interface HandleEvent {
-    Class<?> type();
 }
