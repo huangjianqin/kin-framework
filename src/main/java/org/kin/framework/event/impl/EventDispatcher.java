@@ -9,8 +9,8 @@ import org.kin.framework.event.AbstractEvent;
 import org.kin.framework.event.NullEventDispatcher;
 import org.kin.framework.event.ScheduleDispatcher;
 import org.kin.framework.event.annotation.Event;
-import org.kin.framework.proxy.ProxyDefinition;
 import org.kin.framework.proxy.ProxyInvoker;
+import org.kin.framework.proxy.ProxyMethodDefinition;
 import org.kin.framework.proxy.utils.ProxyEnhanceUtils;
 import org.kin.framework.service.AbstractService;
 import org.kin.framework.utils.ExceptionUtils;
@@ -71,7 +71,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     //------------------------------------------------------------------------------------------------------------------
     private ProxyInvoker getHandler(Object obj, Method method) {
         if (isEnhance) {
-            return ProxyEnhanceUtils.generateMethodProxy(new ProxyDefinition<>(obj, method, proxyEnhancePackageName));
+            return ProxyEnhanceUtils.enhanceMethod(new ProxyMethodDefinition(obj, method, proxyEnhancePackageName));
         } else {
             return new ProxyEventHandler(obj, method);
         }

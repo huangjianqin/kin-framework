@@ -6,19 +6,19 @@ import java.lang.reflect.Method;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public class ProxyDefinition<T> {
+public class ProxyMethodDefinition {
     private Object proxyObj;
     private Method method;
     private String className;
 
-    public ProxyDefinition(Object proxyObj, Method method, String packageName) {
+    public ProxyMethodDefinition(Object proxyObj, Method method, String packageName) {
         this(proxyObj, method, packageName, proxyObj.getClass().getSimpleName() + "$" + method.getName());
     }
 
-    public ProxyDefinition(Object proxyObj, Method method, String packageName, String uniqueMethodName) {
+    public ProxyMethodDefinition(Object proxyObj, Method method, String packageName, String uniqueMethodName) {
         this.proxyObj = proxyObj;
         this.method = method;
-        this.className = packageName + uniqueMethodName + "$JavassistProxy";
+        this.className = packageName + "." + uniqueMethodName + "$JavassistProxy";
     }
 
     //getter

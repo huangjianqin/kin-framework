@@ -3,8 +3,8 @@ package org.kin.framework.proxy.utils;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import javassist.*;
-import org.kin.framework.proxy.ProxyDefinition;
 import org.kin.framework.proxy.ProxyInvoker;
+import org.kin.framework.proxy.ProxyMethodDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class ProxyEnhanceUtils {
     /**
      * 利用javassist字节码技术生成方法代理类, 调用效率比反射要高
      */
-    public static <S> ProxyInvoker<S> generateMethodProxy(ProxyDefinition<S> definition) {
+    public static ProxyInvoker enhanceMethod(ProxyMethodDefinition definition) {
         Object proxyObj = definition.getProxyObj();
         Class<?> proxyObjClass = proxyObj.getClass();
         Method method = definition.getMethod();
@@ -125,6 +125,8 @@ public class ProxyEnhanceUtils {
 
         return null;
     }
+
+    //---------------------------------------------------------------------------------------------------------------------------------
 
     /**
      * 尝试释放${@link ClassPool}无用空间
