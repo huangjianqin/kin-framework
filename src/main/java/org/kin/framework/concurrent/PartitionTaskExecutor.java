@@ -9,7 +9,10 @@ import org.kin.framework.utils.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 /**
@@ -330,16 +333,22 @@ public class PartitionTaskExecutor<K> {
             }
         }
 
-        private void run0(Collection<Task> waittingTasks) {
-            for (Task task1 : waittingTasks) {
-                try {
-                    task1.run();
-                    finishedTaskNum++;
-                } catch (Exception e) {
-                    ExceptionUtils.log(e);
+        /**
+         * @param limit 处理任务上限, -1无上限
+         */
+        private void run0(Task one, int limit) {
+            int counter = 0;
+            do {
+                if (one != null) {
+                    try {
+                        one.run();
+                        finishedTaskNum++;
+                        counter++;
+                    } catch (Exception e) {
+                        ExceptionUtils.log(e);
+                    }
                 }
-            }
-            waittingTasks.clear();
+            } while ((limit <= 0 || counter < limit) && (one = queue.poll()) != null);
         }
 
         @Override
@@ -349,18 +358,13 @@ public class PartitionTaskExecutor<K> {
                 while (!isStopped && !Thread.currentThread().isInterrupted()) {
                     try {
                         Task task = queue.take();
-                        Collection<Task> waittingTasks = new ArrayList<>(batchMaxNum);
-                        waittingTasks.add(task);
-                        queue.drainTo(waittingTasks, batchMaxNum - 1);
-                        run0(waittingTasks);
+                        run0(task, batchMaxNum - 1);
                     } catch (InterruptedException e) {
                         //do nothing
                     }
                 }
             } finally {
-                Collection<Task> waittingTasks = new ArrayList<>(batchMaxNum);
-                queue.drainTo(waittingTasks);
-                run0(waittingTasks);
+                run0(null, -1);
             }
             isTerminated = true;
         }

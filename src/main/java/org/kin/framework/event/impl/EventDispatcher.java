@@ -168,14 +168,16 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
         private BlockingQueue<EventContext> eventContextQueue = new LinkedBlockingQueue<>();
         private volatile Thread bind = null;
 
-        private void dispatchEvent(Collection<EventContext> eventContexts) {
-            for (EventContext eventContext : eventContexts) {
-                try {
-                    dispatch(eventContext);
-                } catch (Exception e) {
-                    ExceptionUtils.log(e);
+        private void dispatchEvent(EventContext one) {
+            do {
+                if(one != null){
+                    try {
+                        dispatch(one);
+                    } catch (Exception e) {
+                        ExceptionUtils.log(e);
+                    }
                 }
-            }
+            } while ((one = eventContextQueue.poll()) != null);
         }
 
         @Override
@@ -185,18 +187,13 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
                 while (!isStopped && !Thread.currentThread().isInterrupted()) {
                     try {
                         EventContext eventContext = eventContextQueue.take();
-                        Collection<EventContext> eventContexts = new ArrayList<>();
-                        eventContexts.add(eventContext);
-                        eventContextQueue.drainTo(eventContexts);
-                        dispatchEvent(eventContexts);
+                        dispatchEvent(eventContext);
                     } catch (InterruptedException e) {
                     }
                 }
             } finally {
                 //尽可能处理完队列里面的事件
-                Collection<EventContext> eventContexts = new ArrayList<>();
-                eventContextQueue.drainTo(eventContexts);
-                dispatchEvent(eventContexts);
+                dispatchEvent(null);
             }
         }
 
