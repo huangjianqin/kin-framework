@@ -1,6 +1,7 @@
 package org.kin.framework.event.dispatcher;
 
 
+import org.kin.framework.event.EventCallback;
 import org.kin.framework.event.EventHandler;
 import org.kin.framework.event.impl.EventDispatcher;
 import org.kin.framework.utils.SysUtils;
@@ -17,7 +18,17 @@ public class TestDispatcher {
 
         dispatcher.serviceInit();
         dispatcher.serviceStart();
-        dispatcher.asyncDispatch(new SecondEvent(SecondEventType.S));
+        dispatcher.asyncDispatch(new SecondEvent(SecondEventType.S), new EventCallback() {
+            @Override
+            public void finish(Object result) {
+                System.out.println(result);
+            }
+
+            @Override
+            public void exception(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        });
         dispatcher.dispatch(new SecondEvent(SecondEventType.C));
         dispatcher.dispatch(new SecondEvent(SecondEventType.D));
 

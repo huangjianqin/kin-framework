@@ -6,6 +6,7 @@ import org.kin.framework.concurrent.SimpleThreadFactory;
 import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.concurrent.impl.EfficientHashPartitioner;
 import org.kin.framework.event.AbstractEvent;
+import org.kin.framework.event.EventCallback;
 import org.kin.framework.event.NullEventDispatcher;
 import org.kin.framework.event.ScheduleDispatcher;
 import org.kin.framework.event.annotation.Event;
@@ -105,9 +106,11 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
         if (handler != null) {
             executor.execute(eventContext.getPartitionId(), () -> {
                 try {
-                    handler.invoke(eventContext.getRealParams(handler.getMethod()));
+                    Object result = handler.invoke(eventContext.getRealParams(handler.getMethod()));
+                    eventContext.callback.finish(result);
                 } catch (Exception e) {
-                    log.error("", e);
+                    ExceptionUtils.log(e);
+                    eventContext.callback.exception(e);
                 }
             });
         } else {
@@ -117,12 +120,17 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
 
     @Override
     public void dispatch(Object event, Object... params) {
-        dispatch(new EventContext(event.hashCode(), event, params));
+        dispatch(new EventContext(event.hashCode(), event, params, EventCallback.EMPTY));
     }
 
     @Override
     public void asyncDispatch(Object event, Object... params) {
-        asyncDispatchThread.handleEvent(new EventContext(event, params));
+        asyncDispatch(event, EventCallback.EMPTY, params);
+    }
+
+    @Override
+    public void asyncDispatch(Object event, EventCallback callback, Object... params) {
+        asyncDispatchThread.handleEvent(new EventContext(event, params, callback));
     }
 
     @Override
@@ -290,8 +298,9 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
         private int partitionId;
         private Object event;
         private Map<Class<?>, Object> paramsMap;
+        private EventCallback callback;
 
-        public EventContext(int partitionId, Object event, Object[] params) {
+        public EventContext(int partitionId, Object event, Object[] params, EventCallback callback) {
             this.partitionId = partitionId;
             this.event = event;
             this.paramsMap = new HashMap<>();
@@ -302,10 +311,18 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
             }
             Preconditions.checkArgument(!paramsMap.containsKey(event.getClass()), new IllegalStateException("same param type"));
             paramsMap.put(event.getClass(), event);
+            if(Objects.isNull(callback)){
+                callback = EventCallback.EMPTY;
+            }
+            this.callback = callback;
+        }
+
+        public EventContext(Object event, Object[] params, EventCallback callback) {
+            this(event.hashCode(), event, params, callback);
         }
 
         public EventContext(Object event, Object[] params) {
-            this(event.hashCode(), event, params);
+            this(event.hashCode(), event, params, EventCallback.EMPTY);
         }
 
         /**
@@ -327,6 +344,10 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
 
         public Object getEvent() {
             return event;
+        }
+
+        public EventCallback getCallback() {
+            return callback;
         }
     }
 }

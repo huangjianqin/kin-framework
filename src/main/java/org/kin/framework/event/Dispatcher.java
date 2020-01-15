@@ -22,4 +22,10 @@ public interface Dispatcher {
      * 异步
      */
     void asyncDispatch(Object event, Object... params);
+
+    /**
+     * 根据事件类型分发给对应的事件处理器
+     * 异步
+     */
+    void asyncDispatch(Object event, EventCallback callback, Object... params);
 }

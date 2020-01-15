@@ -1,5 +1,6 @@
 package org.kin.framework.event.impl;
 
+import org.kin.framework.event.EventCallback;
 import org.kin.framework.event.ScheduledActorLikeDispatcher;
 
 import java.util.concurrent.Future;
@@ -21,12 +22,17 @@ public class ActorLikeEventDispatcher extends EventDispatcher implements Schedul
 
     @Override
     public void dispatch(int partitionId, Object event, Object... params) {
-        dispatch(new EventContext(partitionId, event, params));
+        dispatch(new EventContext(partitionId, event, params, EventCallback.EMPTY));
     }
 
     @Override
     public void asyncDispatch(int partitionId, Object event, Object... params) {
-        asyncDispatchThread.handleEvent(new EventContext(partitionId, event, params));
+        asyncDispatch(partitionId, event, EventCallback.EMPTY, params);
+    }
+
+    @Override
+    public void asyncDispatch(int partitionId, Object event, EventCallback callback, Object... params) {
+        asyncDispatchThread.handleEvent(new EventContext(partitionId, event, params, callback));
     }
 
     @Override
