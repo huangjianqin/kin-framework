@@ -18,6 +18,11 @@ public interface ActorLikeDispatcher {
     void dispatch(int partitionId, Object event, Object... params);
 
     /**
+     * 分发事件
+     */
+    void dispatch(int partitionId, Object event, EventCallback callback, Object... params);
+
+    /**
      * 异步分发事件
      */
     void asyncDispatch(int partitionId, Object event, Object... params);

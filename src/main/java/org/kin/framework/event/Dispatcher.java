@@ -18,6 +18,11 @@ public interface Dispatcher {
     void dispatch(Object event, Object... params);
 
     /**
+     * 分发事件
+     */
+    void dispatch(Object event, EventCallback callback, Object... params);
+
+    /**
      * 异步分发事件
      */
     void asyncDispatch(Object event, Object... params);

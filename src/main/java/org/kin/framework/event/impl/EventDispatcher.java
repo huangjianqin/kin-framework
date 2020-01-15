@@ -110,7 +110,6 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
                     Object result = handler.invoke(eventContext.getRealParams(handler.getMethod()));
                     eventContext.callback.finish(result);
                 } catch (Exception e) {
-                    ExceptionUtils.log(e);
                     eventContext.callback.exception(e);
                 }
             });
@@ -121,7 +120,12 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
 
     @Override
     public void dispatch(Object event, Object... params) {
-        dispatch(new EventContext(event.hashCode(), event, params, EventCallback.EMPTY));
+        dispatch(event, EventCallback.EMPTY, params);
+    }
+
+    @Override
+    public void dispatch(Object event, EventCallback callback, Object... params) {
+        dispatch(new EventContext(event.hashCode(), event, params, callback));
     }
 
     @Override

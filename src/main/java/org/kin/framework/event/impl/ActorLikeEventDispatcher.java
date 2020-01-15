@@ -25,7 +25,12 @@ public class ActorLikeEventDispatcher extends EventDispatcher implements Schedul
 
     @Override
     public void dispatch(int partitionId, Object event, Object... params) {
-        dispatch(new EventContext(partitionId, event, params, EventCallback.EMPTY));
+        dispatch(partitionId, event, EventCallback.EMPTY, params);
+    }
+
+    @Override
+    public void dispatch(int partitionId, Object event, EventCallback callback, Object... params) {
+        dispatch(new EventContext(partitionId, event, params, callback));
     }
 
     @Override
