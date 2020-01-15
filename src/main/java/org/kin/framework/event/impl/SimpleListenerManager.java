@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * 简单的监听器实现
+ *
  * Created by huangjianqin on 2019/3/1.
  */
 public class SimpleListenerManager {

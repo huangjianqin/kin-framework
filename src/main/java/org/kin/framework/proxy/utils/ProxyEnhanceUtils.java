@@ -12,6 +12,8 @@ import java.lang.reflect.Method;
 import java.util.StringJoiner;
 
 /**
+ * 利用javassist字节码技术增加代理类 调用速度更快
+ *
  * @author huangjianqin
  * @date 2020-01-11
  */
@@ -57,7 +59,7 @@ public class ProxyEnhanceUtils {
     }
 
     /**
-     * 利用javassist字节码技术生成方法代理类, 调用效率比反射要高
+     * 增强某个方法代理的调用
      */
     public static ProxyInvoker enhanceMethod(ProxyMethodDefinition definition) {
         Object proxyObj = definition.getProxyObj();

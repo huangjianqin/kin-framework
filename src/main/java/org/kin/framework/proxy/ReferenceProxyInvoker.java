@@ -3,6 +3,9 @@ package org.kin.framework.proxy;
 import java.lang.reflect.Method;
 
 /**
+ * 方法代理类
+ * 底层简单粗暴利用反射实现代理调用
+ *
  * @author huangjianqin
  * @date 2020-01-12
  */

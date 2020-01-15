@@ -13,19 +13,17 @@ public interface ActorLikeDispatcher {
     void register(Class<?> eventClass, Object handler, Method method);
 
     /**
-     * 根据事件类型分发给对应的事件处理器
+     * 分发事件
      */
     void dispatch(int partitionId, Object event, Object... params);
 
     /**
-     * 根据事件类型分发给对应的事件处理器
-     * 异步
+     * 异步分发事件
      */
     void asyncDispatch(int partitionId, Object event, Object... params);
 
     /**
-     * 根据事件类型分发给对应的事件处理器
-     * 异步
+     * 异步分发事件
      */
     void asyncDispatch(int partitionId, Object event, EventCallback callback, Object... params);
 }

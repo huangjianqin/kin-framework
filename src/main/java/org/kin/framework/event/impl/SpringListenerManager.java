@@ -9,18 +9,20 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
+ * 获取注释有@Listener的bean并注册
+ *
  * @author huangjianqin
  * @date 2019/7/19
  */
 @Component
-public class SpringListenerManager extends SimpleListenerManager implements ApplicationContextAware {
+public class SpringListenerManager implements ApplicationContextAware {
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         Map<String, Object> beans = applicationContext.getBeansWithAnnotation(Listener.class);
         for (Object bean : beans.values()) {
-            register0(bean);
+            SimpleListenerManager.instance().register0(bean);
         }
 
-        sortAll();
+        SimpleListenerManager.instance().sortAll();
     }
 }

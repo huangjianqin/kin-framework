@@ -13,19 +13,17 @@ public interface Dispatcher {
     void register(Class<?> eventClass, Object handler, Method method);
 
     /**
-     * 根据事件类型分发给对应的事件处理器
+     * 分发事件
      */
     void dispatch(Object event, Object... params);
 
     /**
-     * 根据事件类型分发给对应的事件处理器
-     * 异步
+     * 异步分发事件
      */
     void asyncDispatch(Object event, Object... params);
 
     /**
-     * 根据事件类型分发给对应的事件处理器
-     * 异步
+     * 异步分发事件
      */
     void asyncDispatch(Object event, EventCallback callback, Object... params);
 }

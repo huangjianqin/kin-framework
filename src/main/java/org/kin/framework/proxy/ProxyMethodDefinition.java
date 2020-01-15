@@ -3,6 +3,8 @@ package org.kin.framework.proxy;
 import java.lang.reflect.Method;
 
 /**
+ * 方法代理定义
+ *
  * @author huangjianqin
  * @date 2020-01-11
  */

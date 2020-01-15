@@ -7,6 +7,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * actor风格的事件分发
+ * 支持事务顺序处理事件
+ *
  * @author huangjianqin
  * @date 2020-01-11
  */

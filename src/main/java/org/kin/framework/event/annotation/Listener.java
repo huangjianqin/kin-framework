@@ -3,6 +3,8 @@ package org.kin.framework.event.annotation;
 import java.lang.annotation.*;
 
 /**
+ * 监听器
+ *
  * Created by huangjianqin on 2019/3/1.
  */
 @Retention(RetentionPolicy.RUNTIME)

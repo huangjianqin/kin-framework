@@ -33,16 +33,17 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     //事件堆积太多阈值
     private static final int TOO_MUCH_EVENTS_THRESHOLD = 1000;
 
-    //事件处理线程
+    //事件处理线程(分区处理)
     protected final PartitionTaskExecutor<Integer> executor;
-    //负责分发事件的线程
+    //负责分发事件的线程(主要负责调度和异步分发事件)
     protected final ThreadManager threadManager;
-    //异步分发事件线程
+    //异步分发事件线程逻辑实现
     protected AsyncEventDispatchThread asyncDispatchThread;
     //存储事件与其对应的事件处理器的映射
     protected final Map<Class<?>, ProxyInvoker> event2Handler;
-    //是否使用直接码增强技术
+    //是否使用字节码增强技术
     private final boolean isEnhance;
+    //字节码增强代理类包名
     private String proxyEnhancePackageName;
 
     public EventDispatcher(int parallelism) {
@@ -226,6 +227,9 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
         }
     }
 
+    /**
+     * 事件处理器的代理封装
+     */
     private class ProxyEventHandler implements ProxyInvoker {
         private Object proxy;
         private Method method;

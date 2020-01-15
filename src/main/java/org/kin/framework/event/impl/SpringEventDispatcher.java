@@ -16,6 +16,8 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
+ * 获取注释有@HandleEvent的bean并注册事件及其处理器
+ *
  * Created by huangjianqin on 2019/3/1.
  */
 public class SpringEventDispatcher extends EventDispatcher implements ApplicationContextAware, ApplicationListener {
