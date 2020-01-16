@@ -228,12 +228,10 @@ public class ProxyEnhanceUtils {
         return null;
     }
 
-    public static <P> P enhanceClass(ProxyDefinition definition) {
-        Object proxyObj = definition.getProxyObj();
-        Class<?> proxyObjClass = proxyObj.getClass();
-        String packageName = definition.getPackageName();
-        String proxyCtClassName = packageName + "." + proxyObjClass.getSimpleName() + "$JavassistProxy";
-
+    /**
+     * @param proxyObjClass 需要代理的类或该类的某一接口
+     */
+    public static <P> P enhanceClass0(Object proxyObj, Class<?> proxyObjClass, String packageName, String proxyCtClassName) {
         CtClass proxyCtClass = pool.getOrNull(proxyCtClassName);
         if (proxyCtClass == null) {
             proxyCtClass = generateEnhanceClassProxyClass(proxyObjClass, packageName);
@@ -247,6 +245,29 @@ public class ProxyEnhanceUtils {
             }
         }
         return null;
+    }
+
+    public static <P> P enhanceClass(ProxyDefinition definition) {
+        Object proxyObj = definition.getProxyObj();
+        Class<?> proxyObjClass = proxyObj.getClass();
+        String packageName = definition.getPackageName();
+        String proxyCtClassName = packageName + "." + proxyObjClass.getSimpleName() + "$JavassistProxy";
+
+        return enhanceClass0(proxyObj, proxyObjClass, packageName, proxyCtClassName);
+    }
+
+    public static <P> P enhanceClass(ProxyDefinition definition, Class<P> interfaceClass) {
+        Object proxyObj = definition.getProxyObj();
+        Class<?> proxyObjClass = proxyObj.getClass();
+
+        if(!interfaceClass.isAssignableFrom(proxyObjClass)){
+            return null;
+        }
+
+        String packageName = definition.getPackageName();
+        String proxyCtClassName = packageName + "." + interfaceClass.getSimpleName() + "$JavassistProxy";
+
+        return enhanceClass0(proxyObj, interfaceClass, packageName, proxyCtClassName);
     }
 
     //---------------------------------------------------------------------------------------------------------------------------------
