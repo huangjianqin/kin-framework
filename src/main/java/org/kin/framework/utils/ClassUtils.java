@@ -3,10 +3,7 @@ package org.kin.framework.utils;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.net.JarURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,6 +25,8 @@ public class ClassUtils {
     public static final String CLASS_SUFFIX = ".class";
     //用于匹配内部类
     private static final Pattern INNER_PATTERN = Pattern.compile("\\$(\\d+).", Pattern.CASE_INSENSITIVE);
+    //生成方法签名的参数命名
+    public static final String METHOD_DECLARATION_ARG_NAME = "arg";
 
     @FunctionalInterface
     private interface Matcher<T> {
@@ -559,5 +558,47 @@ public class ClassUtils {
 
         sb.append("$");
         return sb.toString();
+    }
+
+    /**
+     * 生成方法签名(编译后的, 也就是类型擦除, 解语法糖后), 方法参数从 ${ClassUtils.METHOD_DECLARATION_ARG_NAME}0, ${ClassUtils.METHOD_DECLARATION_ARG_NAME}1, ${ClassUtils.METHOD_DECLARATION_ARG_NAME}2....
+     */
+    public static String generateMethodDeclaration(Method method) {
+        if (method == null) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(Modifier.toString(method.getModifiers()) + " ");
+        sb.append(method.getReturnType().getName() + " ");
+        sb.append(method.getName() + "(");
+
+        StringJoiner argSJ = new StringJoiner(", ");
+        Type[] paramTypes = method.getGenericParameterTypes();
+        for (int i = 0; i < paramTypes.length; i++) {
+            String paramTypeStr = paramTypes[i].getTypeName();
+//            if (method.isVarArgs() && (i == paramTypes.length - 1)) {
+//                param = param.replaceFirst("\\[\\]$", "...");
+//            }
+            argSJ.add(paramTypeStr + " " + METHOD_DECLARATION_ARG_NAME + i);
+        }
+        sb.append(argSJ.toString());
+        sb.append(")");
+
+        StringJoiner throwsSJ = new StringJoiner(", ");
+        Class[] exceptionTypes = method.getExceptionTypes();
+        for (int i = 0; i < exceptionTypes.length; i++) {
+            throwsSJ.add(exceptionTypes[i].getName());
+        }
+        if (throwsSJ.length() > 0) {
+            sb.append(" throws ");
+            sb.append(throwsSJ.toString());
+        }
+
+        String methodDeclarationStr = sb.toString();
+        methodDeclarationStr = methodDeclarationStr.replace("abstract ", "");
+        methodDeclarationStr = methodDeclarationStr.replace("transient ", "");
+        methodDeclarationStr = methodDeclarationStr.replace("native ", "");
+        return methodDeclarationStr;
     }
 }
