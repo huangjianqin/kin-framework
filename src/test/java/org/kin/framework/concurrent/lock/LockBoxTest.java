@@ -3,7 +3,6 @@ package org.kin.framework.concurrent.lock;
 import org.kin.framework.concurrent.ThreadManager;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * @author huangjianqin
@@ -15,28 +14,28 @@ public class LockBoxTest {
         ThreadManager threadManager = new ThreadManager(Executors.newCachedThreadPool());
 
         threadManager.execute(() -> {
-            lockBox.execute(1, () -> {
+            lockBox.lockRun(1, () -> {
                 System.out.println(1111);
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
 
                 }
-                lockBox.execute(2, () -> {
+                lockBox.lockRun(2, () -> {
                     System.out.println(11112222);
                 });
             });
         });
 
         threadManager.execute(() -> {
-            lockBox.execute(2, () -> {
+            lockBox.lockRun(2, () -> {
                 System.out.println(2222);
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
 
                 }
-                lockBox.execute(1, () -> {
+                lockBox.lockRun(1, () -> {
                     System.out.println(22221111);
                 });
             });
