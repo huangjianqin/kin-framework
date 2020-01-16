@@ -260,7 +260,7 @@ public class ProxyEnhanceUtils {
         Object proxyObj = definition.getProxyObj();
         Class<?> proxyObjClass = proxyObj.getClass();
 
-        if(!interfaceClass.isAssignableFrom(proxyObjClass)){
+        if (!interfaceClass.isAssignableFrom(proxyObjClass)) {
             return null;
         }
 

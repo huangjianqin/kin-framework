@@ -580,7 +580,12 @@ public class ClassUtils {
 //            if (method.isVarArgs() && (i == paramTypes.length - 1)) {
 //                param = param.replaceFirst("\\[\\]$", "...");
 //            }
-            argSJ.add(paramTypeStr + " " + METHOD_DECLARATION_ARG_NAME + i);
+            //处理范性类型擦除
+            if (paramTypes[i] instanceof Class) {
+                argSJ.add(paramTypeStr + " " + METHOD_DECLARATION_ARG_NAME + i);
+            } else {
+                argSJ.add(Object.class.getName() + " " + METHOD_DECLARATION_ARG_NAME + i);
+            }
         }
         sb.append(argSJ.toString());
         sb.append(")");
