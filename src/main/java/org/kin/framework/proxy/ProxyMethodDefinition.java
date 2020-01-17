@@ -14,13 +14,13 @@ public class ProxyMethodDefinition {
     private String className;
 
     public ProxyMethodDefinition(Object proxyObj, Method method, String packageName) {
-        this(proxyObj, method, packageName, proxyObj.getClass().getSimpleName() + "$" + method.getName());
+        this(proxyObj, method, packageName, proxyObj.getClass().getSimpleName().concat("$").concat(method.getName()));
     }
 
     public ProxyMethodDefinition(Object proxyObj, Method method, String packageName, String uniqueMethodName) {
         this.proxyObj = proxyObj;
         this.method = method;
-        this.className = packageName + "." + uniqueMethodName + "$JavassistProxy";
+        this.className = packageName.concat(".").concat(uniqueMethodName).concat("$JavassistProxy");
     }
 
     //getter
