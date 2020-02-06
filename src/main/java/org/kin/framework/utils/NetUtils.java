@@ -4,10 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
@@ -188,5 +185,36 @@ public class NetUtils {
         int port = Integer.parseInt(array[1]);
 
         return new Object[]{host, port};
+    }
+
+    /**
+     * 检查端口是否被占用
+     */
+    public static boolean isValidPort(int port) {
+        return isValidPort(getIp(), port);
+    }
+
+    /**
+     * 检查端口是否被占用
+     */
+    public static boolean isValidPort(String host, int port) {
+        Socket socket = null;
+        try {
+            socket = new Socket();
+            socket.bind(new InetSocketAddress(host, port));
+            return true;
+        } catch (IOException e) {
+
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+
+                }
+            }
+        }
+
+        return false;
     }
 }
