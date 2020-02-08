@@ -187,6 +187,15 @@ public class NetUtils {
         return new Object[]{host, port};
     }
 
+    //检查端口是否在指定范围内
+    public static boolean isPortInRange(int port){
+        if (port < 0 || port > 0xFFFF) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * 检查端口是否被占用
      */
@@ -198,6 +207,10 @@ public class NetUtils {
      * 检查端口是否被占用
      */
     public static boolean isValidPort(String host, int port) {
+        if(StringUtils.isBlank(host) || !isPortInRange(port)){
+            return false;
+        }
+
         Socket socket = null;
         try {
             socket = new Socket();
