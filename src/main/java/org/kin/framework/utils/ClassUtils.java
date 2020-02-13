@@ -220,6 +220,8 @@ public class ClassUtils {
                         }
 
                         String className = entryName.replaceAll("/", ".");
+                        className = className.substring(0, entryName.lastIndexOf(".class"));
+
                         try {
                             Class<T> claxx = (Class<T>) contextClassLoader.loadClass(className);
                             if (matcher.match(c, claxx)) {
