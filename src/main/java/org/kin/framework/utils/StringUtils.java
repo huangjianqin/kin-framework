@@ -70,7 +70,7 @@ public class StringUtils {
         if (chars[0] >= 'a' && chars[0] <= 'z') {
             chars[0] = (char)(chars[0] - 32);
         }
-        return s;
+        return new String(chars);
     }
 
     public static String firstLowerCase(String s){
@@ -78,6 +78,6 @@ public class StringUtils {
         if (chars[0] >= 'A' && chars[0] <= 'Z') {
             chars[0] = (char)(chars[0] + 32);
         }
-        return s;
+        return new String(chars);
     }
 }
