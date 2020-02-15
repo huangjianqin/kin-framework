@@ -178,6 +178,16 @@ public class NetUtils {
         return ip.concat(":").concat(String.valueOf(port));
     }
 
+    public static String getIpPort2(int port) {
+        InetSocketAddress address = new InetSocketAddress(port);
+        return address.toString();
+    }
+
+    public static String getIpPort2(String ip, int port) {
+        InetSocketAddress address = new InetSocketAddress(ip, port);
+        return address.toString();
+    }
+
     public static Object[] parseIpPort(String address) {
         String[] array = address.split(":");
 
@@ -188,7 +198,7 @@ public class NetUtils {
     }
 
     //检查端口是否在指定范围内
-    public static boolean isPortInRange(int port){
+    public static boolean isPortInRange(int port) {
         if (port < 0 || port > 0xFFFF) {
             return false;
         }
@@ -207,7 +217,7 @@ public class NetUtils {
      * 检查端口是否被占用
      */
     public static boolean isValidPort(String host, int port) {
-        if(StringUtils.isBlank(host) || !isPortInRange(port)){
+        if (StringUtils.isBlank(host) || !isPortInRange(port)) {
             return false;
         }
 

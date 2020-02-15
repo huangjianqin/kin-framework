@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
@@ -130,18 +131,36 @@ public class ProxyEnhanceUtils {
         Method proxyMethod = definition.getMethod();
         String proxyCtClassName = definition.getClassName();
 
-        CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
-        if (proxyCtClass == null) {
-            proxyCtClass = generateEnhanceMethodProxyClass(proxyObjClass, proxyMethod, proxyCtClassName);
+        Class realProxyClass = null;
+        try {
+            realProxyClass = Class.forName(proxyCtClassName);
+        } catch (ClassNotFoundException e) {
+
         }
 
-        if (proxyCtClass != null) {
+        if (Objects.isNull(realProxyClass)) {
+            CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
+            if (proxyCtClass == null) {
+                proxyCtClass = generateEnhanceMethodProxyClass(proxyObjClass, proxyMethod, proxyCtClassName);
+            }
+
+            if (proxyCtClass != null) {
+                try {
+                    realProxyClass = proxyCtClass.toClass();
+                } catch (Exception e) {
+                    log.error(proxyMethod.toString(), e);
+                }
+            }
+        }
+
+        if (Objects.nonNull(realProxyClass)) {
             try {
-                return (ProxyInvoker) proxyCtClass.toClass().getConstructor(proxyObjClass, Method.class).newInstance(proxyObj, proxyMethod);
+                return (ProxyInvoker) realProxyClass.getConstructor(proxyObjClass, Method.class).newInstance(proxyObj, proxyMethod);
             } catch (Exception e) {
                 log.error(proxyMethod.toString(), e);
             }
         }
+
         return null;
     }
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -184,17 +203,15 @@ public class ProxyEnhanceUtils {
     }
 
     /**
-     *
      * @param proxyClass 需要代理的类, 即是需要实现(继承)的类
      */
     private static CtClass generateEnhanceClassProxyClass(Class<?> proxyClass, String className, MethodBodyConstructor methodBodyConstructor) {
         CtClass proxyCtClass = POOL.makeClass(className);
         try {
-            if(proxyClass.isInterface()){
+            if (proxyClass.isInterface()) {
                 //实现接口
                 proxyCtClass.addInterface(POOL.getCtClass(proxyClass.getName()));
-            }
-            else{
+            } else {
                 //继承类
                 proxyCtClass.setSuperclass(POOL.getCtClass(proxyClass.getName()));
             }
@@ -243,18 +260,35 @@ public class ProxyEnhanceUtils {
             String packageName,
             String proxyCtClassName,
             MethodBodyConstructor methodBodyConstructor) {
-        CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
-        if (proxyCtClass == null) {
-            proxyCtClass = generateEnhanceClassProxyClass(proxyObjClass, packageName, methodBodyConstructor);
+        Class realProxyClass = null;
+        try {
+            realProxyClass = Class.forName(proxyCtClassName);
+        } catch (ClassNotFoundException e) {
+
         }
 
-        if (proxyCtClass != null) {
+        if (Objects.isNull(realProxyClass)) {
+            CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
+            if (proxyCtClass == null) {
+                proxyCtClass = generateEnhanceClassProxyClass(proxyObjClass, packageName, methodBodyConstructor);
+                if (Objects.nonNull(proxyCtClass)) {
+                    try {
+                        realProxyClass = proxyCtClass.toClass();
+                    } catch (Exception e) {
+                        log.error(proxyObjClass.toString(), e);
+                    }
+                }
+            }
+        }
+
+        if (Objects.nonNull(realProxyClass)) {
             try {
-                return (P) proxyCtClass.toClass().getConstructor(proxyObjClass).newInstance(proxyObj);
+                return (P) realProxyClass.getConstructor(proxyObjClass).newInstance(proxyObj);
             } catch (Exception e) {
                 log.error(proxyObjClass.toString(), e);
             }
         }
+
         return null;
     }
 
