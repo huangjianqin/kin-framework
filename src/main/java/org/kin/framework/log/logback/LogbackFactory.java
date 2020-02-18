@@ -1,4 +1,4 @@
-package org.kin.framework.log;
+package org.kin.framework.log.logback;
 
 import ch.qos.logback.classic.AsyncAppender;
 import ch.qos.logback.classic.Level;
@@ -6,29 +6,64 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import org.kin.framework.log.AbstractLogEvent;
 import org.slf4j.Logger;
 
 import java.io.File;
 
 /**
  * Created by huangjianqin on 2017/11/14.
+ * 动态生成logback logger
+ * 所有组件都必须start
  */
-public class LoggerFactory {
-    public static final String BASE_PATH = "logs";
+public class LogbackFactory {
+    private ch.qos.logback.classic.Logger logbackLogger;
 
-    public static Logger getAsyncFileLogger(AbstractLogEvent logEvent) {
-        Logger logger = org.slf4j.LoggerFactory.getLogger(logEvent.getLoggerName());
-        if (!(logger instanceof ch.qos.logback.classic.Logger)) {
-            return logger;
+    public LogbackFactory(ch.qos.logback.classic.Logger logbackLogger) {
+        this.logbackLogger = logbackLogger;
+    }
+
+    //---------------------------------------------------------------------------------------------
+    public LogbackFactory add(Appender<ILoggingEvent> newAppender) {
+        logbackLogger.addAppender(newAppender);
+        return this;
+    }
+
+    public LogbackFactory add(Appender<ILoggingEvent>... newAppenders) {
+        for (Appender<ILoggingEvent> newAppender : newAppenders) {
+            logbackLogger.addAppender(newAppender);
+        }
+        return this;
+    }
+
+    public LogbackFactory level(Level level) {
+        logbackLogger.setLevel(level);
+        return this;
+    }
+
+    public LogbackFactory additive(boolean additive) {
+        logbackLogger.setAdditive(additive);
+        return this;
+    }
+
+    public Logger get() {
+        return logbackLogger;
+    }
+
+    //---------------------------------------------------------------------------------------------
+    public static LogbackFactory create(String logggerName) {
+        Logger logger = org.slf4j.LoggerFactory.getLogger(logggerName);
+        if (!ch.qos.logback.classic.Logger.class.isAssignableFrom(logger.getClass())) {
+            throw new UnsupportedOperationException("only support logback");
         }
 
-        ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
-        if (logbackLogger.getAppender(logEvent.getAsyncAppenderName()) != null) {
-            return logger;
-        }
-        //所有组件都必须start
+        return new LogbackFactory((ch.qos.logback.classic.Logger) logger);
+    }
+
+    public static Logger getAsyncRollingFileLogger(String basePath, AbstractLogEvent logEvent) {
         LoggerContext lc = (LoggerContext) org.slf4j.LoggerFactory.getILoggerFactory();
 
         ThresholdFilter infoFilter = new ThresholdFilter();
@@ -37,7 +72,7 @@ public class LoggerFactory {
         infoFilter.start();
 
         TimeBasedRollingPolicy policy = new TimeBasedRollingPolicy();
-        policy.setFileNamePattern(BASE_PATH + File.separator + "%d{yyyy-MM-dd}" + File.separator + logEvent.getFileName() + ".log.%d{yyyy-MM-dd}");
+        policy.setFileNamePattern(basePath + File.separator + "%d{yyyy-MM-dd}" + File.separator + logEvent.getFileName() + ".log.%d{yyyy-MM-dd}");
 //        policy.setMaxHistory(30);
         policy.setContext(lc);
 
@@ -67,10 +102,7 @@ public class LoggerFactory {
         asyncAppender.setIncludeCallerData(true);
         asyncAppender.start();
 
-        logbackLogger.addAppender(asyncAppender);
-        logbackLogger.setLevel(Level.INFO);
-        logbackLogger.setAdditive(false);
 
-        return logger;
+        return LogbackFactory.create(logEvent.getLoggerName()).add(asyncAppender).level(Level.INFO).additive(false).get();
     }
 }

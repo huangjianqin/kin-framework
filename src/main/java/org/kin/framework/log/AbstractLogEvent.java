@@ -1,5 +1,6 @@
 package org.kin.framework.log;
 
+import org.kin.framework.log.logback.LogUtils;
 import org.kin.framework.utils.StringUtils;
 
 /**
