@@ -3,7 +3,10 @@ package org.kin.framework.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.*;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
@@ -236,6 +239,51 @@ public class NetUtils {
 
                 }
             }
+        }
+
+        return false;
+    }
+
+    /**
+     * 读取远程服务器文件, 需保留两服务器连通
+     */
+    public static boolean copyRemoteFile(String url, String fileName) {
+        URL u;
+        try {
+            u = new URL(url);
+            URLConnection uc = u.openConnection();
+            String contentType = uc.getContentType();
+            int contentLength = uc.getContentLength();
+            if (contentLength != -1) {
+                InputStream raw = uc.getInputStream();
+                InputStream in = new BufferedInputStream(raw);
+                byte[] data = new byte[contentLength];
+                int bytesRead = 0;
+                int offset = 0;
+                while (offset < contentLength) {
+                    bytesRead = in.read(data, offset, data.length - offset);
+                    if (bytesRead == -1) {
+                        break;
+                    }
+                    offset += bytesRead;
+                }
+                in.close();
+
+                if (offset != contentLength) {
+                    throw new IOException("Only read " + offset + " bytes; Expected " + contentLength + " bytes");
+                }
+
+                FileOutputStream out = new FileOutputStream(fileName);
+                out.write(data);
+                out.flush();
+                out.close();
+            }
+
+            return true;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return false;
