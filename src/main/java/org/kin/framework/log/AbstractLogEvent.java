@@ -1,6 +1,5 @@
 package org.kin.framework.log;
 
-import org.kin.framework.log.logback.LogUtils;
 import org.kin.framework.utils.StringUtils;
 
 /**
@@ -44,19 +43,8 @@ public abstract class AbstractLogEvent {
         return "async" + appenderName;
     }
 
-    public void debug() {
-        LogUtils.debug(this);
-    }
-
-    public void info() {
-        LogUtils.info(this);
-    }
-
-    public void warn() {
-        LogUtils.warn(this);
-    }
-
-    public void error() {
-        LogUtils.error(this);
-    }
+    public abstract void debug();
+    public abstract void info();
+    public abstract void warn();
+    public abstract void error();
 }

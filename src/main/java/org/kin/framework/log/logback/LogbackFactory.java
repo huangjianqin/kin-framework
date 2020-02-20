@@ -2,6 +2,7 @@ package org.kin.framework.log.logback;
 
 import ch.qos.logback.classic.AsyncAppender;
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.filter.ThresholdFilter;
@@ -10,7 +11,7 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import org.kin.framework.log.AbstractLogEvent;
-import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
@@ -54,8 +55,12 @@ public class LogbackFactory {
     }
 
     //---------------------------------------------------------------------------------------------
+    public static LogbackFactory create(String logggerName, LoggerContext context) {
+        return new LogbackFactory(context.getLogger(logggerName));
+    }
+
     public static LogbackFactory create(String logggerName) {
-        Logger logger = org.slf4j.LoggerFactory.getLogger(logggerName);
+        org.slf4j.Logger logger = LoggerFactory.getLogger(logggerName);
         if (!ch.qos.logback.classic.Logger.class.isAssignableFrom(logger.getClass())) {
             throw new UnsupportedOperationException("only support logback");
         }
