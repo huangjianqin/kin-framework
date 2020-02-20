@@ -252,6 +252,11 @@ public class NetUtils {
         try {
             u = new URL(url);
             URLConnection uc = u.openConnection();
+            //setting
+            uc.setUseCaches(false);
+            uc.setReadTimeout(5 * 1000);
+            uc.setConnectTimeout(3 * 1000);
+
             String contentType = uc.getContentType();
             int contentLength = uc.getContentLength();
             if (contentLength != -1) {
