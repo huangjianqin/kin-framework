@@ -7,29 +7,19 @@ import java.io.File;
  * @date 2020-02-22
  */
 public class FileUtils {
-    public static boolean deleteDir(String dir) {
-        File dirFile = new File(dir);
-        if (dirFile.isDirectory()) {
-            return deleteDir(dirFile);
-        }
-
-        return false;
+    public static boolean delete(String targetPath) {
+        File targetFile = new File(targetPath);
+        return delete(targetFile);
     }
 
-    public static boolean deleteDir(File dirFile) {
-        for (File childFile : dirFile.listFiles()) {
-            boolean result;
-            if (childFile.isDirectory()) {
-                result = deleteDir(childFile);
-            } else {
-                result = childFile.delete();
+    public static boolean delete(File targetFile) {
+        if (targetFile.isDirectory()) {
+            for (File childFile : targetFile.listFiles()) {
+                delete(childFile);
             }
-            if (!result) {
-                return result;
-            }
+            return targetFile.delete();
+        } else {
+            return targetFile.delete();
         }
-        dirFile.delete();
-
-        return true;
     }
 }
