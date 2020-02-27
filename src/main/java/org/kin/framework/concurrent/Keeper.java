@@ -101,7 +101,7 @@ public class Keeper {
         THREADS.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
 
-        return () -> runnableKeeperAction.stop();
+        return runnableKeeperAction::stop;
     }
 
     public static KeeperStopper keep(Runnable runnable) {
@@ -124,6 +124,6 @@ public class Keeper {
         THREADS.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
 
-        return () -> runnableKeeperAction.stop();
+        return runnableKeeperAction::stop;
     }
 }

@@ -13,33 +13,29 @@ public class LockBoxTest {
         LockBox<Integer> lockBox = new LockBox<>();
         ThreadManager threadManager = new ThreadManager(Executors.newCachedThreadPool());
 
-        threadManager.execute(() -> {
-            lockBox.lockRun(1, () -> {
-                System.out.println(1111);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
+        threadManager.execute(() -> lockBox.lockRun(1, () -> {
+            System.out.println(1111);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
 
-                }
-                lockBox.lockRun(2, () -> {
-                    System.out.println(11112222);
-                });
-            });
-        });
-
-        threadManager.execute(() -> {
+            }
             lockBox.lockRun(2, () -> {
-                System.out.println(2222);
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-
-                }
-                lockBox.lockRun(1, () -> {
-                    System.out.println(22221111);
-                });
+                System.out.println(11112222);
             });
-        });
+        }));
+
+        threadManager.execute(() -> lockBox.lockRun(2, () -> {
+            System.out.println(2222);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+
+            }
+            lockBox.lockRun(1, () -> {
+                System.out.println(22221111);
+            });
+        }));
 
 //        threadManager.execute(() -> {
 //            lockBox.execute(3, () -> {

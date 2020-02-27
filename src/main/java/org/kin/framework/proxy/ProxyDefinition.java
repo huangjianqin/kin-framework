@@ -8,7 +8,7 @@ import org.kin.framework.proxy.utils.ProxyEnhanceUtils;
  */
 public class ProxyDefinition {
     private static final MethodBodyConstructor DEFAULT_METHOD_BODY_CONSTRUCTOR =
-            (proxyFieldName, proxyMethod) -> ProxyEnhanceUtils.generateProxyInvokeCode(proxyFieldName, proxyMethod);
+            ProxyEnhanceUtils::generateProxyInvokeCode;
     //---------------------------------------------------------------------------------------------------------------------
 
     private Object proxyObj;

@@ -83,7 +83,7 @@ public class SimpleListenerManager {
         List<ListenerDetail> list = listeners.get(key);
         if (list != null && !list.isEmpty()) {
             list = new ArrayList<>(list);
-            list.sort(Comparator.comparingInt(o -> o.getOrder()));
+            list.sort(Comparator.comparingInt(ListenerDetail::getOrder));
             listeners.put(key, list);
         }
     }

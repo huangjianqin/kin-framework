@@ -253,7 +253,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     private void clearFinishedFutures() {
         Queue<Future> old = futures.get(this);
         if (old != null) {
-            old.removeIf(future -> future.isDone());
+            old.removeIf(Future::isDone);
         }
     }
 

@@ -34,7 +34,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
         //每1h清理已结束的调度
         scheduleAtFixedRate(actor -> clearFinishedFutures(), 0, 1, TimeUnit.HOURS);
 
-        JvmCloseCleaner.DEFAULT().add(() -> threads.shutdown());
+        JvmCloseCleaner.DEFAULT().add(threads::shutdown);
     }
 
     public ActorLike(ExecutorService executorService, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
@@ -155,7 +155,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     private void clearFinishedFutures() {
         Queue<Future> old = futures.get(this);
         if (old != null) {
-            old.removeIf(future -> future.isDone());
+            old.removeIf(Future::isDone);
         }
     }
 
