@@ -19,11 +19,7 @@ public class ServiceState {
 
     ServiceState(String serviceName) {
         this.serviceName = serviceName;
-    }
-
-    ServiceState(String serviceName, Service.State state) {
-        this.serviceName = serviceName;
-        this.state = state;
+        this.state = Service.State.NOTINITED;
     }
 
     /**

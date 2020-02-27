@@ -7,7 +7,6 @@ import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.*;
@@ -66,9 +65,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     @Override
     public Future<?> schedule(Message<AL> message, long delay, TimeUnit unit) {
         if (!isStopped) {
-            Future future = threads.schedule(() -> {
-                receive(message);
-            }, delay, unit);
+            Future future = threads.schedule(() -> receive(message), delay, unit);
             addFuture(future);
             return future;
         }
@@ -78,9 +75,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     @Override
     public Future<?> scheduleAtFixedRate(Message<AL> message, long initialDelay, long period, TimeUnit unit) {
         if (!isStopped) {
-            Future future = threads.scheduleAtFixedRate(() -> {
-                receive(message);
-            }, initialDelay, period, unit);
+            Future future = threads.scheduleAtFixedRate(() -> receive(message), initialDelay, period, unit);
             addFuture(future);
             return future;
         }
@@ -160,20 +155,12 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     private void clearFinishedFutures() {
         Queue<Future> old = futures.get(this);
         if (old != null) {
-            Iterator<Future> iterator = old.iterator();
-            while (iterator.hasNext()) {
-                Future future = iterator.next();
-                if (future.isDone()) {
-                    iterator.remove();
-                }
-            }
+            old.removeIf(future -> future.isDone());
         }
     }
 
     /**
-     * 获取每条消息处理时间上限, 如果超过该上限就会打warn日志
-     *
-     * @return
+     * @return 每条消息处理时间上限, 如果超过该上限就会打warn日志
      */
     protected int getWarnMsgCostTime() {
         return 200;

@@ -59,9 +59,7 @@ public class ActorSystem implements Closeable {
                     ActorSystem defaultActorSystem = new ActorSystem(DEFAULT_AS_NAME);
                     NAME2ACTORSYSTEM.put(DEFAULT_AS_NAME, defaultActorSystem);
 
-                    JvmCloseCleaner.DEFAULT().add(() -> {
-                        defaultActorSystem.shutdown();
-                    });
+                    JvmCloseCleaner.DEFAULT().add(() -> defaultActorSystem.shutdown());
 
                     return defaultActorSystem;
                 }
@@ -71,7 +69,7 @@ public class ActorSystem implements Closeable {
     }
 
     public static ActorSystem create(String name) {
-        return create(name);
+        return new ActorSystem(name);
     }
 
     public static ActorSystem create(String name, ThreadManager threadManager) {

@@ -30,7 +30,7 @@ public class SimpleListenerManager {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    private class ListenerDetail {
+    private static class ListenerDetail {
         private Object instance;
         private int order;
 

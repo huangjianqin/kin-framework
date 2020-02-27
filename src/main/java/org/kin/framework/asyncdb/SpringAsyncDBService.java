@@ -4,6 +4,7 @@ import org.kin.framework.asyncdb.impl.DefaultAsyncDBStrategy;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.NonNull;
 
 import javax.annotation.PostConstruct;
 
@@ -15,6 +16,7 @@ public class SpringAsyncDBService extends AsyncDBService implements ApplicationC
     private ApplicationContext springContext;
 
     @Override
+    @NonNull
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         springContext = applicationContext;
     }
@@ -34,17 +36,9 @@ public class SpringAsyncDBService extends AsyncDBService implements ApplicationC
             PersistentClass persistentAnnotation = (PersistentClass) claxx.getAnnotation(PersistentClass.class);
             if (persistentAnnotation != null) {
                 Class<? extends DBSynchronzier> persistentClass = persistentAnnotation.type();
-                if (persistentClass != null) {
-                    DBSynchronzier DBSynchronzier = springContext.getBean(persistentClass);
-                    if (DBSynchronzier != null) {
-                        class2Persistent.put(claxx, DBSynchronzier);
-                        return DBSynchronzier;
-                    } else {
-                        throw new AsyncDBException("找不到类'" + claxx.getName() + "' 持久化类");
-                    }
-                } else {
-                    throw new AsyncDBException("找不到类'" + claxx.getName() + "' 持久化类");
-                }
+                DBSynchronzier dbSynchronzier = springContext.getBean(persistentClass);
+                class2Persistent.put(claxx, dbSynchronzier);
+                return dbSynchronzier;
             } else {
                 throw new AsyncDBException("找不到类'" + claxx.getName() + "' 持久化类");
             }

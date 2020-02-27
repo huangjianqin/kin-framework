@@ -63,32 +63,32 @@ public class Log4jLoggerBinder {
     }
 
     public Log4jLoggerBinder setRootCategory(Level level, String... appenders) {
-        String value = level.toString();
+        StringBuilder value = new StringBuilder(level.toString());
         for (String appender : appenders) {
-            value += "," + appender;
+            value.append(",").append(appender);
         }
 
-        properties.setProperty(ROOT_CATEGORY, value);
+        properties.setProperty(ROOT_CATEGORY, value.toString());
         return this;
     }
 
     public Log4jLoggerBinder setRootLogger(Level level, String... appenders) {
-        String value = level.toString();
+        StringBuilder value = new StringBuilder(level.toString());
         for (String appender : appenders) {
-            value += "," + appender;
+            value.append(",").append(appender);
         }
 
-        properties.setProperty(ROOT_LOGGER, value);
+        properties.setProperty(ROOT_LOGGER, value.toString());
         return this;
     }
 
     public Log4jLoggerBinder setLogger(Level level, String logger, String... appenders) {
-        String value = level.toString();
+        StringBuilder value = new StringBuilder(level.toString());
         for (String appender : appenders) {
-            value += "," + appender;
+            value.append(",").append(appender);
         }
 
-        properties.setProperty(String.format(LOGGER, logger), value);
+        properties.setProperty(String.format(LOGGER, logger), value.toString());
         return this;
     }
 

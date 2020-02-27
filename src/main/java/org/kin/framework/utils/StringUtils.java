@@ -42,7 +42,7 @@ public class StringUtils {
         if (collection != null && collection.size() > 0) {
             StringBuilder sb = new StringBuilder();
             for (E e : collection) {
-                sb.append(e + separator);
+                sb.append(e).append(separator);
             }
             sb.deleteCharAt(sb.length() - 1);
             return sb.toString();
@@ -58,7 +58,7 @@ public class StringUtils {
         if (map != null && map.size() > 0) {
             StringBuilder sb = new StringBuilder();
             for (Map.Entry<K, V> entry : map.entrySet()) {
-                sb.append("(" + entry.getKey() + "-" + entry.getValue() + ")" + separator);
+                sb.append("(").append(entry.getKey()).append("-").append(entry.getValue()).append(")").append(separator);
             }
             sb.deleteCharAt(sb.length() - 1);
             return sb.toString();

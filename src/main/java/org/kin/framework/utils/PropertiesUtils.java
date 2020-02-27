@@ -57,9 +57,6 @@ public class PropertiesUtils {
 
             URL url = new File(propertyFileName).toURI().toURL();
             in = new FileInputStream(url.getPath());
-            if (in == null) {
-                return null;
-            }
 
             Properties prop = new Properties();
             prop.load(new InputStreamReader(in, "utf-8"));

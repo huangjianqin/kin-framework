@@ -39,9 +39,7 @@ public class FileMonitor extends Thread implements Closeable {
     private static volatile boolean isStarted = false;
 
     static {
-        JvmCloseCleaner.DEFAULT().add(() -> {
-            COMMON.shutdown();
-        });
+        JvmCloseCleaner.DEFAULT().add(() -> COMMON.shutdown());
     }
 
     private WatchService watchService;

@@ -59,7 +59,7 @@ public class ReceiveBuilder {
      * Predicate用于匹配message
      * Comparable用于排序方法
      */
-    private abstract class AbstractFuncWrapper<AA extends AbstractActor<AA>, T> implements Predicate, Comparable {
+    private static abstract class AbstractFuncWrapper<AA extends AbstractActor<AA>, T> implements Predicate, Comparable {
         private final Receive.Func<AA, T> func;
 
         protected AbstractFuncWrapper(Receive.Func<AA, T> func) {

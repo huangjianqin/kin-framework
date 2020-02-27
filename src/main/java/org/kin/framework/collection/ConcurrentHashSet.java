@@ -1,5 +1,7 @@
 package org.kin.framework.collection;
 
+import org.springframework.lang.NonNull;
+
 import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Spliterator;
@@ -16,6 +18,7 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> {
     private ConcurrentHashMap<E, Boolean> items = new ConcurrentHashMap<>();
 
     @Override
+    @NonNull
     public Iterator<E> iterator() {
         return items.keySet().iterator();
     }
@@ -31,18 +34,21 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> {
     }
 
     @Override
+    @NonNull
     public Object[] toArray() {
         return items.keySet().toArray();
     }
 
     @Override
+    @NonNull
     public <T> T[] toArray(T[] a) {
         return items.keySet().toArray(a);
     }
 
     @Override
     public boolean add(E e) {
-        return items.put(e, Boolean.TRUE);
+        Boolean origin = items.put(e, Boolean.TRUE);
+        return origin == null || origin;
     }
 
     @Override
@@ -90,6 +96,7 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> {
      */
     @Override
     public ConcurrentHashSet<E> clone() throws CloneNotSupportedException {
+        super.clone();
         ConcurrentHashSet<E> cloned = new ConcurrentHashSet<>();
         cloned.addAll(items.keySet());
         return cloned;

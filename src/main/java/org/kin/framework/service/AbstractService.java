@@ -35,7 +35,7 @@ public abstract class AbstractService implements Service {
             this.serviceName = getClass().getSimpleName();
         }
         //服务初始状态
-        this.state = new ServiceState(serviceName, State.NOTINITED);
+        this.state = new ServiceState(serviceName);
     }
 
     @Override

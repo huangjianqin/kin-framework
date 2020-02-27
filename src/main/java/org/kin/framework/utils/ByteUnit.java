@@ -102,7 +102,7 @@ public enum ByteUnit {
         BigDecimal base = BigDecimal.valueOf(2);
         if (dis >= 0) {
             base = base.pow(dis);
-            return source.divide(base).toString();
+            return source.divide(base, BigDecimal.ROUND_DOWN).toString();
         } else {
             base = base.pow(-dis);
             return source.multiply(base).toString();

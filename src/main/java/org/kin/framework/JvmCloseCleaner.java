@@ -4,7 +4,10 @@ import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -33,7 +36,7 @@ public class JvmCloseCleaner {
     private void waitingClose() {
         //等spring容器完全初始化后执行
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Collections.sort(this.closeableWrappers, Comparator.comparingInt(CloseableWrapper::getNPriority));
+            this.closeableWrappers.sort(Comparator.comparingInt(CloseableWrapper::getNPriority));
             for (CloseableWrapper wrapper : this.closeableWrappers) {
                 wrapper.close();
             }

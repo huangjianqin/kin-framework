@@ -41,7 +41,7 @@ public interface Actor<A extends Actor<?>> {
      * 周期性调度执行@message 方法
      *
      * @param message     消息
-     * @param initialDela 延迟执行时间
+     * @param initialDelay 延迟执行时间
      * @param period      时间间隔
      * @param unit        时间单位
      */

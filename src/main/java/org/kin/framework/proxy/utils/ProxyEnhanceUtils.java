@@ -233,7 +233,7 @@ public class ProxyEnhanceUtils {
                 if (Modifier.isFinal(method.getModifiers())) {
                     continue;
                 }
-                StringBuffer methodCode = new StringBuffer();
+                StringBuilder methodCode = new StringBuilder();
                 methodCode.append(ClassUtils.generateMethodDeclaration(method).concat("{"));
                 methodCode.append(methodBodyConstructor.construct(prxoyFieldName, method));
                 methodCode.append(" }");

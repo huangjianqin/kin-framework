@@ -79,8 +79,7 @@ public class ClassUtils {
                 argClasses.add(arg.getClass());
             }
             Constructor<T> constructor = claxx.getDeclaredConstructor(argClasses.toArray(new Class[1]));
-            T target = constructor.newInstance(args);
-            return target;
+            return constructor.newInstance(args);
         } catch (InstantiationException | IllegalAccessException |
                 NoSuchMethodException | InvocationTargetException e) {
             ExceptionUtils.log(e);
@@ -355,9 +354,7 @@ public class ClassUtils {
 
         List<Field> fields = new ArrayList<>();
         while (!claxx.equals(parent)) {
-            for (Field field : claxx.getDeclaredFields()) {
-                fields.add(field);
-            }
+            Collections.addAll(fields, claxx.getDeclaredFields());
             claxx = claxx.getSuperclass();
         }
         return fields;
@@ -499,7 +496,7 @@ public class ClassUtils {
 
     public static String primitivePackage(Class claxx, String code) {
         StringBuffer sb = new StringBuffer();
-        /** 需要手动装箱, 不然编译会报错 */
+        // 需要手动装箱, 不然编译会报错
         if (claxx.isPrimitive()) {
             if (Integer.TYPE.equals(claxx)) {
                 sb.append("Integer.valueOf(");
@@ -525,7 +522,7 @@ public class ClassUtils {
     }
 
     public static String primitiveUnpackage(Class claxx, String code) {
-        /** 需要手动拆箱, 不然编译会报错 */
+        //需要手动拆箱, 不然编译会报错
         if (Integer.TYPE.equals(claxx)) {
             return "((" + Integer.class.getSimpleName() + ")" + code + ").intValue()";
         } else if (Short.TYPE.equals(claxx)) {
@@ -571,9 +568,9 @@ public class ClassUtils {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(Modifier.toString(method.getModifiers()) + " ");
-        sb.append(method.getReturnType().getName() + " ");
-        sb.append(method.getName() + "(");
+        sb.append(Modifier.toString(method.getModifiers())).append(" ");
+        sb.append(method.getReturnType().getName()).append(" ");
+        sb.append(method.getName()).append("(");
 
         StringJoiner argSJ = new StringJoiner(", ");
         Type[] paramTypes = method.getGenericParameterTypes();

@@ -236,7 +236,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     /**
      * 事件处理器的代理封装
      */
-    private class ProxyEventHandler implements ProxyInvoker {
+    private static class ProxyEventHandler implements ProxyInvoker {
         private Object proxy;
         private Method method;
 
@@ -266,7 +266,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     /**
      * 一事件对应多个事件处理器的场景
      */
-    private class MultiEventHandler implements ProxyInvoker {
+    private static class MultiEventHandler implements ProxyInvoker {
         private List<ProxyInvoker> handlers;
 
         MultiEventHandler() {
@@ -304,7 +304,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     /**
      * 事件封装
      */
-    protected class EventContext {
+    protected static class EventContext {
         private int partitionId;
         private Object event;
         private Map<Class<?>, Object> paramsMap;

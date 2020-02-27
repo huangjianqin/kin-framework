@@ -39,9 +39,7 @@ public class HotFix {
         if (oldVersion < version) {
             log.info("hot fix start: {}", version);
             try {
-                /**
-                 * 此处写逻辑
-                 */
+                //TODO 此处写逻辑
             } finally {
                 oldVersion = version;
                 version = 0;

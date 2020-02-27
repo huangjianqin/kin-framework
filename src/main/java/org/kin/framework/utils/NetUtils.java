@@ -167,10 +167,9 @@ public class NetUtils {
     }
 
     /**
-     * get ip:port
      *
-     * @param port
-     * @return String
+     * @param port 端口号
+     * @return String ip:port
      */
     public static String getIpPort(int port) {
         String ip = getIp();
@@ -210,11 +209,7 @@ public class NetUtils {
      * @return 是否合法
      */
     public static boolean isPortInRange(int port) {
-        if (port < 0 || port > 0xFFFF) {
-            return false;
-        }
-
-        return true;
+        return 0 <= port && port <= 0xFFFF;
     }
 
     /**

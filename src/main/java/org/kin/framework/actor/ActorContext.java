@@ -6,7 +6,6 @@ import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.*;
@@ -171,9 +170,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
 
     Future<?> receiveSchedule(Message<AA> message, long delay, TimeUnit unit) {
         if (isStarted && !isStopped) {
-            Future future = actorSystem.getThreadManager().schedule(() -> {
-                receive(message);
-            }, delay, unit);
+            Future future = actorSystem.getThreadManager().schedule(() -> receive(message), delay, unit);
             addFuture(future);
             return future;
         }
@@ -182,9 +179,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
 
     Future<?> receiveFixedRateSchedule(Message<AA> message, long initialDelay, long period, TimeUnit unit) {
         if (isStarted && !isStopped) {
-            Future future = actorSystem.getThreadManager().scheduleAtFixedRate(() -> {
-                receive(message);
-            }, initialDelay, period, unit);
+            Future future = actorSystem.getThreadManager().scheduleAtFixedRate(() -> receive(message), initialDelay, period, unit);
             addFuture(future);
             return future;
         }
@@ -258,13 +253,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     private void clearFinishedFutures() {
         Queue<Future> old = futures.get(this);
         if (old != null) {
-            Iterator<Future> iterator = old.iterator();
-            while (iterator.hasNext()) {
-                Future future = iterator.next();
-                if (future.isDone()) {
-                    iterator.remove();
-                }
-            }
+            old.removeIf(future -> future.isDone());
         }
     }
 

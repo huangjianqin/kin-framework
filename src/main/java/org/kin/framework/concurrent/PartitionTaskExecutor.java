@@ -138,12 +138,12 @@ public class PartitionTaskExecutor<K> {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("taskNum: " + reports.size() + " >>>" + System.lineSeparator());
-        sb.append("threadName\t" + "pendingTaskNum\t" + "finishedTaskNum" + System.lineSeparator());
+        sb.append("taskNum: ").append(reports.size()).append(" >>>").append(System.lineSeparator());
+        sb.append("threadName\t").append("pendingTaskNum\t").append("finishedTaskNum").append(System.lineSeparator());
         for (PartitionTaskReport report : reports) {
-            sb.append(report.getThreadName() + "\t");
-            sb.append(report.getPendingTaskNum() + "\t");
-            sb.append(report.getFinishedTaskNum() + System.lineSeparator());
+            sb.append(report.getThreadName()).append("\t");
+            sb.append(report.getPendingTaskNum()).append("\t");
+            sb.append(report.getFinishedTaskNum()).append(System.lineSeparator());
         }
 
         log.info(sb.toString());

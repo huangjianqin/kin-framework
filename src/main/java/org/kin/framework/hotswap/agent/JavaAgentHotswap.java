@@ -92,6 +92,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
             filePath = URLDecoder.decode(url.getPath(), "utf-8");
         } catch (Exception e) {
             ExceptionUtils.log(e);
+            return null;
         }
         // 可执行jar包运行的结果里包含".jar"
         if (filePath.endsWith(JAR_SUFFIX)) {
@@ -163,7 +164,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                 vm.loadAgent(JAR_PATH);
 
                 //重新定义类
-                JavaDynamicAgent.getInstrumentation().redefineClasses(classDefList.toArray(new ClassDefinition[classDefList.size()]));
+                JavaDynamicAgent.getInstrumentation().redefineClasses(classDefList.toArray(new ClassDefinition[0]));
 
                 //删除热更类文件
                 Path rootPath = Paths.get(CLASSPATH);
@@ -197,7 +198,6 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
 
     @Override
     public List<ClassFileInfo> getClassFileInfo() {
-        List<ClassFileInfo> classFileInfos = new ArrayList<>(filePath2ClassFileInfo.values());
-        return classFileInfos;
+        return new ArrayList<>(filePath2ClassFileInfo.values());
     }
 }
