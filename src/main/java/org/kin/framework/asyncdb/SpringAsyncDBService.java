@@ -30,7 +30,7 @@ public class SpringAsyncDBService extends AsyncDBService implements ApplicationC
      * 自动从Spring容器获取持久化实现类
      */
     @Override
-    protected DBSynchronzier getAsyncPersistent(AbstractAsyncDBEntity asyncDBEntity) {
+    protected DBSynchronzier getAsyncPersistent(AsyncDBEntity asyncDBEntity) {
         Class claxx = asyncDBEntity.getClass();
         if (!class2Persistent.containsKey(claxx)) {
             PersistentClass persistentAnnotation = (PersistentClass) claxx.getAnnotation(PersistentClass.class);

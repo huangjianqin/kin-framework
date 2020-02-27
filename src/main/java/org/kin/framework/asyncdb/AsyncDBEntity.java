@@ -7,11 +7,13 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Created by huangjianqin on 2019/3/31.
+ *
+ * @author huangjianqin
+ * @date 2019/3/31
  * 支持多线程操作
  */
-public abstract class AbstractAsyncDBEntity implements Serializable {
-    private static final Logger log = LoggerFactory.getLogger(AbstractAsyncDBEntity.class);
+public abstract class AsyncDBEntity implements Serializable {
+    private static final Logger log = LoggerFactory.getLogger(AsyncDBEntity.class);
 
     private volatile AtomicReference<DBStatus> status = new AtomicReference<>(DBStatus.NORMAL);
     private volatile DBSynchronzier DBSynchronzier;

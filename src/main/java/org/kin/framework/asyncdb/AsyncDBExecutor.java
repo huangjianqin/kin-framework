@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class AsyncDBExecutor implements Closeable {
     private static final Logger log = LoggerFactory.getLogger("asyncDB");
-    private final AbstractAsyncDBEntity POISON = new AbstractAsyncDBEntity() {
+    private final AsyncDBEntity POISON = new AsyncDBEntity() {
     };
     private static final int WAITTING_OPR_NUM_THRESHOLD = 500;
     private static final int LOG_STATE_INTERVAL = 60;
@@ -83,7 +83,7 @@ public class AsyncDBExecutor implements Closeable {
         }
     }
 
-    boolean submit(AbstractAsyncDBEntity asyncDBEntity) {
+    boolean submit(AsyncDBEntity asyncDBEntity) {
         if (!isStopped) {
             int key = asyncDBEntity.hashCode();
             int index = key % asyncDBOperators.length;
@@ -97,13 +97,13 @@ public class AsyncDBExecutor implements Closeable {
     }
 
     private class AsyncDBOperator implements Runnable, Closeable {
-        private BlockingQueue<AbstractAsyncDBEntity> queue = new LinkedBlockingQueue<>();
+        private BlockingQueue<AsyncDBEntity> queue = new LinkedBlockingQueue<>();
         private volatile boolean isStopped = false;
         private long syncNum = 0;
         private String threadName = "";
         private long preSyncNum = 0;
 
-        void submit(AbstractAsyncDBEntity asyncDBEntity) {
+        void submit(AsyncDBEntity asyncDBEntity) {
             if (!isStopped) {
                 try {
                     queue.put(asyncDBEntity);
@@ -120,7 +120,7 @@ public class AsyncDBExecutor implements Closeable {
                 int oprNum = asyncDBStrategy.getOprNum();
                 for (int i = 0; i < oprNum; i++) {
                     try {
-                        AbstractAsyncDBEntity entity = queue.take();
+                        AsyncDBEntity entity = queue.take();
 
                         if (entity == POISON) {
                             log.info("AsyncDBOperator return");

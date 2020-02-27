@@ -78,11 +78,11 @@ public class AsyncDBService implements Closeable {
         }
     }
 
-    protected DBSynchronzier getAsyncPersistent(AbstractAsyncDBEntity asyncDBEntity) {
+    protected DBSynchronzier getAsyncPersistent(AsyncDBEntity asyncDBEntity) {
         return class2Persistent.get(asyncDBEntity.getClass());
     }
 
-    boolean dbOpr(AbstractAsyncDBEntity asyncDBEntity, DBOperation operation) {
+    boolean dbOpr(AsyncDBEntity asyncDBEntity, DBOperation operation) {
         asyncDBEntity.serialize();
         try {
             DBSynchronzier DBSynchronzier = getAsyncPersistent(asyncDBEntity);

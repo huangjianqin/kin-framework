@@ -13,7 +13,7 @@ public enum DBStatus {
      */
     NORMAL {
         @Override
-        public boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity) {
+        public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
             return true;
         }
     },
@@ -22,7 +22,7 @@ public enum DBStatus {
      */
     INSERT {
         @Override
-        public boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity) {
+        public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
             try {
                 DBSynchronzier.insert(asyncDBEntity);
                 return true;
@@ -38,7 +38,7 @@ public enum DBStatus {
      */
     UPDATE {
         @Override
-        public boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity) {
+        public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
             try {
                 DBSynchronzier.update(asyncDBEntity);
                 return true;
@@ -54,7 +54,7 @@ public enum DBStatus {
      */
     DELETED {
         @Override
-        public boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity) {
+        public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
             try {
                 DBSynchronzier.delete(asyncDBEntity);
                 return true;
@@ -69,6 +69,6 @@ public enum DBStatus {
 
     private static final Logger log = LoggerFactory.getLogger("asyncDB");
 
-    public abstract boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity);
+    public abstract boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity);
 
 }

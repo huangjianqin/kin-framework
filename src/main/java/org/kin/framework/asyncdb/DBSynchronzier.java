@@ -6,7 +6,7 @@ package org.kin.framework.asyncdb;
  * <p>
  * 定义DB基本操作
  */
-public interface DBSynchronzier<E extends AbstractAsyncDBEntity> {
+public interface DBSynchronzier<E extends AsyncDBEntity> {
     void insert(E entity);
 
     void update(E entity);
