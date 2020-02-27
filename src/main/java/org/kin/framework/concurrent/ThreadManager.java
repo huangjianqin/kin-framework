@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * Created by huangjianqin on 2018/1/24.
+ * @author huangjianqin
+ * @date 2018/1/24
  */
 public class ThreadManager implements ScheduledExecutorService {
-    //执行线程
+    /** 执行线程 */
     private ExecutorService executor;
-    //调度线程
+    /** 调度线程 */
     private ScheduledExecutorService scheduleExecutor;
     private volatile boolean isStopped;
 
@@ -27,7 +28,7 @@ public class ThreadManager implements ScheduledExecutorService {
 
     public ThreadManager(ExecutorService executor, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
         this.executor = executor;
-        if(scheduleCoreNum > 0){
+        if (scheduleCoreNum > 0) {
             this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleCoreNum, scheduleThreadFactory);
         }
     }
@@ -66,7 +67,7 @@ public class ThreadManager implements ScheduledExecutorService {
     public void shutdown() {
         isStopped = true;
         executor.shutdown();
-        if(scheduleExecutor != null){
+        if (scheduleExecutor != null) {
             scheduleExecutor.shutdown();
         }
     }
@@ -76,7 +77,7 @@ public class ThreadManager implements ScheduledExecutorService {
         isStopped = true;
         List<Runnable> tasks = Lists.newArrayList();
         tasks.addAll(executor.shutdownNow());
-        if(scheduleExecutor != null){
+        if (scheduleExecutor != null) {
             tasks.addAll(scheduleExecutor.shutdownNow());
         }
         return tasks;
@@ -95,7 +96,7 @@ public class ThreadManager implements ScheduledExecutorService {
     @Override
     public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
         boolean result = executor.awaitTermination(timeout, unit);
-        if(scheduleExecutor != null){
+        if (scheduleExecutor != null) {
             result &= scheduleExecutor.awaitTermination(timeout, unit);
         }
         return result;

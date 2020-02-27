@@ -5,7 +5,8 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Created by huangjianqin on 2018/5/25.
+ * @author huangjianqin
+ * @date 2018/5/25
  */
 public class StringUtils {
     private static final String MKSTRING_SEPARATOR = ",";
@@ -65,18 +66,18 @@ public class StringUtils {
         return "";
     }
 
-    public static String firstUpperCase(String s){
+    public static String firstUpperCase(String s) {
         char[] chars = s.toCharArray();
         if (chars[0] >= 'a' && chars[0] <= 'z') {
-            chars[0] = (char)(chars[0] - 32);
+            chars[0] = (char) (chars[0] - 32);
         }
         return new String(chars);
     }
 
-    public static String firstLowerCase(String s){
+    public static String firstLowerCase(String s) {
         char[] chars = s.toCharArray();
         if (chars[0] >= 'A' && chars[0] <= 'Z') {
-            chars[0] = (char)(chars[0] + 32);
+            chars[0] = (char) (chars[0] + 32);
         }
         return new String(chars);
     }

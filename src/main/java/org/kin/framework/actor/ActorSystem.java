@@ -19,7 +19,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by huangjianqin on 2018/6/5.
+ * @author huangjianqin
+ * @date 2018/6/5
  */
 public class ActorSystem implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(ActorSystem.class);
@@ -27,9 +28,9 @@ public class ActorSystem implements Closeable {
     private static final String DEFAULT_AS_NAME = "default";
 
     private final String name;
-    //该actor system下的actor
+    /** 该actor system下的actor */
     private Map<String, AbstractActor> path2Actors = new ConcurrentHashMap<>();
-    //每个actor system绑定一个线程池，并且该actor system下的actor使用该线程池
+    /** 每个actor system绑定一个线程池，并且该actor system下的actor使用该线程池 */
     private ThreadManager threadManager;
 
     private ActorSystem(String name) {
@@ -52,9 +53,9 @@ public class ActorSystem implements Closeable {
     }
 
     public static ActorSystem create() {
-        if(!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)){
-            synchronized (DEFAULT_AS_NAME){
-                if(!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)){
+        if (!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
+            synchronized (DEFAULT_AS_NAME) {
+                if (!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
                     ActorSystem defaultActorSystem = new ActorSystem(DEFAULT_AS_NAME);
                     NAME2ACTORSYSTEM.put(DEFAULT_AS_NAME, defaultActorSystem);
 
@@ -74,7 +75,7 @@ public class ActorSystem implements Closeable {
     }
 
     public static ActorSystem create(String name, ThreadManager threadManager) {
-        if(DEFAULT_AS_NAME.equals(name)){
+        if (DEFAULT_AS_NAME.equals(name)) {
             return create();
         }
         ActorSystem actorSystem = new ActorSystem(name, threadManager);
@@ -139,6 +140,7 @@ public class ActorSystem implements Closeable {
     }
 
     //getter
+
     ThreadManager getThreadManager() {
         return threadManager;
     }

@@ -11,7 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Created by 健勤 on 2017/8/11.
+ * @author 健勤
+ * @date 2017/8/11
  * 组合服务,也就是说该类或继承该类的子类会拥有许多服务
  */
 public class CompsiteService extends AbstractService {

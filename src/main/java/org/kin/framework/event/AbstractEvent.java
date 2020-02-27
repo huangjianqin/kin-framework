@@ -1,10 +1,11 @@
 package org.kin.framework.event;
 
 /**
- * Created by 健勤 on 2017/8/8.
+ * @author 健勤
+ * @date 2017/8/8
  * 事件的抽象
  */
-public abstract class AbstractEvent<TYPE extends Enum<TYPE>>{
+public abstract class AbstractEvent<TYPE extends Enum<TYPE>> {
     private final TYPE type;
     private final long timestamp;
 
@@ -16,6 +17,7 @@ public abstract class AbstractEvent<TYPE extends Enum<TYPE>>{
     public TYPE getType() {
         return type;
     }
+
     public long getTimestamp() {
         return timestamp;
     }

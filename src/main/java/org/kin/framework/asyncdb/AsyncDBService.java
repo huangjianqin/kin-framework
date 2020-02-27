@@ -10,7 +10,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by huangjianqin on 2019/3/31.
+ * @author huangjianqin
+ * @date 2019/3/31
  * <p>
  * 一Entity(以hashcode分区)一条线程执行DB操作
  */
@@ -22,6 +23,7 @@ public class AsyncDBService implements Closeable {
     private AsyncDBExecutor asyncDBExecutor;
 
     //---------------------------------------------------------------------------------------------------
+
     public static AsyncDBService getInstance() {
         if (INSTANCE == null) {
             synchronized (AsyncDBService.class) {
@@ -34,6 +36,7 @@ public class AsyncDBService implements Closeable {
     }
 
     //---------------------------------------------------------------------------------------------------
+
     public AsyncDBService() {
         monitorJVMClose();
     }
@@ -75,11 +78,11 @@ public class AsyncDBService implements Closeable {
         }
     }
 
-    protected DBSynchronzier getAsyncPersistent(AsyncDBEntity asyncDBEntity) {
+    protected DBSynchronzier getAsyncPersistent(AbstractAsyncDBEntity asyncDBEntity) {
         return class2Persistent.get(asyncDBEntity.getClass());
     }
 
-    boolean dbOpr(AsyncDBEntity asyncDBEntity, DBOperation operation) {
+    boolean dbOpr(AbstractAsyncDBEntity asyncDBEntity, DBOperation operation) {
         asyncDBEntity.serialize();
         try {
             DBSynchronzier DBSynchronzier = getAsyncPersistent(asyncDBEntity);

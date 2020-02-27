@@ -1,14 +1,20 @@
 package org.kin.framework;
 
 /**
- * Created by huangjianqin on 2019/2/28.
+ * @author huangjianqin
+ * @date 2019/2/28
  * <p>
- * close服务并释放资源
  */
 public interface Closeable {
+    /**
+     * close服务并释放资源
+     */
     void close();
 
-    default void monitorJVMClose(){
+    /**
+     * 默认方法, 绑定jvm shutdownhook close服务并释放资源
+     */
+    default void monitorJVMClose() {
         JvmCloseCleaner.DEFAULT().add(this);
     }
 }

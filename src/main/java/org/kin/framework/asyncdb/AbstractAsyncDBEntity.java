@@ -10,31 +10,33 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by huangjianqin on 2019/3/31.
  * 支持多线程操作
  */
-public abstract class AsyncDBEntity implements Serializable{
-    private static final Logger log = LoggerFactory.getLogger(AsyncDBEntity.class);
+public abstract class AbstractAsyncDBEntity implements Serializable {
+    private static final Logger log = LoggerFactory.getLogger(AbstractAsyncDBEntity.class);
 
     private volatile AtomicReference<DBStatus> status = new AtomicReference<>(DBStatus.NORMAL);
     private volatile DBSynchronzier DBSynchronzier;
 
-    public void insert(){
+    public void insert() {
         AsyncDBService.getInstance().dbOpr(this, DBOperation.Insert);
     }
-    public void update(){
+
+    public void update() {
         AsyncDBService.getInstance().dbOpr(this, DBOperation.Update);
     }
-    public void delete(){
+
+    public void delete() {
         AsyncDBService.getInstance().dbOpr(this, DBOperation.Delete);
     }
 
-    protected void serialize(){
+    protected void serialize() {
         //do nothing, waitting to overwrite
     }
 
-    protected void deserialize(){
+    protected void deserialize() {
         //do nothing, waitting to overwrite
     }
 
-    boolean isCanPersist(DBOperation operation){
+    boolean isCanPersist(DBOperation operation) {
         DBStatus now;
         do {
             now = status.get();
@@ -46,7 +48,7 @@ public abstract class AsyncDBEntity implements Serializable{
     }
 
 
-    boolean tryBDOpr(int tryTimes){
+    boolean tryBDOpr(int tryTimes) {
         DBStatus now;
         do {
             now = status.get();
@@ -65,6 +67,7 @@ public abstract class AsyncDBEntity implements Serializable{
     }
 
     //setter && getter
+
     DBSynchronzier getAsyncPersistent() {
         return DBSynchronzier;
     }

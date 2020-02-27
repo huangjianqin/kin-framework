@@ -2,10 +2,8 @@ package org.kin.framework.actor;
 
 import org.kin.framework.JvmCloseCleaner;
 import org.kin.framework.actor.domain.ActorPath;
-import org.kin.framework.concurrent.SimpleThreadFactory;
 import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author huangjianqin
  * @date 2019/7/9
+ * <p>
+ * 推荐使用继承实现
  */
-public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
+public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ActorLike.class);
 
     private static Map<ActorLike<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
@@ -30,9 +30,9 @@ public abstract class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, R
     private volatile Thread currentThread;
     private volatile boolean isStopped = false;
 
-    public ActorLike(ThreadManager threads) {
+    protected ActorLike(ThreadManager threads) {
         this.threads = threads;
-        //每1h清楚已结束的调度
+        //每1h清理已结束的调度
         scheduleAtFixedRate(actor -> clearFinishedFutures(), 0, 1, TimeUnit.HOURS);
 
         JvmCloseCleaner.DEFAULT().add(() -> threads.shutdown());

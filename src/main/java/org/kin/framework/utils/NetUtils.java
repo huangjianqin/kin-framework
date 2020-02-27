@@ -12,7 +12,8 @@ import java.util.Enumeration;
 import java.util.regex.Pattern;
 
 /**
- * Created by huangjianqin on 2018/1/28.
+ * @author huangjianqin
+ * @date 2018/1/28
  */
 public class NetUtils {
     private static final Logger logger = LoggerFactory.getLogger(NetUtils.class);
@@ -85,6 +86,7 @@ public class NetUtils {
     }
 
     // ---------------------- find ip ----------------------
+
     private static InetAddress getLocalAddress0() {
         InetAddress localAddress = null;
         try {
@@ -136,6 +138,7 @@ public class NetUtils {
 
 
     // ---------------------- tool ----------------------
+
     public static boolean checkHostPort(String address) {
         return address.matches(IP_PATTERN.pattern());
     }
@@ -200,7 +203,12 @@ public class NetUtils {
         return new Object[]{host, port};
     }
 
-    //检查端口是否在指定范围内
+    /**
+     * 检查端口是否在指定范围内
+     *
+     * @param port 端口号
+     * @return 是否合法
+     */
     public static boolean isPortInRange(int port) {
         if (port < 0 || port > 0xFFFF) {
             return false;

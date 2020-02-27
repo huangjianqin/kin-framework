@@ -7,7 +7,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by huangjianqin on 2018/2/26.
+ * @author huangjianqin
+ * @date 2018/2/26
  * <p>
  * 业务Actor必须继承该类并根据需求实现业务逻辑
  * 每个Actor实例必须并定一个ActorSystem
@@ -110,6 +111,8 @@ public abstract class AbstractActor<A extends Actor<?>> implements Actor<A>, Com
 
     /**
      * Actor 线程执行
+     *
+     * @return Actor 事件-处理 封装
      */
     public abstract Receive createReceiver();
 }

@@ -24,6 +24,7 @@ public class ProxyMethodDefinition {
     }
 
     //getter
+
     public Object getProxyObj() {
         return proxyObj;
     }

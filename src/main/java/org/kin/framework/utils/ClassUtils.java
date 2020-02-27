@@ -23,9 +23,9 @@ import java.util.stream.Stream;
  */
 public class ClassUtils {
     public static final String CLASS_SUFFIX = ".class";
-    //用于匹配内部类
+    /** 用于匹配内部类 */
     private static final Pattern INNER_PATTERN = Pattern.compile("\\$(\\d+).", Pattern.CASE_INSENSITIVE);
-    //生成方法签名的参数命名
+    /** 生成方法签名的参数命名 */
     public static final String METHOD_DECLARATION_ARG_NAME = "arg";
 
     @FunctionalInterface
@@ -187,7 +187,7 @@ public class ClassUtils {
 
                                 if (StringUtils.isNotBlank(className) &&
                                         !INNER_PATTERN.matcher(className).find() &&
-                                        !(className.indexOf("$") > 0)) {
+                                        (className.indexOf("$") <= 0)) {
                                     try {
                                         return (Class<T>) contextClassLoader.loadClass(className);
                                     } catch (ClassNotFoundException e) {

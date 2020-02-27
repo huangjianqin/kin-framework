@@ -1,13 +1,14 @@
 package org.kin.framework.asyncdb;
 
 /**
- * Created by huangjianqin on 2019/4/4.
+ * @author huangjianqin
+ * @date 2019/4/4
  */
 public class SyncState {
     private String threadName;
     private long syncNum;
     private int waittingOprNum;
-    //离上次记录期间处理的DB 实体数量
+    /** 离上次记录期间处理的DB 实体数量 */
     private long syncPeriodNum;
 
     public SyncState(String threadName, long syncNum, int waittingOprNum, long syncPeriodNum) {
@@ -18,6 +19,7 @@ public class SyncState {
     }
 
     //setter && getter
+
     public String getThreadName() {
         return threadName;
     }

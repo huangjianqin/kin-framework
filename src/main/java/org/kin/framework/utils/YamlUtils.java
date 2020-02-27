@@ -17,15 +17,14 @@ public class YamlUtils {
     public static YamlConfig loadYaml(String configPath) {
         //从classpath寻找
         URL url = Thread.currentThread().getContextClassLoader().getResource(configPath);
-        if(url != null){
+        if (url != null) {
             //返回多层嵌套map
             try {
                 return new YamlConfig((Map<String, Object>) Yaml.load(url.openStream()));
             } catch (IOException e) {
                 ExceptionUtils.log(e);
             }
-        }
-        else{
+        } else {
             //从file path寻找
             try {
                 //返回多层嵌套map
@@ -47,6 +46,7 @@ public class YamlUtils {
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     public static Properties transfer2Properties(Map<String, Object> yaml) {
         Properties properties = new Properties();
         transfer2Properties(yaml, properties, "");
@@ -74,6 +74,7 @@ public class YamlUtils {
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     public static Map<String, Object> transfer2Yaml(Map config) {
         Map<String, Object> yaml = new HashMap<>();
         transfer2Yaml(yaml, config);

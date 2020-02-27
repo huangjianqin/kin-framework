@@ -18,9 +18,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * @date 2020-01-15
  */
 public class LockBox<K extends Comparable<K>> {
-    //用于没有外部自定义锁实现的key存储锁对象
+    /** 用于没有外部自定义锁实现的key存储锁对象 */
     private ConcurrentHashMap<K, Lock> lockMap = new ConcurrentHashMap<>();
-    //当前锁线程等待的锁列表
+    /** 当前锁线程等待的锁列表 */
     private ThreadLocal<List<LockInfo>> threadLocal = new ThreadLocal<>();
 
     public void lockRun(K key, Runnable runnable) {

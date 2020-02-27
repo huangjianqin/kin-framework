@@ -9,7 +9,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.*;
 
 /**
- * Created by 健勤 on 2017/8/9.
+ * @author 健勤
+ * @date 2017/8/9
  * 状态机工厂类
  * 延迟构造状态拓扑图
  * <p>
@@ -21,14 +22,16 @@ import java.util.*;
 public class StateMachineFactory<OPERAND, STATE extends Enum<STATE>, EVENTTYPE extends Enum<EVENTTYPE>, EVENT> {
     private static Logger log = LoggerFactory.getLogger(StateMachine.class);
 
-    //拓扑
+    /** 拓扑 */
     private Map<STATE, Map<EVENTTYPE, Transition<OPERAND, STATE, EVENTTYPE, EVENT>>> stateMachineTable;
 
-    //初始状态
+    /** 初始状态 */
     private STATE defaultInitialState;
 
-    //临时存储链表,最终会转换为拓扑
-    //栈形式
+    /**
+     * 临时存储链表,最终会转换为拓扑
+     * 栈形式
+     */
     private final TransitionsListNode node;
 
     private String stateGraph;
@@ -65,6 +68,9 @@ public class StateMachineFactory<OPERAND, STATE extends Enum<STATE>, EVENTTYPE e
      * 生成状态图的接口
      */
     private interface ApplicableTransition<OPERAND, STATE extends Enum<STATE>, EVENTTYPE extends Enum<EVENTTYPE>, EVENT> {
+        /**
+         * @param subject 子状态机
+         */
         void apply(StateMachineFactory<OPERAND, STATE, EVENTTYPE, EVENT> subject);
     }
 
@@ -115,15 +121,20 @@ public class StateMachineFactory<OPERAND, STATE extends Enum<STATE>, EVENTTYPE e
 
     /**
      * 内部状态转换逻辑抽象
-     *
-     * @param <OPERAND>
-     * @param <STATE>
-     * @param <EVENTTYPE>
-     * @param <EVENT>
      */
     private interface Transition<OPERAND, STATE extends Enum<STATE>, EVENTTYPE extends Enum<EVENTTYPE>, EVENT> {
+        /**
+         * @param operand   操作
+         * @param oldState  之前的状态
+         * @param event     事件
+         * @param eventType 事件类型
+         * @return 事件触发后的状态
+         */
         STATE doTransition(OPERAND operand, STATE oldState, EVENT event, EVENTTYPE eventType);
 
+        /**
+         * @return 获取Transition后的状态
+         */
         Set<STATE> getPostStates();
     }
 

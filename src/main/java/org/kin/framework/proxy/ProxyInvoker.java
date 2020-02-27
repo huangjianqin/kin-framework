@@ -10,17 +10,20 @@ import java.lang.reflect.Method;
  */
 public interface ProxyInvoker<S> {
     /**
-     * 获取代理类
+     * @return 代理类
      */
     S getProxyObj();
 
     /**
-     * 获取方法
+     * @return 代理方法
      */
     Method getMethod();
 
     /**
      * 调用
+     *
+     * @param params 参数
+     * @return 代理方法返回结果
      */
     Object invoke(Object... params) throws Exception;
 }

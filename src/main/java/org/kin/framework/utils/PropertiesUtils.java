@@ -78,7 +78,7 @@ public class PropertiesUtils {
         return null;
     }
 
-    public static boolean writeFileProperties(Properties properties, String filePathName){
+    public static boolean writeFileProperties(Properties properties, String filePathName) {
         FileOutputStream out = null;
         try {
 

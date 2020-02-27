@@ -7,43 +7,64 @@ import java.math.BigDecimal;
  * @date 2019/7/31
  */
 public enum ByteUnit {
-    BIT{
+    /**
+     * b
+     */
+    BIT {
         @Override
         public int pow() {
             return 0;
         }
     },
-    BYTE{
+    /**
+     * B
+     */
+    BYTE {
         @Override
         public int pow() {
             return BIT.pow() + 3;
         }
     },
-    KILOBYTE{
+    /**
+     * KB
+     */
+    KILOBYTE {
         @Override
         public int pow() {
             return BYTE.pow() + 10;
         }
     },
-    MEGABYTE{
+    /**
+     * MB
+     */
+    MEGABYTE {
         @Override
         public int pow() {
             return BYTE.pow() + 20;
         }
     },
-    GIGABYTE{
+    /**
+     * GB
+     */
+    GIGABYTE {
         @Override
         public int pow() {
             return BYTE.pow() + 30;
         }
     },
-    TERABYTE{
+    /**
+     * TB
+     */
+    TERABYTE {
         @Override
         public int pow() {
             return BYTE.pow() + 40;
         }
     },
-    PETABYTE{
+    /**
+     * PB
+     */
+    PETABYTE {
         @Override
         public int pow() {
             return BYTE.pow() + 50;
@@ -53,33 +74,36 @@ public enum ByteUnit {
     ;
 
     public abstract int pow();
-    public String convert(long source, ByteUnit sourceUnit){
+
+    public String convert(long source, ByteUnit sourceUnit) {
         return convert(source, sourceUnit, this);
     }
-    public String convert(double source, ByteUnit sourceUnit){
+
+    public String convert(double source, ByteUnit sourceUnit) {
         return convert(source, sourceUnit, this);
     }
-    public String convert(BigDecimal source, ByteUnit sourceUnit){
+
+    public String convert(BigDecimal source, ByteUnit sourceUnit) {
         return convert(source, sourceUnit, this);
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    public static String convert(long source, ByteUnit sourceUnit, ByteUnit targetUnit){
+
+    public static String convert(long source, ByteUnit sourceUnit, ByteUnit targetUnit) {
         return convert(BigDecimal.valueOf(source), sourceUnit, targetUnit);
     }
 
-    public static String convert(double source, ByteUnit sourceUnit, ByteUnit targetUnit){
+    public static String convert(double source, ByteUnit sourceUnit, ByteUnit targetUnit) {
         return convert(BigDecimal.valueOf(source), sourceUnit, targetUnit);
     }
 
-    public static String convert(BigDecimal source, ByteUnit sourceUnit, ByteUnit targetUnit){
+    public static String convert(BigDecimal source, ByteUnit sourceUnit, ByteUnit targetUnit) {
         int dis = targetUnit.pow() - sourceUnit.pow();
         BigDecimal base = BigDecimal.valueOf(2);
-        if(dis >= 0){
+        if (dis >= 0) {
             base = base.pow(dis);
             return source.divide(base).toString();
-        }
-        else{
+        } else {
             base = base.pow(-dis);
             return source.multiply(base).toString();
         }

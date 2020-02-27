@@ -3,7 +3,8 @@ package org.kin.framework.asyncdb;
 import java.lang.annotation.*;
 
 /**
- * Created by huangjianqin on 2019/3/31.
+ * @author huangjianqin
+ * @date 2019/3/31
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

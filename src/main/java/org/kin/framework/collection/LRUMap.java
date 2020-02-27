@@ -4,7 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Created by huangjianqin on 2017/10/28.
+ * @author huangjianqin
+ * @date 2017/10/28
  */
 public class LRUMap<K, V> extends LinkedHashMap<K, V> {
     private int initItemNum;

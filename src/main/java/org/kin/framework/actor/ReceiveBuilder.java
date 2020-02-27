@@ -11,19 +11,20 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * Created by huangjianqin on 2018/6/5.
- * <p>
+ * @author huangjianqin
+ * @date 2018/6/5
  * 预定义方法匹配builder
  */
 public class ReceiveBuilder {
     private static final Logger log = LoggerFactory.getLogger(ReceiveBuilder.class);
-    //match和matchEqual根据定义顺序排序,matchAny总是在match和matchEqual之后执行，并且也是根据定义顺序排序
+    /** match和matchEqual根据定义顺序排序,matchAny总是在match和matchEqual之后执行，并且也是根据定义顺序排序 */
     private List<AbstractFuncWrapper> funcWrappers = new ArrayList<>();
 
     private ReceiveBuilder() {
     }
 
     //-----------------------------------------------------------------------------------------------
+
     public static ReceiveBuilder create() {
         return new ReceiveBuilder();
     }
@@ -133,6 +134,7 @@ public class ReceiveBuilder {
     }
 
     //-----------------------------------------------------------------------------------------------
+
     private class InternalReceive implements Receive {
         private final List<AbstractFuncWrapper> funcWrappers;
 

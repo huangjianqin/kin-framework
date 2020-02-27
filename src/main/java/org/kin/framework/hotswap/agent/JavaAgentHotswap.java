@@ -29,14 +29,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by huangjianqin on 2018/2/3.
+ * @author huangjianqin
+ * @date 2018/2/3
  * 单例模式
  */
-public final class JavaAgentHotswap implements JavaAgentHotswapMBean{
+public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
     private static final Logger log = LoggerFactory.getLogger("hotSwap");
     private static final String JAR_SUFFIX = ".jar";
-    //热更class文件放另外一个目录
-    //开发者指定, 也可以走配置
+    /**
+     * 热更class文件放另外一个目录
+     * 开发者指定, 也可以走配置
+     */
     private static final String CLASSPATH = "hotswap/classes";
     private static final String JAR_PATH = "hotswap/KinJavaAgent.jar";
     private volatile boolean isInit;

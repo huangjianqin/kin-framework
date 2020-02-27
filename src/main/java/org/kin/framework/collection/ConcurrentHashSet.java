@@ -9,7 +9,8 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
- * Created by huangjianqin on 2017/10/28.
+ * @author huangjianqin
+ * @date 2017/10/28
  */
 public class ConcurrentHashSet<E> extends AbstractSet<E> {
     private ConcurrentHashMap<E, Boolean> items = new ConcurrentHashMap<>();

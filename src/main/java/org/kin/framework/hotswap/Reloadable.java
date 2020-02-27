@@ -1,7 +1,8 @@
 package org.kin.framework.hotswap;
 
 /**
- * Created by huangjianqin on 2018/1/31.
+ * @author huangjianqin
+ * @date 2018/1/31
  * 标识接口
  * <p>
  * 本热更方式侵入很强,要求开发者手动实现继承抽象类,甚至有些情况,需开发定制热更替换实例逻辑

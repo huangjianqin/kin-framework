@@ -4,7 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by huangjianqin on 2019/4/1.
+ * @author huangjianqin
+ * @date 2019/4/1
  */
 public enum DBOperation {
     /**
@@ -18,7 +19,8 @@ public enum DBOperation {
     /**
      * DB记录删除
      */
-    Delete(DBStatus.DELETED, Arrays.asList(DBStatus.INSERT, DBStatus.UPDATE)),;
+    Delete(DBStatus.DELETED, Arrays.asList(DBStatus.INSERT, DBStatus.UPDATE)),
+    ;
 
     private DBStatus targetStauts;
     private List<DBStatus> canTransfer;
@@ -32,7 +34,7 @@ public enum DBOperation {
         return targetStauts;
     }
 
-    boolean isCanTransfer(DBStatus status){
+    boolean isCanTransfer(DBStatus status) {
         return canTransfer.contains(status);
     }
 }

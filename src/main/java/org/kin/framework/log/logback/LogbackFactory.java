@@ -16,7 +16,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 
 /**
- * Created by huangjianqin on 2017/11/14.
+ * @author huangjianqin
+ * @date 2017/11/14
  * 动态生成logback logger
  * 所有组件都必须start
  */
@@ -28,6 +29,7 @@ public class LogbackFactory {
     }
 
     //---------------------------------------------------------------------------------------------
+
     public LogbackFactory add(Appender<ILoggingEvent> newAppender) {
         logbackLogger.addAppender(newAppender);
         return this;
@@ -55,6 +57,7 @@ public class LogbackFactory {
     }
 
     //---------------------------------------------------------------------------------------------
+
     public static LogbackFactory create(String logggerName, LoggerContext context) {
         return new LogbackFactory(context.getLogger(logggerName));
     }

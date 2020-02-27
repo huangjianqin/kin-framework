@@ -4,7 +4,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by huangjianqin on 2019/3/1.
+ * @author huangjianqin
+ * @date 2019/3/1
  */
 public class SimpleThreadFactory implements ThreadFactory {
     private final ThreadGroup threadGroup;

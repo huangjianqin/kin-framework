@@ -4,6 +4,7 @@ import org.kin.framework.JvmCloseCleaner;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.SysUtils;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.SynchronousQueue;
@@ -66,14 +67,35 @@ public class Keeper {
                 target.postAction();
             }
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            RunnableKeeperAction that = (RunnableKeeperAction) o;
+            return target.equals(that.target);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(target);
+        }
     }
 
     @FunctionalInterface
     public interface KeeperStopper {
+        /**
+         * 停止KeeperAction
+         */
         void stopKeeper();
     }
 
-    //api
+    //--------------------------------------------api-----------------------------------------------------------
+
     public static KeeperStopper keep(KeeperAction keeperAction) {
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(keeperAction);
         THREADS.execute(runnableKeeperAction);

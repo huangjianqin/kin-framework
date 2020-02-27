@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * Created by huangjianqin on 2019/5/29.
+ * @author huangjianqin
+ * @date 2019/5/29
  * 在spring容器中扫描Closeable实现类, 并添加进释放资源队列中
  */
 @Component

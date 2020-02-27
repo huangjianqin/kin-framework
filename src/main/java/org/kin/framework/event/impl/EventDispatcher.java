@@ -24,26 +24,27 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * Created by 健勤 on 2017/8/8.
+ * @author 健勤
+ * @date 2017/8/8
  * 事件分发器
  * 支持多线程事件处理
  */
 public class EventDispatcher extends AbstractService implements ScheduleDispatcher, NullEventDispatcher {
     private static Logger log = LoggerFactory.getLogger(EventDispatcher.class);
-    //事件堆积太多阈值
+    /** 事件堆积太多阈值 */
     private static final int TOO_MUCH_EVENTS_THRESHOLD = 1000;
 
-    //事件处理线程(分区处理)
+    /** 事件处理线程(分区处理) */
     protected final PartitionTaskExecutor<Integer> executor;
-    //负责分发事件的线程(主要负责调度和异步分发事件)
+    /** 负责分发事件的线程(主要负责调度和异步分发事件) */
     protected final ThreadManager threadManager;
-    //异步分发事件线程逻辑实现
+    /** 异步分发事件线程逻辑实现 */
     protected AsyncEventDispatchThread asyncDispatchThread;
-    //存储事件与其对应的事件处理器的映射
+    /** 存储事件与其对应的事件处理器的映射 */
     protected final Map<Class<?>, ProxyInvoker> event2Handler;
-    //是否使用字节码增强技术
+    /** 是否使用字节码增强技术 */
     private final boolean isEnhance;
-    //字节码增强代理类包名
+    /** 字节码增强代理类包名 */
     private String proxyEnhancePackageName;
 
     public EventDispatcher(int parallelism) {
@@ -71,6 +72,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     private ProxyInvoker getHandler(Object obj, Method method) {
         if (isEnhance) {
             return ProxyEnhanceUtils.enhanceMethod(new ProxyMethodDefinition(obj, method, proxyEnhancePackageName));
@@ -183,7 +185,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
 
         private void dispatchEvent(EventContext one) {
             do {
-                if(one != null){
+                if (one != null) {
                     try {
                         dispatch(one);
                     } catch (Exception e) {
@@ -319,7 +321,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
             }
             Preconditions.checkArgument(!paramsMap.containsKey(event.getClass()), new IllegalStateException("same param type"));
             paramsMap.put(event.getClass(), event);
-            if(Objects.isNull(callback)){
+            if (Objects.isNull(callback)) {
                 callback = EventCallback.EMPTY;
             }
             this.callback = callback;

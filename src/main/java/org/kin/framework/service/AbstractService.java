@@ -8,17 +8,19 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by 健勤 on 2017/8/8.
+ * @author 健勤
+ * @date 2017/8/8
  * 服务抽象
  */
-public abstract class AbstractService implements Service{
+public abstract class AbstractService implements Service {
     private final String serviceName;
     private final ServiceState state;
     private long startTime;
     private final List<ServiceStateChangeListener> listeners = new LinkedList<>();
     private static final List<ServiceStateChangeListener> GLOBAL_LISTENERS = new LinkedList<>();
 
-    //
+    //----------------------------------------------------------------------------------------------
+
     private final Object lock = new Object();
     private final AtomicBoolean terminationNotification = new AtomicBoolean(false);
 

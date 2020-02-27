@@ -3,34 +3,67 @@ package org.kin.framework.service;
 import org.kin.framework.Closeable;
 
 /**
- * Created by 健勤 on 2017/8/8.
+ * @author 健勤
+ * @date 2017/8/8
  * 服务接口
  */
 public interface Service extends Closeable {
+    /**
+     * 服务初始化
+     */
     void init();
 
+    /**
+     * 服务启动
+     */
     void start();
 
+    /**
+     * 服务关闭
+     */
     void stop();
 
+    /**
+     * 等待服务结束
+     *
+     * @param mills 等待时间, 毫秒
+     * @return 服务结束结果
+     */
     boolean waitForServiceToStop(long mills);
 
+    /**
+     * 注册监听服务状态变化listener
+     *
+     * @param listener listener实现类
+     */
     void registerServiceListener(ServiceStateChangeListener listener);
 
+    /**
+     * 取消注册监听服务状态变化listener
+     *
+     * @param listener listener实现类
+     */
     void unregisterServiceListener(ServiceStateChangeListener listener);
 
     /**
-     * 当前状态是否是指定状态
-     *
-     * @param that
-     * @return
+     * @param that 指定状态
+     * @return 当前状态是否是指定状态
      */
     boolean isInState(State that);
 
+    /**
+     * @return 服务名
+     */
     String getName();
 
+    /**
+     * @return 服务当前状态
+     */
     State getCurrentState();
 
+    /**
+     * @return 服务启动时间
+     */
     long getStartTime();
 
     /**

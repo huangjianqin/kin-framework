@@ -14,6 +14,7 @@ public class Tuple<FIRST, SECOND> {
     }
 
     //getter
+
     public FIRST first() {
         return first;
     }

@@ -1,7 +1,8 @@
 package org.kin.framework.actor.domain;
 
 /**
- * Created by huangjianqin on 2018/6/5.
+ * @author huangjianqin
+ * @date 2018/6/5
  * <p>
  * 终止Actor的message类
  */

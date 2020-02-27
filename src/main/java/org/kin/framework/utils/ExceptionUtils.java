@@ -7,7 +7,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 /**
- * Created by huangjianqin on 2018/1/28.
+ * @author huangjianqin
+ * @date 2018/1/28
  */
 public class ExceptionUtils {
     private static Logger log = LoggerFactory.getLogger("error");

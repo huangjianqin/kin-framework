@@ -23,11 +23,15 @@ public interface EventCallback {
 
     /**
      * 事件处理完成时触发
+     *
+     * @param result 事件处理结果
      */
     void finish(Object result);
 
     /**
      * 事件处理发生异常时触发
+     *
+     * @param throwable 事件处理时抛出的异常
      */
     void exception(Throwable throwable);
 }

@@ -1,13 +1,14 @@
 package org.kin.framework.service;
 
 /**
- * Created by 健勤 on 2017/8/8.
+ * @author 健勤
+ * @date 2017/8/8
  * 某一具体服务状态的类
  */
 public class ServiceState {
     private String serviceName;
     private volatile Service.State state;
-    //服务状态转换规则
+    /** 服务状态转换规则 */
     private static final boolean[][] STATE_MAP = {
             //           notInited inited started stopped
             /*notInited*/ {false, true, false, true},

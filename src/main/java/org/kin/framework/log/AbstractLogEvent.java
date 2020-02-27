@@ -11,6 +11,9 @@ public abstract class AbstractLogEvent {
     protected String loggerName;
     protected String appenderName;
 
+    /**
+     * @return 日志输入内容
+     */
     public abstract String message();
 
     public String getFileName() {
@@ -43,8 +46,23 @@ public abstract class AbstractLogEvent {
         return "async" + appenderName;
     }
 
+    /**
+     * debug输出
+     */
     public abstract void debug();
+
+    /**
+     * info输出
+     */
     public abstract void info();
+
+    /**
+     * warn输出
+     */
     public abstract void warn();
+
+    /**
+     * error输出
+     */
     public abstract void error();
 }

@@ -5,7 +5,8 @@ import java.lang.annotation.*;
 /**
  * 监听器
  *
- * Created by huangjianqin on 2019/3/1.
+ * @author huangjianqin
+ * @date 2019/3/1
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

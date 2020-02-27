@@ -1,7 +1,8 @@
 package org.kin.framework.concurrent.domain;
 
 /**
- * Created by huangjianqin on 2019/6/3.
+ * @author huangjianqin
+ * @date 2019/6/3
  */
 public class PartitionTaskReport {
     private String threadName;

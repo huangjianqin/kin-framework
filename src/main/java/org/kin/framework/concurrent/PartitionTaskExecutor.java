@@ -16,7 +16,8 @@ import java.util.Objects;
 import java.util.concurrent.*;
 
 /**
- * Created by huangjianqin on 2017/10/26.
+ * @author huangjianqin
+ * @date 2017/10/26
  * 利用Task的某种属性将task分区,从而达到统一类的task按submit/execute顺序在同一线程执行
  * <p>
  * 对于需要 严格 保证task顺序执行的Executor, 则不能扩大或减少Executor的Parallism(不支持重排序)
@@ -26,21 +27,22 @@ public class PartitionTaskExecutor<K> {
     private static final int REPORT_INTERVAL = 30;
     private static final int BATCH_MAX_NUM = 100;
 
-    //分区数
+    /** 分区数 */
     private volatile int partitionNum;
-
-    //分区算法
+    /** 分区算法 */
     private Partitioner<K> partitioner;
-    //执行线程池
+    /** 执行线程池 */
     private ThreadManager threadManager;
-    //所有分区执行线程实例
-    //lazy init
+    /**
+     * 所有分区执行线程实例
+     * lazy init
+     */
     private volatile PartitionTask[] partitionTasks;
-    //report 线程
+    /** report 线程 */
     private ThreadManager reportThread = new ThreadManager(new ThreadPoolExecutor(1, 1,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>(), new SimpleThreadFactory("partition-task-reporter")));
-    //每批处理任务最大数
+    /** 每批处理任务最大数 */
     private final int batchMaxNum;
 
     public PartitionTaskExecutor() {
@@ -95,6 +97,7 @@ public class PartitionTaskExecutor<K> {
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     private void init() {
         for (int i = 0; i < partitionNum; i++) {
             PartitionTask partitionTask = new PartitionTask();
@@ -147,6 +150,7 @@ public class PartitionTaskExecutor<K> {
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     public Future<?> execute(K key, Runnable task) {
         Preconditions.checkNotNull(partitionTasks);
         PartitionTask partitionTask = partitionTasks[partitioner.toPartition(key, partitionNum)];

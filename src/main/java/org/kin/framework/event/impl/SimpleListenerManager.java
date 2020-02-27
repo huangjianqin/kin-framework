@@ -8,7 +8,8 @@ import java.util.stream.Collectors;
 /**
  * 简单的监听器实现
  *
- * Created by huangjianqin on 2019/3/1.
+ * @author huangjianqin
+ * @date 2019/3/1
  */
 public class SimpleListenerManager {
     private static SimpleListenerManager DEFALUT;
@@ -28,6 +29,7 @@ public class SimpleListenerManager {
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     private class ListenerDetail {
         private Object instance;
         private int order;
@@ -48,6 +50,7 @@ public class SimpleListenerManager {
     }
 
     //------------------------------------------------------------------------------------------------------------------
+
     protected void register0(Object o) {
         Class claxx = o.getClass();
         while (claxx != null) {

@@ -1,7 +1,8 @@
 package org.kin.framework.asyncdb;
 
 /**
- * Created by huangjianqin on 2019/4/3.
+ * @author huangjianqin
+ * @date 2019/4/3
  */
 public class AsyncDBException extends RuntimeException {
     public AsyncDBException() {

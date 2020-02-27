@@ -1,12 +1,15 @@
 package org.kin.framework.asyncdb;
 
 /**
- * Created by huangjianqin on 2019/3/31.
- *
+ * @author huangjianqin
+ * @date 2019/3/31
+ * <p>
  * 定义DB基本操作
  */
-public interface DBSynchronzier<E extends AsyncDBEntity> {
+public interface DBSynchronzier<E extends AbstractAsyncDBEntity> {
     void insert(E entity);
+
     void update(E entity);
+
     void delete(E entity);
 }

@@ -8,7 +8,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
- * Created by huangjianqin on 2019/3/1.
+ * @author huangjianqin
+ * @date 2019/3/1
  */
 public class ClassFileInfo {
     private final String filePath;
@@ -39,6 +40,7 @@ public class ClassFileInfo {
     }
 
     //getter
+
     public String getFilePath() {
         return filePath;
     }

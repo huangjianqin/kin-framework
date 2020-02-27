@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     private static final Logger log = LoggerFactory.getLogger("actor");
 
-    //唯一标识该ActorSystem下的这个Actor
+    /** 唯一标识该ActorSystem下的这个Actor */
     private final ActorPath actorPath;
     private final AA self;
     private Receive receive;
@@ -67,9 +67,9 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
             }
 
             long st = System.currentTimeMillis();
-            try{
+            try {
                 mail.handle(self);
-            }catch (Exception e){
+            } catch (Exception e) {
                 ExceptionUtils.log(e);
             }
             long cost = System.currentTimeMillis() - st;
@@ -84,9 +84,18 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     }
 
     //-----------------------------------------------------------------------------------------------
+
     private interface Mail<AA extends AbstractActor<AA>> {
+        /**
+         * 消息处理逻辑
+         *
+         * @param applier 处理该消息的actor
+         */
         void handle(AA applier);
 
+        /**
+         * @return 消息名
+         */
         String name();
     }
 
@@ -137,6 +146,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     }
 
     //-----------------------------------------------------------------------------------------------
+
     private void tryRun() {
         if (isStarted && !isStopped && boxSize.incrementAndGet() == 1) {
             actorSystem.getThreadManager().execute(this);
@@ -144,7 +154,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     }
 
     <T> void receive(T arg) {
-        if(isStarted && !isStopped){
+        if (isStarted && !isStopped) {
             Mail<AA> mail = new ReceiveMailImpl<T>(arg);
             mailBox.add(mail);
             tryRun();
@@ -152,7 +162,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     }
 
     void receive(Message<AA> message) {
-        if(isStarted && !isStopped){
+        if (isStarted && !isStopped) {
             Mail<AA> mail = new MessageMailImpl(message);
             mailBox.add(mail);
             tryRun();
@@ -160,7 +170,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     }
 
     Future<?> receiveSchedule(Message<AA> message, long delay, TimeUnit unit) {
-        if(isStarted && !isStopped){
+        if (isStarted && !isStopped) {
             Future future = actorSystem.getThreadManager().schedule(() -> {
                 receive(message);
             }, delay, unit);
@@ -171,7 +181,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     }
 
     Future<?> receiveFixedRateSchedule(Message<AA> message, long initialDelay, long period, TimeUnit unit) {
-        if(isStarted && !isStopped){
+        if (isStarted && !isStopped) {
             Future future = actorSystem.getThreadManager().scheduleAtFixedRate(() -> {
                 receive(message);
             }, initialDelay, period, unit);
@@ -185,7 +195,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
      * Actor线程执行
      */
     void close() {
-        if(isStarted && !isStopped){
+        if (isStarted && !isStopped) {
             isStopped = true;
             actorSystem.remove(actorPath);
             self.preStop();
@@ -206,7 +216,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
      * ps: 停止当前执行线程, 另外开
      */
     void closeNow() {
-        if(isStarted && !isStopped){
+        if (isStarted && !isStopped) {
             isStopped = true;
             actorSystem.remove(actorPath);
             if (this.currentThread != null) {
@@ -259,6 +269,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
     }
 
     //getter
+
     ActorPath getActorPath() {
         return actorPath;
     }

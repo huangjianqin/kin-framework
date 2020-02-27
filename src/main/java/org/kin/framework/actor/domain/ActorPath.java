@@ -3,17 +3,19 @@ package org.kin.framework.actor.domain;
 import org.kin.framework.actor.ActorSystem;
 
 /**
- * Created by huangjianqin on 2018/6/5.
+ * @author huangjianqin
+ * @date 2018/6/5
  * <p>
  * Actor的唯一标识
+ * <p>
+ * TODO 自动生成url形式的path
  */
-//TODO 自动生成url形式的path
 public class ActorPath {
-    //合并需全局唯一
+    /** 合并需全局唯一 */
     private String parent;
     private String name;
 
-    //host or ip
+    /** host or ip */
     private String host;
     private int port;
 
@@ -46,6 +48,7 @@ public class ActorPath {
     }
 
     //getter
+
     public String getPath() {
         return parent + name;
     }

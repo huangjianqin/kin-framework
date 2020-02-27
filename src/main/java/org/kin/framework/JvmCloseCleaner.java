@@ -9,7 +9,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
- * Created by huangjianqin on 2019/2/28.
+ * @author huangjianqin
+ * @date 2019/2/28
  * <p>
  * 用于控制jvm close时, 释放占用资源
  */
@@ -71,6 +72,7 @@ public class JvmCloseCleaner {
     }
 
     //---------------------------------------------------------------------------------------------------
+
     private class CloseableWrapper implements Closeable {
         private Closeable closeable;
         private int priority;

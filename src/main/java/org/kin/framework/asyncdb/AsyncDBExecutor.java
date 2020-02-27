@@ -14,11 +14,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by huangjianqin on 2019/4/1.
+ * @author huangjianqin
+ * @date 2019/4/1
  */
 public class AsyncDBExecutor implements Closeable {
     private static final Logger log = LoggerFactory.getLogger("asyncDB");
-    private final AsyncDBEntity POISON = new AsyncDBEntity() {
+    private final AbstractAsyncDBEntity POISON = new AbstractAsyncDBEntity() {
     };
     private static final int WAITTING_OPR_NUM_THRESHOLD = 500;
     private static final int LOG_STATE_INTERVAL = 60;
@@ -82,7 +83,7 @@ public class AsyncDBExecutor implements Closeable {
         }
     }
 
-    boolean submit(AsyncDBEntity asyncDBEntity) {
+    boolean submit(AbstractAsyncDBEntity asyncDBEntity) {
         if (!isStopped) {
             int key = asyncDBEntity.hashCode();
             int index = key % asyncDBOperators.length;
@@ -96,13 +97,13 @@ public class AsyncDBExecutor implements Closeable {
     }
 
     private class AsyncDBOperator implements Runnable, Closeable {
-        private BlockingQueue<AsyncDBEntity> queue = new LinkedBlockingQueue<>();
+        private BlockingQueue<AbstractAsyncDBEntity> queue = new LinkedBlockingQueue<>();
         private volatile boolean isStopped = false;
         private long syncNum = 0;
         private String threadName = "";
         private long preSyncNum = 0;
 
-        void submit(AsyncDBEntity asyncDBEntity) {
+        void submit(AbstractAsyncDBEntity asyncDBEntity) {
             if (!isStopped) {
                 try {
                     queue.put(asyncDBEntity);
@@ -119,7 +120,7 @@ public class AsyncDBExecutor implements Closeable {
                 int oprNum = asyncDBStrategy.getOprNum();
                 for (int i = 0; i < oprNum; i++) {
                     try {
-                        AsyncDBEntity entity = queue.take();
+                        AbstractAsyncDBEntity entity = queue.take();
 
                         if (entity == POISON) {
                             log.info("AsyncDBOperator return");

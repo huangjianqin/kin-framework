@@ -4,7 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by huangjianqin on 2019/3/31.
+ * @author huangjianqin
+ * @date 2019/3/31
  */
 public enum DBStatus {
     /**
@@ -12,7 +13,7 @@ public enum DBStatus {
      */
     NORMAL {
         @Override
-        public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
+        public boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity) {
             return true;
         }
     },
@@ -21,12 +22,11 @@ public enum DBStatus {
      */
     INSERT {
         @Override
-        public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
-            try{
+        public boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity) {
+            try {
                 DBSynchronzier.insert(asyncDBEntity);
                 return true;
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
 
@@ -38,12 +38,11 @@ public enum DBStatus {
      */
     UPDATE {
         @Override
-        public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
-            try{
+        public boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity) {
+            try {
                 DBSynchronzier.update(asyncDBEntity);
                 return true;
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
 
@@ -55,20 +54,21 @@ public enum DBStatus {
      */
     DELETED {
         @Override
-        public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
-            try{
+        public boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity) {
+            try {
                 DBSynchronzier.delete(asyncDBEntity);
                 return true;
-            }
-            catch (Exception e){
+            } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
 
             return false;
         }
-    },;
+    },
+    ;
 
     private static final Logger log = LoggerFactory.getLogger("asyncDB");
-    public abstract boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity);
+
+    public abstract boolean execute(DBSynchronzier DBSynchronzier, AbstractAsyncDBEntity asyncDBEntity);
 
 }

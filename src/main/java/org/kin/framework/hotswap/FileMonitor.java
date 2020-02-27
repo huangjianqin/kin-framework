@@ -24,7 +24,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by huangjianqin on 2018/2/1.
+ * @author huangjianqin
+ * @date 2018/2/1
  * 文件监听器   单例模式
  * 利用nio 新api监听文件变换
  * 该api底层本质上是监听了操作系统的文件系统触发的文件更改事件
@@ -33,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class FileMonitor extends Thread implements Closeable {
     private static final Logger log = LoggerFactory.getLogger("hotSwap");
-    //默认实现
+    /** 默认实现 */
     private static final FileMonitor COMMON = new FileMonitor();
     private static volatile boolean isStarted = false;
 
@@ -44,14 +45,14 @@ public class FileMonitor extends Thread implements Closeable {
     }
 
     private WatchService watchService;
-    //hash(file name) -> Reloadable 实例
+    /** hash(file name) -> Reloadable 实例 */
     private Map<Integer, AbstractFileReloadable> monitorItems;
-    //类热加载工厂
+    /** 类热加载工厂 */
 //    private AbstractHotswapFactory hotswapFactory;
     private JavaAgentHotswap javaAgentHotswap = JavaAgentHotswap.instance();
-    //分段锁
+    /** 分段锁 */
     private Object[] locks;
-    //异步热加载文件 执行线程
+    /** 异步热加载文件 执行线程 */
     private ThreadManager threadManager;
     private volatile boolean isStopped = false;
 
