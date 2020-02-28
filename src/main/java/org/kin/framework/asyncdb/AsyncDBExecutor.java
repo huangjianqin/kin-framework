@@ -33,7 +33,7 @@ public class AsyncDBExecutor implements Closeable {
     void init(int num, AsyncDBStrategy asyncDBStrategy) {
         threadManager = new ThreadManager(
                 new ThreadPoolExecutor(num + 1, num + 1, 60L, TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<Runnable>(), new SimpleThreadFactory("asyncDB")));
+                        new LinkedBlockingQueue<>(), new SimpleThreadFactory("asyncDB")));
         this.asyncDBStrategy = asyncDBStrategy;
         asyncDBOperators = new AsyncDBOperator[num];
         for (int i = 0; i < num; i++) {

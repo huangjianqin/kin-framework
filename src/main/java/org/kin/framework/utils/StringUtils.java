@@ -26,10 +26,12 @@ public class StringUtils {
         return s;
     }
 
+    @SafeVarargs
     public static <E> String mkString(E... contents) {
         return mkString(MKSTRING_SEPARATOR, contents);
     }
 
+    @SafeVarargs
     public static <E> String mkString(String separator, E... contents) {
         return mkString(separator, Arrays.asList(contents));
     }

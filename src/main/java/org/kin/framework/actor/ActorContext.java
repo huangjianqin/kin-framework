@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -154,7 +155,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
 
     <T> void receive(T arg) {
         if (isStarted && !isStopped) {
-            Mail<AA> mail = new ReceiveMailImpl<T>(arg);
+            Mail<AA> mail = new ReceiveMailImpl<>(arg);
             mailBox.add(mail);
             tryRun();
         }
@@ -282,7 +283,7 @@ class ActorContext<AA extends AbstractActor<AA>> implements Runnable {
 
         ActorContext<?> that = (ActorContext<?>) o;
 
-        return actorPath != null ? actorPath.equals(that.actorPath) : that.actorPath == null;
+        return Objects.equals(actorPath, that.actorPath);
     }
 
     @Override

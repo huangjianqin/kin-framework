@@ -145,8 +145,8 @@ public class ClassUtils {
                 : new ClassLoader[0];
 
         Set<Class<? extends T>> subClasses = Sets.newLinkedHashSet();
-        for (int i = 0; i < classLoaders.length; i++) {
-            subClasses.addAll(scanClasspathAndFindMatch(classLoaders[i], packageName, c, matcher, isIncludeJar));
+        for (ClassLoader classLoader : classLoaders) {
+            subClasses.addAll(scanClasspathAndFindMatch(classLoader, packageName, c, matcher, isIncludeJar));
         }
 
         return subClasses;
@@ -495,7 +495,7 @@ public class ClassUtils {
     }
 
     public static String primitivePackage(Class claxx, String code) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         // 需要手动装箱, 不然编译会报错
         if (claxx.isPrimitive()) {
             if (Integer.TYPE.equals(claxx)) {
@@ -591,8 +591,8 @@ public class ClassUtils {
 
         StringJoiner throwsSJ = new StringJoiner(", ");
         Class[] exceptionTypes = method.getExceptionTypes();
-        for (int i = 0; i < exceptionTypes.length; i++) {
-            throwsSJ.add(exceptionTypes[i].getName());
+        for (Class exceptionType : exceptionTypes) {
+            throwsSJ.add(exceptionType.getName());
         }
         if (throwsSJ.length() > 0) {
             sb.append(" throws ");

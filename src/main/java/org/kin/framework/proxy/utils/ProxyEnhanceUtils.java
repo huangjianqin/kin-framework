@@ -35,14 +35,14 @@ public class ProxyEnhanceUtils {
      * 为了ProxyInvoker的invoker方法生成代理方法调用代码
      */
     private static String generateProxyInvokerInvokeCode(String fieldName, Method proxyMethod) {
-        StringBuffer invokeCode = new StringBuffer();
+        StringBuilder invokeCode = new StringBuilder();
 
         Class<?> returnType = proxyMethod.getReturnType();
         if (!returnType.equals(Void.TYPE)) {
             invokeCode.append("result = ");
         }
 
-        StringBuffer oneLineCode = new StringBuffer();
+        StringBuilder oneLineCode = new StringBuilder();
         oneLineCode.append(fieldName.concat(".").concat(proxyMethod.getName()).concat("("));
 
         Class[] paramTypes = proxyMethod.getParameterTypes();
@@ -169,13 +169,13 @@ public class ProxyEnhanceUtils {
      * 为目标方法生成代理方法调用代码
      */
     public static String generateProxyInvokeCode(String proxyFieldName, Method proxyMethod) {
-        StringBuffer methodBody = new StringBuffer();
+        StringBuilder methodBody = new StringBuilder();
 
         if (!proxyMethod.getReturnType().equals(Void.TYPE)) {
             methodBody.append("return ");
         }
 
-        StringBuffer oneLineCode = new StringBuffer();
+        StringBuilder oneLineCode = new StringBuilder();
         oneLineCode.append(proxyFieldName.concat(".").concat(proxyMethod.getName()).concat("("));
 
         Class[] paramTypes = proxyMethod.getParameterTypes();
@@ -233,12 +233,11 @@ public class ProxyEnhanceUtils {
                 if (Modifier.isFinal(method.getModifiers())) {
                     continue;
                 }
-                StringBuilder methodCode = new StringBuilder();
-                methodCode.append(ClassUtils.generateMethodDeclaration(method).concat("{"));
-                methodCode.append(methodBodyConstructor.construct(prxoyFieldName, method));
-                methodCode.append(" }");
 
-                CtMethod ctMethod = CtMethod.make(methodCode.toString(), proxyCtClass);
+                String methodCode = ClassUtils.generateMethodDeclaration(method).concat("{") +
+                        methodBodyConstructor.construct(prxoyFieldName, method) +
+                        " }";
+                CtMethod ctMethod = CtMethod.make(methodCode, proxyCtClass);
                 proxyCtClass.addMethod(ctMethod);
             }
 

@@ -306,7 +306,7 @@ public class StateMachineFactory<OPERAND, STATE extends Enum<STATE>, EVENTTYPE e
         Map<STATE, Map<EVENTTYPE, Transition<OPERAND, STATE, EVENTTYPE, EVENT>>> prototype = new HashMap<>();
         prototype.put(defaultInitialState, null);
         //这里用EnumMap使得数据结构更加紧凑,性能更好
-        stateMachineTable = new EnumMap<STATE, Map<EVENTTYPE, Transition<OPERAND, STATE, EVENTTYPE, EVENT>>>(prototype);
+        stateMachineTable = new EnumMap<>(prototype);
 
         //按方法调用顺序构建拓扑
         //ps:因为这里的链表构建类似栈

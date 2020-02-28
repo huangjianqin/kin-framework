@@ -175,9 +175,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                         ExceptionUtils.log(e);
                     }
                 });
-            } catch (AttachNotSupportedException | AgentLoadException | AgentInitializationException e) {
-                ExceptionUtils.log(e);
-            } catch (IOException e) {
+            } catch (AttachNotSupportedException | AgentLoadException | AgentInitializationException | IOException e) {
                 ExceptionUtils.log(e);
             } finally {
                 if (vm != null) {

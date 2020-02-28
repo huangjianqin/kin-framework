@@ -35,7 +35,8 @@ public class LogbackFactory {
         return this;
     }
 
-    public LogbackFactory add(Appender<ILoggingEvent>... newAppenders) {
+    @SafeVarargs
+    public final LogbackFactory add(Appender<ILoggingEvent>... newAppenders) {
         for (Appender<ILoggingEvent> newAppender : newAppenders) {
             logbackLogger.addAppender(newAppender);
         }

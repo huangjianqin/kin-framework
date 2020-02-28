@@ -232,7 +232,7 @@ public class NetUtils {
             socket = new Socket();
             socket.bind(new InetSocketAddress(host, port));
             return true;
-        } catch (IOException e) {
+        } catch (IOException ignored) {
 
         } finally {
             if (socket != null) {
@@ -288,10 +288,8 @@ public class NetUtils {
             }
 
             return true;
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            ExceptionUtils.log(e);
         }
 
         return false;
