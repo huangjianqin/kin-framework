@@ -16,10 +16,13 @@ public class FileUtils {
     public static boolean delete(File targetFile) {
         if (Objects.nonNull(targetFile)) {
             if (targetFile.isDirectory()) {
-                for (File childFile : targetFile.listFiles()) {
-                    delete(childFile);
+                File[] childFiles = targetFile.listFiles();
+                if (CollectionUtils.isNonEmpty(childFiles)) {
+                    for (File childFile : childFiles) {
+                        delete(childFile);
+                    }
+                    return targetFile.delete();
                 }
-                return targetFile.delete();
             } else {
                 return targetFile.delete();
             }

@@ -86,7 +86,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
     private static String getJarPath() {
         //JavaDynamicAgent是jar文件内容,也就是说jar必须包含JavaDynamicAgent
         URL url = JavaDynamicAgent.class.getProtectionDomain().getCodeSource().getLocation();
-        String filePath = null;
+        String filePath;
         try {
             // 转化为utf-8编码
             filePath = URLDecoder.decode(url.getPath(), "utf-8");

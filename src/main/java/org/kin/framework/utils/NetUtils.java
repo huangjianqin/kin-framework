@@ -266,7 +266,7 @@ public class NetUtils {
                 InputStream raw = uc.getInputStream();
                 InputStream in = new BufferedInputStream(raw);
                 byte[] data = new byte[contentLength];
-                int bytesRead = 0;
+                int bytesRead;
                 int offset = 0;
                 while (offset < contentLength) {
                     bytesRead = in.read(data, offset, data.length - offset);

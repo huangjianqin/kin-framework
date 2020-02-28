@@ -1,8 +1,4 @@
-package org.kin.jmh; /**
- * @author huangjianqin
- * @date 2019/7/1
- */
-
+package org.kin.jmh;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -11,6 +7,10 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author huangjianqin
+ * @date 2019/7/1
+ */
 @BenchmarkMode(Mode.Throughput)//基准测试类型
 @OutputTimeUnit(TimeUnit.SECONDS)//基准测试结果的时间类型
 @Warmup(iterations = 1)//预热的迭代次数

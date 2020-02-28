@@ -1,6 +1,5 @@
 package org.kin.framework.event.dispatcher;
 
-import org.kin.framework.event.EventHandler;
 import org.kin.framework.event.annotation.HandleEvent;
 
 /**

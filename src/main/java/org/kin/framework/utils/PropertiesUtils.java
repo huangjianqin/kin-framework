@@ -2,6 +2,7 @@ package org.kin.framework.utils;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 /**
@@ -29,7 +30,7 @@ public class PropertiesUtils {
             }
 
             Properties prop = new Properties();
-            prop.load(new InputStreamReader(in, "utf-8"));
+            prop.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             return prop;
         } catch (IOException e) {
             ExceptionUtils.log(e);
@@ -59,7 +60,7 @@ public class PropertiesUtils {
             in = new FileInputStream(url.getPath());
 
             Properties prop = new Properties();
-            prop.load(new InputStreamReader(in, "utf-8"));
+            prop.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             return prop;
         } catch (IOException e) {
             ExceptionUtils.log(e);
@@ -87,7 +88,7 @@ public class PropertiesUtils {
 
             // write data
             out = new FileOutputStream(file, false);
-            properties.store(new OutputStreamWriter(out, "utf-8"), null);
+            properties.store(new OutputStreamWriter(out, StandardCharsets.UTF_8), null);
             return true;
         } catch (IOException e) {
             ExceptionUtils.log(e);

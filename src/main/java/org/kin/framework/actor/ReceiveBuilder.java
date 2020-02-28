@@ -77,7 +77,7 @@ public class ReceiveBuilder {
         }
     }
 
-    private class TypeMatchFuncWrapper<AA extends AbstractActor<AA>, T> extends AbstractFuncWrapper<AA, T> {
+    private static class TypeMatchFuncWrapper<AA extends AbstractActor<AA>, T> extends AbstractFuncWrapper<AA, T> {
         private Class<T> type;
 
         private TypeMatchFuncWrapper(Class<T> type, Receive.Func<AA, T> func) {
@@ -96,7 +96,7 @@ public class ReceiveBuilder {
         }
     }
 
-    private class MatchEqualFuncWrapper<AA extends AbstractActor<AA>, T> extends AbstractFuncWrapper<AA, T> {
+    private static class MatchEqualFuncWrapper<AA extends AbstractActor<AA>, T> extends AbstractFuncWrapper<AA, T> {
         private T t;
 
         protected MatchEqualFuncWrapper(T t, Receive.Func<AA, T> func) {
@@ -115,7 +115,7 @@ public class ReceiveBuilder {
         }
     }
 
-    private class MatchAnyFuncWrapper<AA extends AbstractActor<AA>, T> extends AbstractFuncWrapper<AA, T> {
+    private static class MatchAnyFuncWrapper<AA extends AbstractActor<AA>, T> extends AbstractFuncWrapper<AA, T> {
 
         protected MatchAnyFuncWrapper(Receive.Func<AA, T> func) {
             super(func);
@@ -135,7 +135,7 @@ public class ReceiveBuilder {
 
     //-----------------------------------------------------------------------------------------------
 
-    private class InternalReceive implements Receive {
+    private static class InternalReceive implements Receive {
         private final List<AbstractFuncWrapper> funcWrappers;
 
         private InternalReceive(List<AbstractFuncWrapper> funcWrappers) {

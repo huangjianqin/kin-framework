@@ -2,7 +2,6 @@ package org.kin.framework.event.dispatcher;
 
 
 import org.kin.framework.event.EventCallback;
-import org.kin.framework.event.EventHandler;
 import org.kin.framework.event.impl.EventDispatcher;
 import org.kin.framework.utils.SysUtils;
 

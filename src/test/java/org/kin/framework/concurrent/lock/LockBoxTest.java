@@ -20,9 +20,7 @@ public class LockBoxTest {
             } catch (InterruptedException e) {
 
             }
-            lockBox.lockRun(2, () -> {
-                System.out.println(11112222);
-            });
+            lockBox.lockRun(2, () -> System.out.println(11112222));
         }));
 
         threadManager.execute(() -> lockBox.lockRun(2, () -> {
@@ -32,9 +30,7 @@ public class LockBoxTest {
             } catch (InterruptedException e) {
 
             }
-            lockBox.lockRun(1, () -> {
-                System.out.println(22221111);
-            });
+            lockBox.lockRun(1, () -> System.out.println(22221111));
         }));
 
 //        threadManager.execute(() -> {
