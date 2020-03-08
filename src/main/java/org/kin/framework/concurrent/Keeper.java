@@ -2,7 +2,6 @@ package org.kin.framework.concurrent;
 
 import org.kin.framework.JvmCloseCleaner;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.framework.utils.SysUtils;
 
 import java.util.Objects;
 import java.util.Set;
@@ -17,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Keeper {
     private static final ThreadManager THREADS = new ThreadManager(
-            new ThreadPoolExecutor(0, SysUtils.CPU_NUM,
+            new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                     0L, TimeUnit.MILLISECONDS,
                     new SynchronousQueue<>(),
                     new SimpleThreadFactory("keeper")));
@@ -91,7 +90,7 @@ public class Keeper {
         /**
          * 停止KeeperAction
          */
-        void stopKeeper();
+        void stop();
     }
 
     //--------------------------------------------api-----------------------------------------------------------
