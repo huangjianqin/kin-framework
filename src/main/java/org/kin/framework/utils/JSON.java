@@ -1,6 +1,5 @@
 package org.kin.framework.utils;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
@@ -32,10 +31,21 @@ public class JSON {
     public static String write(Object obj) {
         try {
             return PARSER.writeValueAsString(obj);
-        } catch (JsonGenerationException e) {
+        } catch (IOException e) {
             logger.error(e.getMessage(), e);
-        } catch (JsonMappingException e) {
-            logger.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /**
+     * 序列化
+     *
+     * @param obj 序列化实例
+     * @return bytes
+     */
+    public static byte[] writeBytes(Object obj) {
+        try {
+            return PARSER.writeValueAsBytes(obj);
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         }
@@ -52,6 +62,26 @@ public class JSON {
     public static <T> T read(String jsonStr, Class<T> clazz) {
         try {
             return PARSER.readValue(jsonStr, clazz);
+        } catch (JsonParseException e) {
+            logger.error(e.getMessage(), e);
+        } catch (JsonMappingException e) {
+            logger.error(e.getMessage(), e);
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /**
+     * 反序列化
+     *
+     * @param jsonStr json字符串
+     * @param clazz   反序列化类型
+     * @return 反序列化类实例
+     */
+    public static <T> T read(byte[] bytes, Class<T> clazz) {
+        try {
+            return PARSER.readValue(bytes, clazz);
         } catch (JsonParseException e) {
             logger.error(e.getMessage(), e);
         } catch (JsonMappingException e) {
