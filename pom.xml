@@ -20,6 +20,7 @@
         <scala.version>2.12.8</scala.version>
         <scala.version.head>2.12</scala.version.head>
         <logback.version>1.2.3</logback.version>
+        <log4j.version>1.2.17</log4j.version>
         <slf4j.version>1.7.21</slf4j.version>
         <guava.version>27.1-jre</guava.version>
         <fastutil.version>8.1.0</fastutil.version>
@@ -43,12 +44,6 @@
 
         <!-- 日志包-->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <version>${logback.version}</version>
@@ -58,6 +53,26 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- 工具包-->
