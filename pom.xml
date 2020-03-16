@@ -17,8 +17,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.home>/Library/Java/JavaVirtualMachines/jdk1.8.0_151.jdk/Contents/Home</java.home>
 
-        <scala.version>2.11.12</scala.version>
-        <scala.version.head>2.11</scala.version.head>
+        <scala.version>2.12.8</scala.version>
+        <scala.version.head>2.12</scala.version.head>
         <junit.version>4.4</junit.version>
         <specs.version>1.2.5</specs.version>
         <scalatest.version>3.0.4</scalatest.version>
