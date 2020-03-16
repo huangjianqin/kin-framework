@@ -13,26 +13,78 @@ import java.util.concurrent.*;
  */
 public class ThreadManager implements ScheduledExecutorService {
     /** 执行线程 */
-    private ExecutorService executor;
+    private ExecutorService worker;
     /** 调度线程 */
     private ScheduledExecutorService scheduleExecutor;
     private volatile boolean isStopped;
 
-    public ThreadManager(ExecutorService executor) {
-        this(executor, 0);
+    public ThreadManager(ExecutorService worker) {
+        this(worker, 0);
     }
 
-    public ThreadManager(ExecutorService executor, int scheduleCoreNum) {
-        this(executor, scheduleCoreNum, new SimpleThreadFactory("default-schedule-thread-manager"));
+    public ThreadManager(ExecutorService worker, int scheduleParallelism) {
+        this(worker, scheduleParallelism, new SimpleThreadFactory("default-schedule-thread-manager"));
     }
 
-    public ThreadManager(ExecutorService executor, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
-        this.executor = executor;
-        if (scheduleCoreNum > 0) {
-            this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleCoreNum, scheduleThreadFactory);
+    public ThreadManager(ExecutorService worker, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
+        this.worker = worker;
+        if (scheduleParallelism > 0) {
+            this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleParallelism, scheduleThreadFactory);
         }
     }
 
+    //--------------------------------------------------------------------------------------------
+    public static ThreadManager forkjoin(int parallelism, String workerNamePrefix) {
+        return forkjoin(parallelism, workerNamePrefix, 0, "");
+    }
+
+    public static ThreadManager forkjoin(int parallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return forkjoin(parallelism, workerNamePrefix, null, scheduleParallelism, scheduleThreadNamePrefix);
+    }
+
+    public static ThreadManager asyncForkjoin(int parallelism, String workerNamePrefix) {
+        return asyncForkjoin(parallelism, workerNamePrefix, 0, "");
+    }
+
+    public static ThreadManager asyncForkjoin(int parallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return asyncForkjoin(parallelism, workerNamePrefix, null, scheduleParallelism, scheduleThreadNamePrefix);
+    }
+
+    public static ThreadManager forkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
+                                         int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return forkjoin(new ForkJoinPool(parallelism, new SimpleForkJoinWorkerThradFactory(workerNamePrefix), handler, false),
+                scheduleParallelism, scheduleThreadNamePrefix);
+    }
+
+    public static ThreadManager asyncForkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
+                                              int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return forkjoin(new ForkJoinPool(parallelism, new SimpleForkJoinWorkerThradFactory(workerNamePrefix), handler, true),
+                scheduleParallelism, scheduleThreadNamePrefix);
+    }
+
+    private static ThreadManager forkjoin(ForkJoinPool forkJoinPool, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return new ThreadManager(forkJoinPool, scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+    }
+
+    public static ThreadManager cache(String workerNamePrefix) {
+        return forkjoin(Integer.MAX_VALUE, workerNamePrefix, 0, "");
+    }
+
+    public static ThreadManager cache(int maxParallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return new ThreadManager(
+                new ThreadPoolExecutor(0, maxParallelism, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), new SimpleThreadFactory(workerNamePrefix)),
+                scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+    }
+
+    public static ThreadManager fix(int parallelism, String workerNamePrefix) {
+        return forkjoin(parallelism, workerNamePrefix, 0, "");
+    }
+
+    public static ThreadManager fix(int parallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return new ThreadManager(
+                new ThreadPoolExecutor(parallelism, parallelism, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new SimpleThreadFactory(workerNamePrefix)),
+                scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+    }
     //--------------------------------------------------------------------------------------------
 
     @Override
@@ -66,7 +118,7 @@ public class ThreadManager implements ScheduledExecutorService {
     @Override
     public void shutdown() {
         isStopped = true;
-        executor.shutdown();
+        worker.shutdown();
         if (scheduleExecutor != null) {
             scheduleExecutor.shutdown();
         }
@@ -76,7 +128,7 @@ public class ThreadManager implements ScheduledExecutorService {
     public List<Runnable> shutdownNow() {
         isStopped = true;
         List<Runnable> tasks = Lists.newArrayList();
-        tasks.addAll(executor.shutdownNow());
+        tasks.addAll(worker.shutdownNow());
         if (scheduleExecutor != null) {
             tasks.addAll(scheduleExecutor.shutdownNow());
         }
@@ -95,7 +147,7 @@ public class ThreadManager implements ScheduledExecutorService {
 
     @Override
     public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-        boolean result = executor.awaitTermination(timeout, unit);
+        boolean result = worker.awaitTermination(timeout, unit);
         if (scheduleExecutor != null) {
             result &= scheduleExecutor.awaitTermination(timeout, unit);
         }
@@ -105,48 +157,48 @@ public class ThreadManager implements ScheduledExecutorService {
     @Override
     public <T> Future<T> submit(Callable<T> task) {
         Preconditions.checkArgument(!isStopped, "threads is stopped");
-        return executor.submit(task);
+        return worker.submit(task);
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
         Preconditions.checkArgument(!isStopped, "threads is stopped");
-        return executor.submit(task, result);
+        return worker.submit(task, result);
     }
 
     @Override
     public Future<?> submit(Runnable task) {
         Preconditions.checkArgument(!isStopped, "threads is stopped");
-        return executor.submit(task);
+        return worker.submit(task);
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
         Preconditions.checkArgument(!isStopped, "threads is stopped");
-        return executor.invokeAll(tasks);
+        return worker.invokeAll(tasks);
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
         Preconditions.checkArgument(isStopped, "threads is stopped");
-        return executor.invokeAll(tasks, timeout, unit);
+        return worker.invokeAll(tasks, timeout, unit);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
         Preconditions.checkArgument(!isStopped, "threads is stopped");
-        return executor.invokeAny(tasks);
+        return worker.invokeAny(tasks);
     }
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         Preconditions.checkArgument(!isStopped, "threads is stopped");
-        return executor.invokeAny(tasks, timeout, unit);
+        return worker.invokeAny(tasks, timeout, unit);
     }
 
     @Override
     public void execute(Runnable command) {
         Preconditions.checkArgument(!isStopped, "threads is stopped");
-        executor.execute(command);
+        worker.execute(command);
     }
 }
