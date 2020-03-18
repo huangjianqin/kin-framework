@@ -6,20 +6,13 @@ import org.kin.framework.utils.ExceptionUtils;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author huangjianqin
  * @date 2019/7/10
  */
 public class Keeper {
-    private static final ThreadManager THREADS = new ThreadManager(
-            new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                    0L, TimeUnit.MILLISECONDS,
-                    new SynchronousQueue<>(),
-                    new SimpleThreadFactory("keeper")));
+    private static final ThreadManager THREADS = ThreadManager.cache("keeper");
     private static final Set<RunnableKeeperAction> RUNNABLE_KEEPER_ACTIONS = new CopyOnWriteArraySet<>();
 
     static {

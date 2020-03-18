@@ -1,150 +1,143 @@
-package org.kin.framework.actor;
-
-import com.google.common.base.Preconditions;
-import org.kin.framework.Closeable;
-import org.kin.framework.JvmCloseCleaner;
-import org.kin.framework.actor.domain.ActorPath;
-import org.kin.framework.concurrent.SimpleThreadFactory;
-import org.kin.framework.concurrent.ThreadManager;
-import org.kin.framework.utils.ExceptionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-/**
- * @author huangjianqin
- * @date 2018/6/5
- */
-public class ActorSystem implements Closeable {
-    private static final Logger log = LoggerFactory.getLogger(ActorSystem.class);
-    private static final Map<String, ActorSystem> NAME2ACTORSYSTEM = new ConcurrentHashMap<>();
-    private static final String DEFAULT_AS_NAME = "default";
-
-    private final String name;
-    /** 该actor system下的actor */
-    private Map<String, AbstractActor> path2Actors = new ConcurrentHashMap<>();
-    /** 每个actor system绑定一个线程池，并且该actor system下的actor使用该线程池 */
-    private ThreadManager threadManager;
-
-    private ActorSystem(String name) {
-        Preconditions.checkArgument(!DEFAULT_AS_NAME.equals(name));
-        this.name = name;
-        if (name.toLowerCase().equals(DEFAULT_AS_NAME) && NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
-            throw new IllegalStateException("actor system named '" + name + "' has exists!!!");
-        }
-        this.threadManager = new ThreadManager(
-                new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-                        new SynchronousQueue<>(), new SimpleThreadFactory("actor-system-executor" + name)),
-                5, new SimpleThreadFactory("actor-system-schedule" + name));
-
-        monitorJVMClose();
-    }
-
-    private ActorSystem(String name, ThreadManager threadManager) {
-        this(name);
-        this.threadManager = threadManager;
-    }
-
-    public static ActorSystem create() {
-        if (!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
-            synchronized (DEFAULT_AS_NAME) {
-                if (!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
-                    ActorSystem defaultActorSystem = new ActorSystem(DEFAULT_AS_NAME);
-                    NAME2ACTORSYSTEM.put(DEFAULT_AS_NAME, defaultActorSystem);
-
-                    JvmCloseCleaner.DEFAULT().add(defaultActorSystem::shutdown);
-
-                    return defaultActorSystem;
-                }
-            }
-        }
-        return NAME2ACTORSYSTEM.get(DEFAULT_AS_NAME);
-    }
-
-    public static ActorSystem create(String name) {
-        return new ActorSystem(name);
-    }
-
-    public static ActorSystem create(String name, ThreadManager threadManager) {
-        if (DEFAULT_AS_NAME.equals(name)) {
-            return create();
-        }
-        ActorSystem actorSystem = new ActorSystem(name, threadManager);
-        NAME2ACTORSYSTEM.put(name, actorSystem);
-        return actorSystem;
-    }
-
-    public static ActorSystem getActorSystem(String name) {
-        return NAME2ACTORSYSTEM.get(name);
-    }
-
-    public <AA extends AbstractActor<AA>> AA actorOf(Class<AA> claxx, String name) {
-        ActorPath actorPath = ActorPath.as(name, this);
-        if (!path2Actors.containsKey(actorPath.getPath())) {
-            try {
-                Constructor<AA> constructor = claxx.getConstructor(ActorPath.class, ActorSystem.class);
-                AA actor = constructor.newInstance(actorPath, this);
-                add(actorPath, actor);
-                return actor;
-            } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                ExceptionUtils.log(e);
-                return null;
-            }
-        } else {
-            return (AA) path2Actors.get(actorPath.getPath());
-        }
-    }
-
-    public <AA extends AbstractActor<AA>> AA actorOf(ActorPath actorPath) {
-        return (AA) path2Actors.get(actorPath.getPath());
-    }
-
-    public <AA extends AbstractActor<AA>> AA actorOf(String name) {
-        ActorPath actorPath = ActorPath.as(name, this);
-        return (AA) path2Actors.get(actorPath.getPath());
-    }
-
-    public void add(ActorPath actorPath, AbstractActor aa) {
-        if (!path2Actors.containsKey(actorPath.getPath())) {
-            path2Actors.put(actorPath.getPath(), aa);
-        }
-        throw new IllegalStateException("actor of '" + actorPath.getPath() + "' has exists!!!");
-    }
-
-    public void remove(ActorPath actorPath) {
-        AbstractActor actor = path2Actors.remove(actorPath.getPath());
-        actor.stop();
-    }
-
-    public String getRoot() {
-        return name + "/";
-    }
-
-    public void shutdown() {
-        NAME2ACTORSYSTEM.remove(name);
-        for (AbstractActor actor : path2Actors.values()) {
-            actor.stop();
-        }
-        path2Actors = null;
-        threadManager.shutdown();
-        threadManager = null;
-    }
-
-    //getter
-
-    ThreadManager getThreadManager() {
-        return threadManager;
-    }
-
-    @Override
-    public void close() {
-        shutdown();
-    }
-}
+//package org.kin.framework.actor;
+//
+//import com.google.common.base.Preconditions;
+//import org.kin.framework.Closeable;
+//import org.kin.framework.JvmCloseCleaner;
+//import org.kin.framework.actor.domain.ActorPath;
+//import org.kin.framework.concurrent.ThreadManager;
+//import org.kin.framework.utils.ExceptionUtils;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+//
+//import java.lang.reflect.Constructor;
+//import java.lang.reflect.InvocationTargetException;
+//import java.util.Map;
+//import java.util.concurrent.ConcurrentHashMap;
+//
+///**
+// * @author huangjianqin
+// * @date 2018/6/5
+// */
+//public class ActorSystem implements Closeable {
+//    private static final Logger log = LoggerFactory.getLogger(ActorSystem.class);
+//    private static final Map<String, ActorSystem> NAME2ACTORSYSTEM = new ConcurrentHashMap<>();
+//    private static final String DEFAULT_AS_NAME = "default";
+//
+//    private final String name;
+//    /** 该actor system下的actor */
+//    private Map<String, AbstractActor> path2Actors = new ConcurrentHashMap<>();
+//    /** 每个actor system绑定一个线程池，并且该actor system下的actor使用该线程池 */
+//    private ThreadManager threadManager;
+//
+//    private ActorSystem(String name) {
+//        Preconditions.checkArgument(!DEFAULT_AS_NAME.equals(name));
+//        this.name = name;
+//        if (name.toLowerCase().equals(DEFAULT_AS_NAME) && NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
+//            throw new IllegalStateException("actor system named '" + name + "' has exists!!!");
+//        }
+//        this.threadManager = ThreadManager.cache("actor-system-executor".concat(name), 5, "actor-system-schedule".concat(name));
+//
+//        monitorJVMClose();
+//    }
+//
+//    private ActorSystem(String name, ThreadManager threadManager) {
+//        this(name);
+//        this.threadManager = threadManager;
+//    }
+//
+//    public static ActorSystem create() {
+//        if (!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
+//            synchronized (DEFAULT_AS_NAME) {
+//                if (!NAME2ACTORSYSTEM.containsKey(DEFAULT_AS_NAME)) {
+//                    ActorSystem defaultActorSystem = new ActorSystem(DEFAULT_AS_NAME);
+//                    NAME2ACTORSYSTEM.put(DEFAULT_AS_NAME, defaultActorSystem);
+//
+//                    JvmCloseCleaner.DEFAULT().add(defaultActorSystem::shutdown);
+//
+//                    return defaultActorSystem;
+//                }
+//            }
+//        }
+//        return NAME2ACTORSYSTEM.get(DEFAULT_AS_NAME);
+//    }
+//
+//    public static ActorSystem create(String name) {
+//        return new ActorSystem(name);
+//    }
+//
+//    public static ActorSystem create(String name, ThreadManager threadManager) {
+//        if (DEFAULT_AS_NAME.equals(name)) {
+//            return create();
+//        }
+//        ActorSystem actorSystem = new ActorSystem(name, threadManager);
+//        NAME2ACTORSYSTEM.put(name, actorSystem);
+//        return actorSystem;
+//    }
+//
+//    public static ActorSystem getActorSystem(String name) {
+//        return NAME2ACTORSYSTEM.get(name);
+//    }
+//
+//    public <AA extends AbstractActor<AA>> AA actorOf(Class<AA> claxx, String name) {
+//        ActorPath actorPath = ActorPath.as(name, this);
+//        if (!path2Actors.containsKey(actorPath.getPath())) {
+//            try {
+//                Constructor<AA> constructor = claxx.getConstructor(ActorPath.class, ActorSystem.class);
+//                AA actor = constructor.newInstance(actorPath, this);
+//                add(actorPath, actor);
+//                return actor;
+//            } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+//                ExceptionUtils.log(e);
+//                return null;
+//            }
+//        } else {
+//            return (AA) path2Actors.get(actorPath.getPath());
+//        }
+//    }
+//
+//    public <AA extends AbstractActor<AA>> AA actorOf(ActorPath actorPath) {
+//        return (AA) path2Actors.get(actorPath.getPath());
+//    }
+//
+//    public <AA extends AbstractActor<AA>> AA actorOf(String name) {
+//        ActorPath actorPath = ActorPath.as(name, this);
+//        return (AA) path2Actors.get(actorPath.getPath());
+//    }
+//
+//    public void add(ActorPath actorPath, AbstractActor aa) {
+//        if (!path2Actors.containsKey(actorPath.getPath())) {
+//            path2Actors.put(actorPath.getPath(), aa);
+//        }
+//        throw new IllegalStateException("actor of '" + actorPath.getPath() + "' has exists!!!");
+//    }
+//
+//    public void remove(ActorPath actorPath) {
+//        AbstractActor actor = path2Actors.remove(actorPath.getPath());
+//        actor.stop();
+//    }
+//
+//    public String getRoot() {
+//        return name + "/";
+//    }
+//
+//    public void shutdown() {
+//        NAME2ACTORSYSTEM.remove(name);
+//        for (AbstractActor actor : path2Actors.values()) {
+//            actor.stop();
+//        }
+//        path2Actors = null;
+//        threadManager.shutdown();
+//        threadManager = null;
+//    }
+//
+//    //getter
+//
+//    ThreadManager getThreadManager() {
+//        return threadManager;
+//    }
+//
+//    @Override
+//    public void close() {
+//        shutdown();
+//    }
+//}

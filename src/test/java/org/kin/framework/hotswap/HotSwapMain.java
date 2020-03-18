@@ -6,7 +6,7 @@ package org.kin.framework.hotswap;
 public class HotSwapMain {
     public static void main(String[] args) {
         Test test = new Test();
-        FileMonitor monitor = FileMonitor.instance();
+        FileMonitor monitor = new FileMonitor();
         int i = 0;
         while (true) {
             try {

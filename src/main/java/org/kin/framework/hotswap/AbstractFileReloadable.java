@@ -9,11 +9,12 @@ import java.io.InputStream;
  */
 public abstract class AbstractFileReloadable implements Reloadable {
     private final String filePath;
+    private FileMonitor fileMonitor;
 
-    public AbstractFileReloadable(String filePath) {
+    public AbstractFileReloadable(String filePath, FileMonitor fileMonitor) {
         this.filePath = filePath;
-
-        FileMonitor.instance().monitorFile(filePath, this);
+        this.fileMonitor = fileMonitor;
+        this.fileMonitor.monitorFile(filePath, this);
     }
 
     public String getFilePath() {

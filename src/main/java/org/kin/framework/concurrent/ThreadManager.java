@@ -67,7 +67,15 @@ public class ThreadManager implements ScheduledExecutorService {
     }
 
     public static ThreadManager cache(String workerNamePrefix) {
-        return forkjoin(Integer.MAX_VALUE, workerNamePrefix, 0, "");
+        return cache(Integer.MAX_VALUE, workerNamePrefix, 0, "");
+    }
+
+    public static ThreadManager cache(ThreadFactory workerThreadFactory) {
+        return cache(Integer.MAX_VALUE, workerThreadFactory, 0, null);
+    }
+
+    public static ThreadManager cache(String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return cache(Integer.MAX_VALUE, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     public static ThreadManager cache(int maxParallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
@@ -81,7 +89,11 @@ public class ThreadManager implements ScheduledExecutorService {
     }
 
     public static ThreadManager fix(int parallelism, String workerNamePrefix) {
-        return forkjoin(parallelism, workerNamePrefix, 0, "");
+        return fix(parallelism, workerNamePrefix, 0, "");
+    }
+
+    public static ThreadManager fix(int parallelism, ThreadFactory workerThreadFactory) {
+        return fix(parallelism, workerThreadFactory, 0, null);
     }
 
     public static ThreadManager fix(int parallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {

@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -18,9 +18,7 @@ import java.util.concurrent.*;
 /**
  * @author huangjianqin
  * @date 2017/10/26
- * 利用Task的某种属性将task分区,从而达到统一类的task按submit/execute顺序在同一线程执行
- * <p>
- * 对于需要 严格 保证task顺序执行的Executor, 则不能扩大或减少Executor的Parallism(不支持重排序)
+ * 利用Task的某种属性将task分区,从而达到同一类的task按submit/execute顺序在同一线程执行
  */
 public class PartitionTaskExecutor<K> {
     private static final Logger log = LoggerFactory.getLogger(PartitionTaskExecutor.class);
@@ -28,20 +26,18 @@ public class PartitionTaskExecutor<K> {
     private static final int BATCH_MAX_NUM = 100;
 
     /** 分区数 */
-    private volatile int partitionNum;
+    private final int partitionNum;
     /** 分区算法 */
-    private Partitioner<K> partitioner;
+    private final Partitioner<K> partitioner;
     /** 执行线程池 */
-    private ThreadManager threadManager;
+    private final ThreadManager workers;
     /**
      * 所有分区执行线程实例
      * lazy init
      */
-    private volatile PartitionTask[] partitionTasks;
+    private PartitionWorker[] partitionWorkers;
     /** report 线程 */
-    private ThreadManager reportThread = new ThreadManager(new ThreadPoolExecutor(1, 1,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(), new SimpleThreadFactory("partition-task-reporter")));
+    private final ThreadManager reportThread;
     /** 每批处理任务最大数 */
     private final int batchMaxNum;
 
@@ -54,62 +50,42 @@ public class PartitionTaskExecutor<K> {
     }
 
     public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner) {
-        this(partitionNum, partitioner, new SimpleThreadFactory("partition-task-executor"));
+        this(partitionNum, partitioner, BATCH_MAX_NUM);
     }
 
-    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, ThreadFactory threadFactory) {
-        this(partitionNum, partitioner, BATCH_MAX_NUM,
-                new ThreadManager(new ThreadPoolExecutor(partitionNum, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-                        new SynchronousQueue(), threadFactory)));
+    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, String workerNamePrefix) {
+        this(partitionNum, partitioner, BATCH_MAX_NUM, workerNamePrefix);
     }
 
-    /**
-     * @param threadPool 如果最小线程数 < @param partitionNum, 则真实的@param partitionNum=@param threadPool的最大线程数
-     */
-    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, ThreadPoolExecutor threadPool) {
-        this(partitionNum, partitioner, BATCH_MAX_NUM, new ThreadManager(threadPool));
+    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, int batchMaxNum) {
+        this(partitionNum, partitioner, batchMaxNum, "partition-task-executor-");
     }
 
-    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, int batchMaxNum, ThreadFactory threadFactory) {
-        this(partitionNum, partitioner, batchMaxNum,
-                new ThreadManager(new ThreadPoolExecutor(partitionNum, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-                        new SynchronousQueue(), threadFactory)));
-    }
-
-    /**
-     * @param threadPool 如果最小线程数 < @param partitionNum, 则真实的@param partitionNum=@param threadPool的最大线程数
-     */
-    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, int batchMaxNum, ThreadPoolExecutor threadPool) {
-        this(partitionNum, partitioner, batchMaxNum, new ThreadManager(threadPool));
-    }
-
-    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, int batchMaxNum, ThreadManager threadManager) {
+    public PartitionTaskExecutor(int partitionNum, Partitioner<K> partitioner, int batchMaxNum, String workerNamePrefix) {
+        Preconditions.checkArgument(partitionNum > 0, "partitionNum field must be greater then 0");
         Preconditions.checkArgument(batchMaxNum > 0, "batchMaxNum field must be greater then 0");
 
         this.partitionNum = partitionNum;
         this.partitioner = partitioner;
-        this.threadManager = threadManager;
+        this.workers = ThreadManager.fix(partitionNum, workerNamePrefix);
+        this.reportThread = ThreadManager.fix(1, workerNamePrefix.concat("reporter-"));
         this.batchMaxNum = batchMaxNum;
-
-        this.partitionTasks = new PartitionTaskExecutor.PartitionTask[this.partitionNum];
+        this.partitionWorkers = new PartitionTaskExecutor.PartitionWorker[this.partitionNum];
 
         init();
     }
 
     //------------------------------------------------------------------------------------------------------------------
-
     private void init() {
         for (int i = 0; i < partitionNum; i++) {
-            PartitionTask partitionTask = new PartitionTask();
-            partitionTasks[i] = partitionTask;
-            threadManager.execute(partitionTask);
+            PartitionWorker partitionWorker = new PartitionWorker();
+            partitionWorkers[i] = partitionWorker;
         }
-        report();
     }
 
     private void report() {
         reportThread.execute(() -> {
-            while (CollectionUtils.isNonEmpty(partitionTasks)) {
+            while (CollectionUtils.isNonEmpty(partitionWorkers)) {
                 long sleepTime = REPORT_INTERVAL - TimeUtils.timestamp() % REPORT_INTERVAL;
                 try {
                     TimeUnit.SECONDS.sleep(sleepTime);
@@ -123,14 +99,14 @@ public class PartitionTaskExecutor<K> {
     }
 
     private void report0() {
-        if (partitionTasks == null) {
+        if (partitionWorkers == null) {
             return;
         }
-        PartitionTask[] copy = partitionTasks;
+        PartitionWorker[] copy = partitionWorkers;
         List<PartitionTaskReport> reports = new ArrayList<>(copy.length);
-        for (PartitionTask partitionTask : copy) {
-            if (partitionTask != null) {
-                PartitionTaskReport report = partitionTask.report();
+        for (PartitionWorker partitionWorker : copy) {
+            if (partitionWorker != null) {
+                PartitionTaskReport report = partitionWorker.report();
                 if (Objects.nonNull(report)) {
                     reports.add(report);
                 }
@@ -152,40 +128,28 @@ public class PartitionTaskExecutor<K> {
     //------------------------------------------------------------------------------------------------------------------
 
     public Future<?> execute(K key, Runnable task) {
-        Preconditions.checkNotNull(partitionTasks);
-        PartitionTask partitionTask = partitionTasks[partitioner.toPartition(key, partitionNum)];
-        if (partitionTask != null) {
-            FutureTask futureTask = new FutureTask(task, null);
-
-            partitionTask.execute(new Task(key, futureTask));
-
-            return futureTask;
-        } else {
-            return null;
-        }
+        return execute(key, task, null);
     }
 
     public <T> Future<T> execute(K key, Runnable task, T value) {
-        Preconditions.checkNotNull(partitionTasks);
-        PartitionTask partitionTask = partitionTasks[partitioner.toPartition(key, partitionNum)];
-        if (partitionTask != null) {
-            FutureTask futureTask = new FutureTask(task, value);
-
-            partitionTask.execute(new Task(key, futureTask));
-
-            return futureTask;
-        } else {
-            return null;
-        }
+        return execute(key, Executors.callable(task, value));
     }
 
     public <T> Future<T> execute(K key, Callable<T> task) {
-        Preconditions.checkNotNull(partitionTasks);
-        PartitionTask partitionTask = partitionTasks[partitioner.toPartition(key, partitionNum)];
-        if (partitionTask != null) {
-            FutureTask<T> futureTask = new FutureTask(task);
+        PartitionWorker partitionWorker = partitionWorkers[partitioner.toPartition(key, partitionNum)];
+        if (partitionWorker != null) {
+            FutureTask<T> futureTask = new FutureTask<>(task);
 
-            partitionTask.execute(new Task(key, futureTask));
+            partitionWorker.execute(new Task(key, futureTask));
+
+            //lazy run
+            if (!partitionWorker.isRunning()) {
+                synchronized (partitionWorker) {
+                    if (!partitionWorker.isRunning()) {
+                        workers.execute(partitionWorker);
+                    }
+                }
+            }
 
             return futureTask;
         } else {
@@ -194,23 +158,18 @@ public class PartitionTaskExecutor<K> {
     }
 
     private void shutdown0() {
-        if (partitionTasks == null) {
+        if (partitionWorkers == null) {
             return;
         }
         //先关闭执行线程实例再关闭线程池
         //关闭并移除分区执行线程实例,且缓存
-        for (PartitionTask task : partitionTasks) {
+        for (PartitionWorker task : partitionWorkers) {
             if (task != null) {
                 task.close();
             }
         }
-        threadManager.shutdown();
+        workers.shutdown();
         reportThread.shutdown();
-        //help gc
-        partitionTasks = null;
-        threadManager = null;
-        partitioner = null;
-        reportThread = null;
     }
 
     public void shutdown() {
@@ -221,75 +180,7 @@ public class PartitionTaskExecutor<K> {
         shutdown0();
     }
 
-    public void expandTo(int newPartitionNum) {
-        Preconditions.checkNotNull(partitionTasks);
-        Preconditions.checkArgument(newPartitionNum > partitionNum, "param newPartitionNum '{}' must be greater than maxPartition '{}'", newPartitionNum, partitionNum);
-
-        //对partitionTasks加锁并扩容, 然后更新numPartition
-        //这样能保证一致性, 并且不会发生IndexOutOfBound
-        synchronized (this) {
-            partitionTasks = Arrays.copyOf(partitionTasks, newPartitionNum);
-            partitionNum = newPartitionNum;
-        }
-    }
-
-    public void expand(int addPartitionNum) {
-        int newPartitionNum = partitionNum + addPartitionNum;
-        expandTo(newPartitionNum);
-    }
-
-    public void shrink(int reducePartitionNum) {
-        int newPartitionNum = partitionNum - reducePartitionNum;
-        shrinkTo(newPartitionNum);
-    }
-
-    private void shutdownTask(int num) {
-        Preconditions.checkNotNull(partitionTasks);
-        Preconditions.checkArgument(num > 0, "the number of tasks need to be shutdowned must be positive");
-        List<PartitionTask> removedPartitionTasks = new ArrayList<>();
-        //关闭并移除分区执行线程实例,且缓存
-        for (int i = partitionTasks.length - num; i < partitionTasks.length; i++) {
-            PartitionTask task = partitionTasks[i];
-            if (task != null) {
-                partitionTasks[i] = null;
-                task.close();
-                removedPartitionTasks.add(task);
-            }
-        }
-
-        //Executors doesn't shutdown
-        if (!removedPartitionTasks.isEmpty()) {
-            for (PartitionTask partitionTask : removedPartitionTasks) {
-                while (!partitionTask.isTerminated) {
-                    try {
-                        Thread.sleep(200);
-                    } catch (InterruptedException e) {
-                        //do nothing
-                    }
-                }
-                //重新执行被移除线程但还没执行的tasks
-                for (Task queuedTask : partitionTask.queue) {
-                    execute(queuedTask.key, queuedTask.target);
-                }
-
-            }
-        }
-    }
-
-    public void shrinkTo(int newPartitionNum) {
-        Preconditions.checkArgument(newPartitionNum > 0, "param newPartitionNum '{}' can't be zero or negative", newPartitionNum);
-        Preconditions.checkArgument(newPartitionNum < partitionNum, "param newPartitionNum '{}' must be lower than nowPartitionNum '{}'", newPartitionNum, partitionNum);
-
-        //对partitionTasks加锁, 然后更新numPartition, 最后更新partitionTasks大小
-        //这样能保证一致性, 并且不会发生数组index异常(因数组长度缩小)
-        synchronized (this) {
-            int originPartitionNum = partitionNum;
-            partitionNum = newPartitionNum;
-            shutdownTask(originPartitionNum - partitionNum);
-            partitionTasks = Arrays.copyOf(partitionTasks, partitionNum);
-        }
-    }
-
+    //------------------------------------------------------------------------------------------------------------------
     private class Task implements Runnable {
         //缓存分区key,以便重分区时获取分区key
         private final K key;
@@ -306,12 +197,10 @@ public class PartitionTaskExecutor<K> {
         }
     }
 
-    //------------------------------------------------------------------------------------------------------------------
-
     /**
      * task 执行
      */
-    private class PartitionTask implements Runnable {
+    private class PartitionWorker implements Runnable {
         //任务队列
         private BlockingQueue<Task> queue = new LinkedBlockingQueue<>();
         //绑定的线程
@@ -341,18 +230,18 @@ public class PartitionTaskExecutor<K> {
          * @param limit 处理任务上限, -1无上限
          */
         private void run0(Task one, int limit) {
-            int counter = 0;
-            do {
-                if (one != null) {
-                    try {
-                        one.run();
-                        finishedTaskNum++;
-                        counter++;
-                    } catch (Exception e) {
-                        ExceptionUtils.log(e);
-                    }
+            Collection<Task> waittingTasks = new ArrayList<>(limit + 1);
+            queue.add(one);
+            queue.drainTo(waittingTasks, limit);
+
+            for (Task waittingTask : waittingTasks) {
+                try {
+                    waittingTask.run();
+                    finishedTaskNum++;
+                } catch (Exception e) {
+                    ExceptionUtils.log(e);
                 }
-            } while ((limit <= 0 || counter < limit) && (one = queue.poll()) != null);
+            }
         }
 
         @Override
@@ -368,17 +257,25 @@ public class PartitionTaskExecutor<K> {
                     }
                 }
             } finally {
-                run0(null, -1);
+                run0(null, Integer.MAX_VALUE);
             }
             isTerminated = true;
         }
 
-        public PartitionTaskReport report() {
+        PartitionTaskReport report() {
             if (Objects.nonNull(bind)) {
                 return new PartitionTaskReport(bind.getName(), queue.size(), finishedTaskNum);
             }
 
             return null;
+        }
+
+        boolean isTerminated() {
+            return isTerminated;
+        }
+
+        boolean isRunning() {
+            return Objects.nonNull(bind);
         }
     }
 }

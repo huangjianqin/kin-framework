@@ -1,7 +1,6 @@
 package org.kin.framework.asyncdb;
 
 import org.kin.framework.Closeable;
-import org.kin.framework.concurrent.SimpleThreadFactory;
 import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.TimeUtils;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,9 +29,7 @@ public class AsyncDBExecutor implements Closeable {
     private AsyncDBStrategy asyncDBStrategy;
 
     void init(int num, AsyncDBStrategy asyncDBStrategy) {
-        threadManager = new ThreadManager(
-                new ThreadPoolExecutor(num + 1, num + 1, 60L, TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<>(), new SimpleThreadFactory("asyncDB")));
+        threadManager = ThreadManager.fix(num + 1, "asyncDB");
         this.asyncDBStrategy = asyncDBStrategy;
         asyncDBOperators = new AsyncDBOperator[num];
         for (int i = 0; i < num; i++) {

@@ -1,8 +1,6 @@
 package org.kin.framework.hotswap;
 
 import org.kin.framework.Closeable;
-import org.kin.framework.JvmCloseCleaner;
-import org.kin.framework.concurrent.SimpleThreadFactory;
 import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.hotswap.agent.JavaAgentHotswap;
 import org.kin.framework.utils.ClassUtils;
@@ -18,10 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author huangjianqin
@@ -34,19 +28,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class FileMonitor extends Thread implements Closeable {
     private static final Logger log = LoggerFactory.getLogger("hotSwap");
-    /** 默认实现 */
-    private static final FileMonitor COMMON = new FileMonitor();
-    private static volatile boolean isStarted = false;
-
-    static {
-        JvmCloseCleaner.DEFAULT().add(COMMON::shutdown);
-    }
-
     private WatchService watchService;
     /** hash(file name) -> Reloadable 实例 */
     private Map<Integer, AbstractFileReloadable> monitorItems;
     /** 类热加载工厂 */
-//    private AbstractHotswapFactory hotswapFactory;
     private JavaAgentHotswap javaAgentHotswap = JavaAgentHotswap.instance();
     /** 分段锁 */
     private Object[] locks;
@@ -54,15 +39,21 @@ public class FileMonitor extends Thread implements Closeable {
     private ThreadManager threadManager;
     private volatile boolean isStopped = false;
 
-    private FileMonitor() {
-
+    public FileMonitor() {
+        this("hotSwapFileMonitor", null);
     }
 
-    public static FileMonitor instance() {
-        if (!isStarted) {
-            COMMON.start();
-        }
-        return COMMON;
+    public FileMonitor(String name) {
+        this(name, null);
+    }
+
+    public FileMonitor(ThreadManager threadManager) {
+        this("hotSwapFileMonitor", threadManager);
+    }
+
+    public FileMonitor(String name, ThreadManager threadManager) {
+        super(name);
+        this.threadManager = threadManager;
     }
 
     private void init() {
@@ -77,20 +68,12 @@ public class FileMonitor extends Thread implements Closeable {
         for (int i = 0; i < locks.length; i++) {
             locks[i] = new Object();
         }
-//        if (hotswapFactory == null) {
-//            //默认设置
-//            hotswapFactory = new CommonHotswapFactory();
-//        }
+
         if (threadManager == null) {
             //默认设置
-            ExecutorService executorService = new ThreadPoolExecutor(5, 5, 60L, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(), new SimpleThreadFactory("file-monitor"));
-            this.threadManager = new ThreadManager(executorService);
+            this.threadManager = ThreadManager.fix(5, "file-monitor");
         }
 
-//        if (hotswapFactory instanceof CommonHotswapFactory || hotswapFactory instanceof JavaAgentHotswap) {
-//            monitorClasspath();
-//        }
         //监听热更class存储目录
         Path classesPath = Paths.get(JavaAgentHotswap.getClasspath());
         try {
@@ -102,30 +85,6 @@ public class FileMonitor extends Thread implements Closeable {
         monitorJVMClose();
     }
 
-//    public FileMonitor hotswapFactory(AbstractHotswapFactory hotswapFactory) {
-//        this.hotswapFactory = hotswapFactory;
-//        return this;
-//    }
-
-    /**
-     * 监听整个classpath
-     */
-//    private void monitorClasspath() {
-//        String classRoot = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-//        Path classRootPath = Paths.get(classRoot);
-//        try {
-//            Stream<Path> allDir = Files.walk(classRootPath).filter(p -> Files.isDirectory(p));
-//            allDir.forEach(p -> {
-//                try {
-//                    p.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
-//                } catch (IOException e) {
-//                    ExceptionUtils.log(e);
-//                }
-//            });
-//        } catch (IOException e) {
-//            ExceptionUtils.log(e);
-//        }
-//    }
     @Override
     public synchronized void start() {
         init();
@@ -184,7 +143,6 @@ public class FileMonitor extends Thread implements Closeable {
 
             if (changedClasses.size() > 0) {
                 //类热更新
-//                threadManager.execute(() -> hotswapFactory.reload(changedClasses));
                 threadManager.execute(() -> javaAgentHotswap.hotswap(changedClasses));
                 HotFix.instance().fix();
             }
@@ -225,16 +183,6 @@ public class FileMonitor extends Thread implements Closeable {
             throw new IllegalStateException("file monitor has shutdowned");
         }
     }
-
-//    /**
-//     * @param classReloadable 监听该实例
-//     */
-//    public void monitorObject(ClassReloadableEntity classReloadable) {
-//        checkStatus();
-//        if (hotswapFactory instanceof CommonHotswapFactory) {
-//            ((CommonHotswapFactory) hotswapFactory).register(classReloadable);
-//        }
-//    }
 
     public void monitorFile(String pathStr, AbstractFileReloadable fileReloadable) {
         checkStatus();

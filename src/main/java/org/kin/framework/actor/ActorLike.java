@@ -1,7 +1,6 @@
 package org.kin.framework.actor;
 
 import org.kin.framework.JvmCloseCleaner;
-import org.kin.framework.actor.domain.ActorPath;
 import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
@@ -93,11 +92,6 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
             isStopped = true;
             clearFutures();
         }
-    }
-
-    @Override
-    public ActorPath getPath() {
-        throw new UnsupportedOperationException();
     }
 
     @Override
