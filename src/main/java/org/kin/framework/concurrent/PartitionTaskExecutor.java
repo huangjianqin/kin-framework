@@ -231,7 +231,9 @@ public class PartitionTaskExecutor<K> {
          */
         private void run0(Task one, int limit) {
             Collection<Task> waittingTasks = new ArrayList<>(limit + 1);
-            queue.add(one);
+            if (Objects.nonNull(one)) {
+                queue.add(one);
+            }
             queue.drainTo(waittingTasks, limit);
 
             for (Task waittingTask : waittingTasks) {

@@ -16,7 +16,7 @@ public interface EventCallback {
         }
 
         @Override
-        public void exception(Throwable throwable) {
+        public void failure(Throwable throwable) {
             ExceptionUtils.log(throwable);
         }
     };
@@ -33,5 +33,5 @@ public interface EventCallback {
      *
      * @param throwable 事件处理时抛出的异常
      */
-    void exception(Throwable throwable);
+    void failure(Throwable throwable);
 }

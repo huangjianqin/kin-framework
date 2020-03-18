@@ -24,7 +24,7 @@ public class TestDispatcher {
             }
 
             @Override
-            public void exception(Throwable throwable) {
+            public void failure(Throwable throwable) {
                 throwable.printStackTrace();
             }
         });

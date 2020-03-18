@@ -34,23 +34,4 @@ public interface ActorLikeDispatcher {
      * @param params      额外参数
      */
     void dispatch(int partitionId, Object event, EventCallback callback, Object... params);
-
-    /**
-     * 异步分发事件
-     *
-     * @param partitionId 分区
-     * @param event       事件实例
-     * @param params      额外参数
-     */
-    void asyncDispatch(int partitionId, Object event, Object... params);
-
-    /**
-     * 异步分发事件
-     *
-     * @param partitionId 分区
-     * @param event       事件实例
-     * @param callback    callback回调
-     * @param params      额外参数
-     */
-    void asyncDispatch(int partitionId, Object event, EventCallback callback, Object... params);
 }

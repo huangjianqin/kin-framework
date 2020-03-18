@@ -68,7 +68,7 @@ class Impl implements EventHandler<FirstEvent> {
     }
 
     public void close() {
-        dispatcher.stop();
+        dispatcher.shutdown();
     }
 }
 

@@ -34,22 +34,12 @@ public class ActorLikeEventDispatcher extends EventDispatcher implements Schedul
     }
 
     @Override
-    public void asyncDispatch(int partitionId, Object event, Object... params) {
-        asyncDispatch(partitionId, event, EventCallback.EMPTY, params);
-    }
-
-    @Override
-    public void asyncDispatch(int partitionId, Object event, EventCallback callback, Object... params) {
-        asyncDispatchThread.handleEvent(new EventContext(partitionId, event, params, callback));
-    }
-
-    @Override
     public Future<?> scheduleDispatch(int partitionId, Object event, TimeUnit unit, long delay, Object... params) {
-        return threadManager.schedule(() -> dispatch(partitionId, event, params), delay, unit);
+        return scheduledExecutors.schedule(() -> dispatch(partitionId, event, params), delay, unit);
     }
 
     @Override
     public Future<?> scheduleDispatchAtFixRate(int partitionId, Object event, TimeUnit unit, long initialDelay, long period, Object... params) {
-        return threadManager.scheduleAtFixedRate(() -> dispatch(partitionId, event, params), initialDelay, period, unit);
+        return scheduledExecutors.scheduleAtFixedRate(() -> dispatch(partitionId, event, params), initialDelay, period, unit);
     }
 }

@@ -3,7 +3,6 @@ package org.kin.framework.event.impl;
 import com.google.common.base.Preconditions;
 import org.kin.framework.concurrent.PartitionTaskExecutor;
 import org.kin.framework.concurrent.SimpleThreadFactory;
-import org.kin.framework.concurrent.ThreadManager;
 import org.kin.framework.concurrent.impl.EfficientHashPartitioner;
 import org.kin.framework.event.AbstractEvent;
 import org.kin.framework.event.EventCallback;
@@ -13,15 +12,16 @@ import org.kin.framework.event.annotation.Event;
 import org.kin.framework.proxy.ProxyInvoker;
 import org.kin.framework.proxy.ProxyMethodDefinition;
 import org.kin.framework.proxy.utils.ProxyEnhanceUtils;
-import org.kin.framework.service.AbstractService;
-import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 健勤
@@ -29,17 +29,13 @@ import java.util.concurrent.*;
  * 事件分发器
  * 支持多线程事件处理
  */
-public class EventDispatcher extends AbstractService implements ScheduleDispatcher, NullEventDispatcher {
+public class EventDispatcher implements ScheduleDispatcher, NullEventDispatcher {
     private static Logger log = LoggerFactory.getLogger(EventDispatcher.class);
-    /** 事件堆积太多阈值 */
-    private static final int TOO_MUCH_EVENTS_THRESHOLD = 1000;
 
     /** 事件处理线程(分区处理) */
     protected final PartitionTaskExecutor<Integer> executor;
-    /** 负责分发事件的线程(主要负责调度和异步分发事件) */
-    protected final ThreadManager threadManager;
-    /** 异步分发事件线程逻辑实现 */
-    protected AsyncEventDispatchThread asyncDispatchThread;
+    /** 调度线程 */
+    protected final ScheduledExecutorService scheduledExecutors;
     /** 存储事件与其对应的事件处理器的映射 */
     protected final Map<Class<?>, ProxyInvoker> event2Handler;
     /** 是否使用字节码增强技术 */
@@ -52,19 +48,11 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     }
 
     public EventDispatcher(int parallelism, boolean isEnhance) {
-        super("EventDispatcher");
-        executor = new PartitionTaskExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE);
+        executor = new PartitionTaskExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler-");
         event2Handler = new HashMap<>();
 
-        ThreadPoolExecutor pool = new ThreadPoolExecutor(
-                SysUtils.getSuitableThreadNum(),
-                SysUtils.getSuitableThreadNum(),
-                60L,
-                TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(),
-                new SimpleThreadFactory("EventDispatcher$event-handler-"));
-        threadManager = new ThreadManager(pool, SysUtils.getSuitableThreadNum() / 2 + 2,
-                new SimpleThreadFactory("EventDispatcher$schedule-event-handler-"));
+        scheduledExecutors = new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum() / 2 + 1,
+                new SimpleThreadFactory("EventDispatcher$schedule-event-"));
         this.isEnhance = isEnhance;
         if (isEnhance) {
             proxyEnhancePackageName = "org.kin.framework.event.handler.proxy";
@@ -112,7 +100,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
                     Object result = handler.invoke(eventContext.getRealParams(handler.getMethod()));
                     eventContext.callback.finish(result);
                 } catch (Exception e) {
-                    eventContext.callback.exception(e);
+                    eventContext.callback.failure(e);
                 }
             });
         } else {
@@ -131,23 +119,13 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     }
 
     @Override
-    public void asyncDispatch(Object event, Object... params) {
-        asyncDispatch(event, EventCallback.EMPTY, params);
-    }
-
-    @Override
-    public void asyncDispatch(Object event, EventCallback callback, Object... params) {
-        asyncDispatchThread.handleEvent(new EventContext(event, params, callback));
-    }
-
-    @Override
     public Future<?> scheduleDispatch(Object event, TimeUnit unit, long delay, Object... params) {
-        return threadManager.schedule(() -> dispatch(event, params), delay, unit);
+        return scheduledExecutors.schedule(() -> dispatch(event, params), delay, unit);
     }
 
     @Override
     public Future<?> scheduleDispatchAtFixRate(Object event, TimeUnit unit, long initialDelay, long period, Object... params) {
-        return threadManager.scheduleAtFixedRate(() -> dispatch(event, params), initialDelay, period, unit);
+        return scheduledExecutors.scheduleAtFixedRate(() -> dispatch(event, params), initialDelay, period, unit);
     }
 
     @Override
@@ -155,88 +133,18 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
         executor.execute(runnable.hashCode(), runnable);
     }
 
-    @Override
-    public void serviceInit() {
-    }
-
-    @Override
-    public void serviceStart() {
-        asyncDispatchThread = new AsyncEventDispatchThread();
-        threadManager.execute(asyncDispatchThread);
-    }
-
-    @Override
-    public void serviceStop() {
-        asyncDispatchThread.shutdown();
+    public void shutdown() {
         executor.shutdown();
-        threadManager.shutdown();
+        scheduledExecutors.shutdown();
         event2Handler.clear();
     }
 
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * 事件处理线程,主要逻辑是从事件队列获得事件并分派出去
-     */
-    protected final class AsyncEventDispatchThread implements Runnable {
-        private volatile boolean isStopped = false;
-        private BlockingQueue<EventContext> eventContextQueue = new LinkedBlockingQueue<>();
-        private volatile Thread bind = null;
-
-        private void dispatchEvent(EventContext one) {
-            do {
-                if (one != null) {
-                    try {
-                        dispatch(one);
-                    } catch (Exception e) {
-                        ExceptionUtils.log(e);
-                    }
-                }
-            } while ((one = eventContextQueue.poll()) != null);
-        }
-
-        @Override
-        public void run() {
-            try {
-                bind = Thread.currentThread();
-                while (!isStopped && !Thread.currentThread().isInterrupted()) {
-                    try {
-                        EventContext eventContext = eventContextQueue.take();
-                        dispatchEvent(eventContext);
-                    } catch (InterruptedException e) {
-                    }
-                }
-            } finally {
-                //尽可能处理完队列里面的事件
-                dispatchEvent(null);
-            }
-        }
-
-        public void handleEvent(EventContext eventContext) {
-            if (!isStopped) {
-                //用于统计并打印相关信息日志
-                int remCapacity = eventContextQueue.remainingCapacity();
-                if (remCapacity > TOO_MUCH_EVENTS_THRESHOLD) {
-                    log.warn("high remaining capacity in the event-queue: " + remCapacity);
-                }
-
-                try {
-                    eventContextQueue.put(eventContext);
-                } catch (InterruptedException e) {
-                }
-            }
-        }
-
-        void shutdown() {
-            isStopped = true;
-            bind.interrupt();
-        }
-    }
-
-    /**
      * 事件处理器的代理封装
      */
-    private static class ProxyEventHandler implements ProxyInvoker {
+    private class ProxyEventHandler implements ProxyInvoker {
         private Object proxy;
         private Method method;
 
@@ -266,7 +174,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     /**
      * 一事件对应多个事件处理器的场景
      */
-    private static class MultiEventHandler implements ProxyInvoker {
+    private class MultiEventHandler implements ProxyInvoker {
         private List<ProxyInvoker> handlers;
 
         MultiEventHandler() {
@@ -304,7 +212,7 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
     /**
      * 事件封装
      */
-    protected static class EventContext {
+    private class EventContext {
         private int partitionId;
         private Object event;
         private Map<Class<?>, Object> paramsMap;
@@ -354,10 +262,6 @@ public class EventDispatcher extends AbstractService implements ScheduleDispatch
 
         public Object getEvent() {
             return event;
-        }
-
-        public EventCallback getCallback() {
-            return callback;
         }
     }
 }

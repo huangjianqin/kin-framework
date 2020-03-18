@@ -33,21 +33,4 @@ public interface Dispatcher {
      * @param params   额外参数
      */
     void dispatch(Object event, EventCallback callback, Object... params);
-
-    /**
-     * 异步分发事件
-     *
-     * @param event  事件实例
-     * @param params 额外参数
-     */
-    void asyncDispatch(Object event, Object... params);
-
-    /**
-     * 异步分发事件
-     *
-     * @param event    事件实例
-     * @param callback callback回调
-     * @param params   额外参数
-     */
-    void asyncDispatch(Object event, EventCallback callback, Object... params);
 }
