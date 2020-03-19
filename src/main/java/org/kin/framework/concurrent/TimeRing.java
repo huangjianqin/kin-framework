@@ -58,7 +58,7 @@ public class TimeRing<D> implements KeeperAction {
         stopper = Keeper.keep(this);
     }
 
-    public void push(int time, D data) {
+    public void push(long time, D data) {
         int ringSlot = (int) ((time / unit) % slot);
         List<D> ringItemData = ringData.computeIfAbsent(ringSlot, k -> new ArrayList<>());
         ringItemData.add(data);
