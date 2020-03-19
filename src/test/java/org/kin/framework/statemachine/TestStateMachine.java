@@ -53,8 +53,6 @@ class Impl implements EventHandler<FirstEvent> {
     public Impl() {
         this.dispatcher = new EventDispatcher(SysUtils.getSuitableThreadNum());
         dispatcher.register(FirstEvent.class, new FirstEventHandler(), FirstEventHandler.class.getMethods()[0]);
-        dispatcher.serviceInit();
-        dispatcher.start();
     }
 
     @Override

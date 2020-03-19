@@ -212,7 +212,7 @@ public class EventDispatcher implements ScheduleDispatcher, NullEventDispatcher 
     /**
      * 事件封装
      */
-    private class EventContext {
+    protected class EventContext {
         private int partitionId;
         private Object event;
         private Map<Class<?>, Object> paramsMap;

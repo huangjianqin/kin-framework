@@ -9,8 +9,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.ContextStartedEvent;
 import org.springframework.lang.NonNull;
 
 import java.lang.reflect.Method;
@@ -64,12 +62,8 @@ public class SpringEventDispatcher extends EventDispatcher implements Applicatio
     @Override
     @NonNull
     public void onApplicationEvent(ApplicationEvent applicationEvent) {
-        if (applicationEvent instanceof ContextStartedEvent || applicationEvent instanceof ContextRefreshedEvent) {
-            serviceInit();
-            serviceStart();
-        }
         if (applicationEvent instanceof ContextClosedEvent) {
-            serviceStop();
+            shutdown();
         }
     }
 }

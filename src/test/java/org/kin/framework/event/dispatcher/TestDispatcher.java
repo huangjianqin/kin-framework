@@ -15,9 +15,7 @@ public class TestDispatcher {
         dispatcher.register(SecondEvent.class, new SecondEventHandler(), SecondEventHandler.class.getMethods()[0]);
         dispatcher.register(ThirdEvent.class, new ThirdEventHandler(), ThirdEventHandler.class.getMethods()[0]);
 
-        dispatcher.serviceInit();
-        dispatcher.serviceStart();
-        dispatcher.asyncDispatch(new SecondEvent(SecondEventType.S), new EventCallback() {
+        dispatcher.dispatch(new SecondEvent(SecondEventType.S), new EventCallback() {
             @Override
             public void finish(Object result) {
                 System.out.println(result);
@@ -33,6 +31,6 @@ public class TestDispatcher {
 
         Thread.sleep(2000);
 
-        dispatcher.serviceStop();
+        dispatcher.shutdown();
     }
 }
