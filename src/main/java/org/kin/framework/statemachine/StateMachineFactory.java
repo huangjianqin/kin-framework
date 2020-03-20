@@ -90,7 +90,7 @@ public class StateMachineFactory<OPERAND, STATE extends Enum<STATE>, EVENTTYPE e
     /**
      * 存储链表每个节点具体生成拓扑的逻辑
      */
-    private static class ApplicableSingleOrMultipleTransition<OPERAND, STATE extends Enum<STATE>, EVENTTYPE
+    private class ApplicableSingleOrMultipleTransition<OPERAND, STATE extends Enum<STATE>, EVENTTYPE
             extends Enum<EVENTTYPE>, EVENT> implements ApplicableTransition<OPERAND, STATE, EVENTTYPE, EVENT> {
         //前驱状态
         private final STATE pre;
