@@ -118,6 +118,7 @@ public class TimeRing<D> implements KeeperAction {
     public interface SlotDataHandler<D> {
         /**
          * 处理时间轮slot数据
+         * 最好异步处理任务
          *
          * @param slotData slot数据
          */
