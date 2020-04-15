@@ -18,10 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author 健勤
@@ -49,7 +46,7 @@ public class EventDispatcher implements ScheduleDispatcher, NullEventDispatcher 
 
     public EventDispatcher(int parallelism, boolean isEnhance) {
         executor = new PartitionTaskExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler-");
-        event2Handler = new HashMap<>();
+        event2Handler = new ConcurrentHashMap<>();
 
         scheduledExecutors = new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum() / 2 + 1,
                 new SimpleThreadFactory("EventDispatcher$schedule-event-"));

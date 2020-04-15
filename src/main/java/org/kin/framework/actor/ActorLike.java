@@ -23,7 +23,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     private static Map<ActorLike<?>, Queue<Future>> FUTURES = new ConcurrentHashMap<>();
 
     private ExecutionContext executionContext;
-    private final Queue<Message<AL>> messageBox = new LinkedBlockingDeque<>();
+    private final Queue<Message<AL>> inBox = new LinkedBlockingQueue<>();
     private final AtomicInteger boxSize = new AtomicInteger();
     private volatile Thread currentThread;
     private volatile boolean isStopped = false;
@@ -43,7 +43,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     @Override
     public void tell(Message<AL> message) {
         if (!isStopped) {
-            messageBox.add(message);
+            inBox.add(message);
             tryRun();
         }
     }
@@ -80,7 +80,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     public void run() {
         this.currentThread = Thread.currentThread();
         while (!isStopped && !this.currentThread.isInterrupted()) {
-            Message message = messageBox.poll();
+            Message message = inBox.poll();
             if (message == null) {
                 break;
             }
