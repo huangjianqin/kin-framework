@@ -12,12 +12,12 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @date 2019/7/10
  */
 public class Keeper {
-    private static final ThreadManager THREADS = ThreadManager.cache("keeper");
+    private static final ExecutionContext EXECUTION_CONTEXT = ExecutionContext.cache("keeper");
     private static final Set<RunnableKeeperAction> RUNNABLE_KEEPER_ACTIONS = new CopyOnWriteArraySet<>();
 
     static {
         JvmCloseCleaner.DEFAULT().add(() -> {
-            THREADS.shutdown();
+            EXECUTION_CONTEXT.shutdown();
             for (RunnableKeeperAction runnableKeeperAction : RUNNABLE_KEEPER_ACTIONS) {
                 runnableKeeperAction.stop();
             }
@@ -90,7 +90,7 @@ public class Keeper {
 
     public static KeeperStopper keep(KeeperAction keeperAction) {
         RunnableKeeperAction runnableKeeperAction = new RunnableKeeperAction(keeperAction);
-        THREADS.execute(runnableKeeperAction);
+        EXECUTION_CONTEXT.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
 
         return runnableKeeperAction::stop;
@@ -113,7 +113,7 @@ public class Keeper {
 
             }
         });
-        THREADS.execute(runnableKeeperAction);
+        EXECUTION_CONTEXT.execute(runnableKeeperAction);
         RUNNABLE_KEEPER_ACTIONS.add(runnableKeeperAction);
 
         return runnableKeeperAction::stop;

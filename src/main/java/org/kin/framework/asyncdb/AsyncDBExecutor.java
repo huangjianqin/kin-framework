@@ -1,7 +1,7 @@
 package org.kin.framework.asyncdb;
 
 import org.kin.framework.Closeable;
-import org.kin.framework.concurrent.ThreadManager;
+import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.TimeUtils;
 import org.slf4j.Logger;
@@ -23,21 +23,21 @@ public class AsyncDBExecutor implements Closeable {
     private static final int LOG_STATE_INTERVAL = 60;
 
 
-    private ThreadManager threadManager;
+    private ExecutionContext executionContext;
     private AsyncDBOperator[] asyncDBOperators;
     private volatile boolean isStopped = false;
     private AsyncDBStrategy asyncDBStrategy;
 
     void init(int num, AsyncDBStrategy asyncDBStrategy) {
-        threadManager = ThreadManager.fix(num + 1, "asyncDB");
+        executionContext = ExecutionContext.fix(num + 1, "asyncDB");
         this.asyncDBStrategy = asyncDBStrategy;
         asyncDBOperators = new AsyncDBOperator[num];
         for (int i = 0; i < num; i++) {
             AsyncDBOperator asyncDBOperator = new AsyncDBOperator();
-            threadManager.execute(asyncDBOperator);
+            executionContext.execute(asyncDBOperator);
             asyncDBOperators[i] = asyncDBOperator;
         }
-        threadManager.execute(() -> {
+        executionContext.execute(() -> {
             while (!isStopped) {
                 long sleepTime = LOG_STATE_INTERVAL - TimeUtils.timestamp() % LOG_STATE_INTERVAL;
                 try {
@@ -71,9 +71,9 @@ public class AsyncDBExecutor implements Closeable {
         for (AsyncDBOperator asyncDBOperator : asyncDBOperators) {
             asyncDBOperator.close();
         }
-        threadManager.shutdown();
+        executionContext.shutdown();
         try {
-            threadManager.awaitTermination(2, TimeUnit.MINUTES);
+            executionContext.awaitTermination(2, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
         }

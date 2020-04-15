@@ -1,7 +1,7 @@
 package org.kin.framework.actor;
 
 import org.kin.framework.JvmCloseCleaner;
-import org.kin.framework.concurrent.ThreadManager;
+import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,37 +20,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ActorLike.class);
 
-    private static Map<ActorLike<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
+    private static Map<ActorLike<?>, Queue<Future>> FUTURES = new ConcurrentHashMap<>();
 
-    private ThreadManager threads;
+    private ExecutionContext executionContext;
     private final Queue<Message<AL>> messageBox = new LinkedBlockingDeque<>();
     private final AtomicInteger boxSize = new AtomicInteger();
     private volatile Thread currentThread;
     private volatile boolean isStopped = false;
 
-    protected ActorLike(ThreadManager threads) {
-        this.threads = threads;
+    protected ActorLike(ExecutionContext executionContext) {
+        this.executionContext = executionContext;
         //每1h清理已结束的调度
         scheduleAtFixedRate(actor -> clearFinishedFutures(), 0, 1, TimeUnit.HOURS);
 
-        JvmCloseCleaner.DEFAULT().add(threads::shutdown);
+        JvmCloseCleaner.DEFAULT().add(executionContext::shutdown);
     }
 
     public ActorLike(ExecutorService executorService, int scheduleCoreNum, ThreadFactory scheduleThreadFactory) {
-        this(new ThreadManager(executorService, scheduleCoreNum, scheduleThreadFactory));
-    }
-
-
-    @Override
-    public <T> void receive(T message) {
-        if (!isStopped) {
-            if (message instanceof Message) {
-                messageBox.add((Message<AL>) message);
-                tryRun();
-            } else {
-                throw new UnsupportedOperationException();
-            }
-        }
+        this(new ExecutionContext(executorService, scheduleCoreNum, scheduleThreadFactory));
     }
 
     @Override
@@ -64,7 +51,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     @Override
     public Future<?> schedule(Message<AL> message, long delay, TimeUnit unit) {
         if (!isStopped) {
-            Future future = threads.schedule(() -> receive(message), delay, unit);
+            Future future = executionContext.schedule(() -> tell(message), delay, unit);
             addFuture(future);
             return future;
         }
@@ -74,7 +61,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     @Override
     public Future<?> scheduleAtFixedRate(Message<AL> message, long initialDelay, long period, TimeUnit unit) {
         if (!isStopped) {
-            Future future = threads.scheduleAtFixedRate(() -> receive(message), initialDelay, period, unit);
+            Future future = executionContext.scheduleAtFixedRate(() -> tell(message), initialDelay, period, unit);
             addFuture(future);
             return future;
         }
@@ -83,11 +70,6 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
 
     @Override
     public void stop() {
-        stopNow();
-    }
-
-    @Override
-    public void stopNow() {
         if (!isStopped) {
             isStopped = true;
             clearFutures();
@@ -124,19 +106,19 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
 
     private void tryRun() {
         if (!isStopped && boxSize.incrementAndGet() == 1) {
-            threads.execute(this);
+            executionContext.execute(this);
         }
     }
 
     private void addFuture(Future<?> future) {
         Queue<Future> queue;
-        while ((queue = futures.putIfAbsent(this, new ConcurrentLinkedQueue<>())) == null) {
+        while ((queue = FUTURES.putIfAbsent(this, new ConcurrentLinkedQueue<>())) == null) {
         }
         queue.add(future);
     }
 
     private void clearFutures() {
-        Queue<Future> old = futures.remove(this);
+        Queue<Future> old = FUTURES.remove(this);
         if (old != null) {
             for (Future future : old) {
                 if (!future.isDone() || !future.isCancelled()) {
@@ -147,7 +129,7 @@ public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     }
 
     private void clearFinishedFutures() {
-        Queue<Future> old = futures.get(this);
+        Queue<Future> old = FUTURES.get(this);
         if (old != null) {
             old.removeIf(Future::isDone);
         }

@@ -30,14 +30,14 @@ public class PartitionTaskExecutor<K> {
     /** 分区算法 */
     private final Partitioner<K> partitioner;
     /** 执行线程池 */
-    private final ThreadManager workers;
+    private final ExecutionContext workers;
     /**
      * 所有分区执行线程实例
      * lazy init
      */
     private PartitionWorker[] partitionWorkers;
     /** report 线程 */
-    private final ThreadManager reportThread;
+    private final ExecutionContext reportThread;
     /** 每批处理任务最大数 */
     private final int batchMaxNum;
 
@@ -67,8 +67,8 @@ public class PartitionTaskExecutor<K> {
 
         this.partitionNum = partitionNum;
         this.partitioner = partitioner;
-        this.workers = ThreadManager.fix(partitionNum, workerNamePrefix);
-        this.reportThread = ThreadManager.fix(1, workerNamePrefix.concat("reporter-"));
+        this.workers = ExecutionContext.fix(partitionNum, workerNamePrefix);
+        this.reportThread = ExecutionContext.fix(1, workerNamePrefix.concat("reporter-"));
         this.batchMaxNum = batchMaxNum;
         this.partitionWorkers = new PartitionTaskExecutor.PartitionWorker[this.partitionNum];
 

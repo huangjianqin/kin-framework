@@ -1,7 +1,7 @@
 package org.kin.framework.hotswap;
 
 import org.kin.framework.Closeable;
-import org.kin.framework.concurrent.ThreadManager;
+import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.hotswap.agent.JavaAgentHotswap;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
@@ -36,7 +36,7 @@ public class FileMonitor extends Thread implements Closeable {
     /** 分段锁 */
     private Object[] locks;
     /** 异步热加载文件 执行线程 */
-    private ThreadManager threadManager;
+    private ExecutionContext executionContext;
     private volatile boolean isStopped = false;
 
     public FileMonitor() {
@@ -47,13 +47,13 @@ public class FileMonitor extends Thread implements Closeable {
         this(name, null);
     }
 
-    public FileMonitor(ThreadManager threadManager) {
-        this("hotSwapFileMonitor", threadManager);
+    public FileMonitor(ExecutionContext executionContext) {
+        this("hotSwapFileMonitor", executionContext);
     }
 
-    public FileMonitor(String name, ThreadManager threadManager) {
+    public FileMonitor(String name, ExecutionContext executionContext) {
         super(name);
-        this.threadManager = threadManager;
+        this.executionContext = executionContext;
     }
 
     private void init() {
@@ -69,9 +69,9 @@ public class FileMonitor extends Thread implements Closeable {
             locks[i] = new Object();
         }
 
-        if (threadManager == null) {
+        if (executionContext == null) {
             //默认设置
-            this.threadManager = ThreadManager.fix(5, "file-monitor");
+            this.executionContext = ExecutionContext.fix(5, "file-monitor");
         }
 
         //监听热更class存储目录
@@ -118,7 +118,7 @@ public class FileMonitor extends Thread implements Closeable {
                                 //处理文件热更新
                                 AbstractFileReloadable fileReloadable = monitorItems.get(hashKey);
                                 if (fileReloadable != null) {
-                                    threadManager.execute(() -> {
+                                    executionContext.execute(() -> {
                                         try {
                                             long startTime = System.currentTimeMillis();
                                             try (InputStream is = new FileInputStream(childPath.toFile())) {
@@ -143,7 +143,7 @@ public class FileMonitor extends Thread implements Closeable {
 
             if (changedClasses.size() > 0) {
                 //类热更新
-                threadManager.execute(() -> javaAgentHotswap.hotswap(changedClasses));
+                executionContext.execute(() -> javaAgentHotswap.hotswap(changedClasses));
                 HotFix.instance().fix();
             }
         }
@@ -165,12 +165,12 @@ public class FileMonitor extends Thread implements Closeable {
             } catch (IOException e) {
                 ExceptionUtils.log(e);
             }
-            threadManager.shutdown();
+            executionContext.shutdown();
             //help GC
             monitorItems = null;
 //            hotswapFactory = null;
             locks = null;
-            threadManager = null;
+            executionContext = null;
 
             //中断监控线程, 让本线程退出
             interrupt();

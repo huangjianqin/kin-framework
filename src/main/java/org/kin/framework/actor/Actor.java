@@ -12,12 +12,6 @@ import java.util.concurrent.TimeUnit;
  * Actor的行为分派调度由具体的业务系统自身定义
  */
 public interface Actor<A extends Actor<?>> {
-    /**
-     * 消息匹配对应预定义方法并执行
-     *
-     * @param message 消息
-     */
-    <T> void receive(T message);
 
     /**
      * 执行@message 方法
@@ -51,10 +45,4 @@ public interface Actor<A extends Actor<?>> {
      * 待mailbox里面的mail执行完, 关闭Actor, 并释放资源
      */
     void stop();
-
-    /**
-     * 非Actor 线程执行
-     * 直接中断 Actor 线程, 关闭Actor, 并释放资源
-     */
-    void stopNow();
 }

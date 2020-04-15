@@ -1,6 +1,6 @@
 package org.kin.framework.concurrent.lock;
 
-import org.kin.framework.concurrent.ThreadManager;
+import org.kin.framework.concurrent.ExecutionContext;
 
 import java.util.concurrent.Executors;
 
@@ -11,9 +11,9 @@ import java.util.concurrent.Executors;
 public class LockBoxTest {
     public static void main(String[] args) throws InterruptedException {
         LockBox<Integer> lockBox = new LockBox<>();
-        ThreadManager threadManager = new ThreadManager(Executors.newCachedThreadPool());
+        ExecutionContext executionContext = new ExecutionContext(Executors.newCachedThreadPool());
 
-        threadManager.execute(() -> lockBox.lockRun(1, () -> {
+        executionContext.execute(() -> lockBox.lockRun(1, () -> {
             System.out.println(1111);
             try {
                 Thread.sleep(1000);
@@ -23,7 +23,7 @@ public class LockBoxTest {
             lockBox.lockRun(2, () -> System.out.println(11112222));
         }));
 
-        threadManager.execute(() -> lockBox.lockRun(2, () -> {
+        executionContext.execute(() -> lockBox.lockRun(2, () -> {
             System.out.println(2222);
             try {
                 Thread.sleep(1000);
@@ -48,6 +48,6 @@ public class LockBoxTest {
 //        });
 
         Thread.sleep(5000);
-        threadManager.shutdown();
+        executionContext.shutdown();
     }
 }
