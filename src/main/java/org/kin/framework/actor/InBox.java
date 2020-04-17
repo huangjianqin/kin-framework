@@ -12,22 +12,23 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2020-04-15
  */
-public class InBox<MSG> implements Closeable {
+class InBox<MSG> implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(InBox.class);
 
     private final Receiver<MSG> receiver;
     private final boolean enableConcurrent;
 
-    private LinkedList<MSG> mail = new LinkedList<>();
+    private LinkedList<InBoxMessage> mail = new LinkedList<>();
     private int activeThreads = 0;
     private boolean stopped;
 
-    public InBox(Receiver receiver, boolean enableConcurrent) {
+    InBox(Receiver receiver, boolean enableConcurrent) {
         this.receiver = receiver;
         this.enableConcurrent = enableConcurrent;
+        mail.add(OnStartSignal.INSTANCE);
     }
 
-    public void post(MSG message) {
+    public void post(InBoxMessage message) {
         synchronized (this) {
             if (stopped) {
                 log.warn(String.format("Drop %s because %s is stopped", message, receiver));
@@ -38,7 +39,7 @@ public class InBox<MSG> implements Closeable {
     }
 
     public void process(Dispatcher dispatcher) {
-        MSG message = null;
+        InBoxMessage message;
         synchronized (this) {
             if (!enableConcurrent && activeThreads > 0) {
                 return;
@@ -53,7 +54,16 @@ public class InBox<MSG> implements Closeable {
 
         while (true) {
             try {
-                receiver.receive(message);
+                if (message instanceof OnStartSignal) {
+                    receiver.onStart();
+                } else if (message instanceof OnStopSignal) {
+                    receiver.onStop();
+                } else if (message instanceof OnMessageSignal) {
+                    OnMessageSignal<MSG> wrapper = (OnMessageSignal) message;
+                    receiver.receive(wrapper.getMessage());
+                } else {
+                    log.error("unknown InBoxMessage >>>> {}", message);
+                }
             } catch (Exception e) {
                 ExceptionUtils.log(e);
             }
@@ -77,6 +87,7 @@ public class InBox<MSG> implements Closeable {
         synchronized (this) {
             if (!stopped) {
                 stopped = true;
+                mail.add(OnStopSignal.INSTANCE);
             }
         }
     }

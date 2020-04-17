@@ -18,7 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class Dispatcher<KEY, MSG> implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(Dispatcher.class);
-    private static final ReceiverData POISON_PILL = new ReceiverData(null, false);
+    private final ReceiverData<MSG> POISON_PILL = new ReceiverData<>(null, false);
 
     private ExecutionContext executionContext;
     private int parallelism;
@@ -46,7 +46,7 @@ public class Dispatcher<KEY, MSG> implements Closeable {
                 throw new IllegalStateException("dispatcher has been stopped");
             }
 
-            if (Objects.nonNull(receiverDatas.putIfAbsent(key, new ReceiverData<MSG>(receiver, enableConcurrent)))) {
+            if (Objects.nonNull(receiverDatas.putIfAbsent(key, new ReceiverData<>(receiver, enableConcurrent)))) {
                 throw new IllegalArgumentException(String.format("%s has registried", key));
             }
 
@@ -55,7 +55,7 @@ public class Dispatcher<KEY, MSG> implements Closeable {
         }
     }
 
-    public void register(KEY key, Receiver receiver) {
+    public void register(KEY key, Receiver<MSG> receiver) {
         register(key, receiver, false);
     }
 
@@ -75,7 +75,7 @@ public class Dispatcher<KEY, MSG> implements Closeable {
 
             ReceiverData<MSG> data = receiverDatas.get(key);
             if (Objects.nonNull(data)) {
-                data.inBox.post(message);
+                data.inBox.post(new OnMessageSignal<>(message));
                 pendingDatas.offer(data);
             }
         }
@@ -99,24 +99,24 @@ public class Dispatcher<KEY, MSG> implements Closeable {
     private class MessageLoop implements Runnable {
         @Override
         public void run() {
-            while (true) {
-                try {
+            try {
+                while (true) {
                     ReceiverData<MSG> data = pendingDatas.take();
                     if (data == POISON_PILL) {
                         pendingDatas.offer(POISON_PILL);
                         return;
                     }
                     data.inBox.process(Dispatcher.this);
-                } catch (InterruptedException e) {
+                }
+            } catch (InterruptedException e) {
 
-                } catch (Exception e) {
-                    ExceptionUtils.log(e);
-                    try {
-                        //re-run
-                        executionContext.execute(new MessageLoop());
-                    } finally {
-                        throw e;
-                    }
+            } catch (Exception e) {
+                ExceptionUtils.log(e);
+                try {
+                    //re-run
+                    executionContext.execute(new MessageLoop());
+                } finally {
+                    throw e;
                 }
             }
         }

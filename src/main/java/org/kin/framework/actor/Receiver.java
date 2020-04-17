@@ -6,4 +6,10 @@ package org.kin.framework.actor;
  */
 public abstract class Receiver<MSG> {
     public abstract void receive(MSG mail);
+
+    protected void onStart() {
+    }
+
+    protected void onStop() {
+    }
 }

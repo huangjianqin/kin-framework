@@ -41,6 +41,18 @@ public class DispatcherTest {
             names.add(Thread.currentThread().getName());
             counter++;
         }
+
+        @Override
+        protected void onStart() {
+            super.onStart();
+            System.out.println("recevier start");
+        }
+
+        @Override
+        protected void onStop() {
+            super.onStop();
+            System.out.println("recevier stop");
+        }
     }
 
     static class IntMessage extends InBoxMessage {
