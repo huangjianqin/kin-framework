@@ -16,14 +16,14 @@ public class DispatcherTest {
     public static void main(String[] args) throws InterruptedException {
         ExecutionContext executionContext = ExecutionContext.cache("dispatcher-test");
 
-        Dispatcher<Integer, IntMessage> dispatcher = new Dispatcher<>(5);
-        dispatcher.init();
+        EventBaseDispatcher<Integer, IntMessage> eventBaseDispatcher = new EventBaseDispatcher<>(5);
+        eventBaseDispatcher.init();
         int key = 1;
-        dispatcher.register(key, new TestReceiver());
+        eventBaseDispatcher.register(key, new TestReceiver(), false);
 
         int num = 3;
         for (int i = 0; i < num; i++) {
-            executionContext.execute(new TestRunnable(dispatcher));
+            executionContext.execute(new TestRunnable(eventBaseDispatcher));
         }
 
         Thread.sleep(10000);
@@ -31,7 +31,7 @@ public class DispatcherTest {
         System.out.println(names);
         System.out.println(counter);
 
-        dispatcher.close();
+        eventBaseDispatcher.close();
         executionContext.shutdown();
     }
 
@@ -65,17 +65,17 @@ public class DispatcherTest {
 
 
     static class TestRunnable implements Runnable {
-        private Dispatcher<Integer, IntMessage> dispatcher;
+        private EventBaseDispatcher<Integer, IntMessage> eventBaseDispatcher;
 
-        public TestRunnable(Dispatcher<Integer, IntMessage> dispatcher) {
-            this.dispatcher = dispatcher;
+        public TestRunnable(EventBaseDispatcher<Integer, IntMessage> eventBaseDispatcher) {
+            this.eventBaseDispatcher = eventBaseDispatcher;
         }
 
         @Override
         public void run() {
             int key = 1;
             for (int i = 0; i < 10000; i++) {
-                dispatcher.postMessage(key, new IntMessage(i));
+                eventBaseDispatcher.postMessage(key, new IntMessage(i));
             }
         }
     }

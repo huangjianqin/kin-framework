@@ -38,7 +38,7 @@ class InBox<MSG> implements Closeable {
         }
     }
 
-    public void process(Dispatcher dispatcher) {
+    public void process(EventBaseDispatcher eventBaseDispatcher) {
         InBoxMessage message;
         synchronized (this) {
             if (!enableConcurrent && activeThreads > 0) {
