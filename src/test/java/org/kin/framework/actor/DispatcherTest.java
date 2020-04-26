@@ -16,7 +16,7 @@ public class DispatcherTest {
     public static void main(String[] args) throws InterruptedException {
         ExecutionContext executionContext = ExecutionContext.cache("dispatcher-test");
 
-        EventBaseDispatcher<Integer, IntMessage> eventBaseDispatcher = new EventBaseDispatcher<>(5);
+        Dispatcher<Integer, IntMessage> eventBaseDispatcher = new EventBaseDispatcher<>(5);
         eventBaseDispatcher.init();
         int key = 1;
         eventBaseDispatcher.register(key, new TestReceiver(), false);
@@ -65,9 +65,9 @@ public class DispatcherTest {
 
 
     static class TestRunnable implements Runnable {
-        private EventBaseDispatcher<Integer, IntMessage> eventBaseDispatcher;
+        private Dispatcher<Integer, IntMessage> eventBaseDispatcher;
 
-        public TestRunnable(EventBaseDispatcher<Integer, IntMessage> eventBaseDispatcher) {
+        public TestRunnable(Dispatcher<Integer, IntMessage> eventBaseDispatcher) {
             this.eventBaseDispatcher = eventBaseDispatcher;
         }
 
