@@ -17,18 +17,18 @@ import java.util.concurrent.LinkedBlockingQueue;
  * <p>
  * 尽量不要blocking
  */
-public class EventBaseDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
-    private static final Logger log = LoggerFactory.getLogger(EventBaseDispatcher.class);
+public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
+    private static final Logger log = LoggerFactory.getLogger(EventBasedDispatcher.class);
     private final ReceiverData<MSG> POISON_PILL = new ReceiverData<>(null, false);
 
     private int parallelism;
     private Map<KEY, ReceiverData<MSG>> receiverDatas = new ConcurrentHashMap<>();
     private LinkedBlockingQueue<ReceiverData<MSG>> pendingDatas = new LinkedBlockingQueue<>();
 
-    public EventBaseDispatcher(int parallelism) {
+    public EventBasedDispatcher(int parallelism) {
         super(ExecutionContext.forkjoin(
-                parallelism, "eventBase-dispatcher",
-                SysUtils.getSuitableThreadNum() / 2 + 1, "eventBase-dispatcher-schedule"));
+                parallelism, "EventBasedDispatcher",
+                SysUtils.getSuitableThreadNum() / 2 + 1, "EventBasedDispatcher-schedule"));
         this.parallelism = parallelism;
     }
 
@@ -41,18 +41,12 @@ public class EventBaseDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> 
 
     @Override
     public void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
-        synchronized (this) {
-            if (stopped) {
-                throw new IllegalStateException("eventBase-dispatcher has been stopped");
-            }
-
-            if (Objects.nonNull(receiverDatas.putIfAbsent(key, new ReceiverData<>(receiver, enableConcurrent)))) {
-                throw new IllegalArgumentException(String.format("%s has registried", key));
-            }
-
-            ReceiverData<MSG> data = receiverDatas.get(key);
-            pendingDatas.offer(data);
+        if (Objects.nonNull(receiverDatas.putIfAbsent(key, new ReceiverData<>(receiver, enableConcurrent)))) {
+            throw new IllegalArgumentException(String.format("%s has registried", key));
         }
+
+        ReceiverData<MSG> data = receiverDatas.get(key);
+        pendingDatas.offer(data);
     }
 
     @Override
@@ -66,29 +60,15 @@ public class EventBaseDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> 
 
     @Override
     public void doPostMessage(KEY key, MSG message) {
-        synchronized (this) {
-            if (stopped) {
-                return;
-            }
-
-            ReceiverData<MSG> data = receiverDatas.get(key);
-            if (Objects.nonNull(data)) {
-                data.inBox.post(new OnMessageSignal<>(message));
-                pendingDatas.offer(data);
-            }
+        ReceiverData<MSG> data = receiverDatas.get(key);
+        if (Objects.nonNull(data)) {
+            data.inBox.post(new OnMessageSignal<>(message));
+            pendingDatas.offer(data);
         }
     }
 
     @Override
     public void doClose() {
-        synchronized (this) {
-            if (stopped) {
-                return;
-            }
-
-            stopped = true;
-        }
-
         receiverDatas.keySet().forEach(this::unRegister);
         pendingDatas.offer(POISON_PILL);
     }
@@ -103,7 +83,7 @@ public class EventBaseDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> 
                         pendingDatas.offer(POISON_PILL);
                         return;
                     }
-                    data.inBox.process(EventBaseDispatcher.this);
+                    data.inBox.process(EventBasedDispatcher.this);
                 }
             } catch (InterruptedException e) {
 

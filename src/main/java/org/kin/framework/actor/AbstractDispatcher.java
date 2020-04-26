@@ -11,8 +11,14 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MSG> {
     private static final Logger log = LoggerFactory.getLogger(AbstractDispatcher.class);
 
+    /**
+     * 底层线程池
+     */
     protected ExecutionContext executionContext;
-    protected volatile boolean stopped;
+    /**
+     * Dispatcher是否stopped
+     */
+    protected volatile boolean stopped = true;
 
     public AbstractDispatcher(ExecutionContext executionContext) {
         this.executionContext = executionContext;
@@ -31,7 +37,8 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
     @Override
     public final void init() {
         synchronized (this) {
-            if (!stopped) {
+            if (stopped) {
+                stopped = false;
                 doInit();
             }
         }

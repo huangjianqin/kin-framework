@@ -16,13 +16,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * 可以blocking, 但要控制好parallelism, 保证有足够的线程数
  */
 public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
-    private static final Logger log = LoggerFactory.getLogger(EventBaseDispatcher.class);
+    private static final Logger log = LoggerFactory.getLogger(EventBasedDispatcher.class);
     private Map<KEY, ActorLikeReceiver<MSG>> actorLikeReceivers = new ConcurrentHashMap<>();
 
     public PinnedDispatcher(int parallelism) {
         super(ExecutionContext.fix(
-                parallelism, "pinnedThread-dispatcher",
-                SysUtils.getSuitableThreadNum() / 2 + 1, "pinnedThread-dispatcher-schedule"));
+                parallelism, "pinnedDispatcher",
+                SysUtils.getSuitableThreadNum() / 2 + 1, "pinnedDispatcher-schedule"));
     }
 
 
@@ -39,7 +39,7 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     @Override
     public void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
         if (enableConcurrent) {
-            throw new IllegalArgumentException("pinnedThread-dispatcher doesn't support concurrent");
+            throw new IllegalArgumentException("pinnedDispatcher doesn't support concurrent");
         }
 
         if (Objects.nonNull(actorLikeReceivers.putIfAbsent(key, new ActorLikeReceiver<>(receiver)))) {
