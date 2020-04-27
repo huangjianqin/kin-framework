@@ -11,20 +11,14 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MSG> {
     private static final Logger log = LoggerFactory.getLogger(AbstractDispatcher.class);
 
-    /**
-     * 底层线程池
-     */
+    /** 底层线程池 */
     protected ExecutionContext executionContext;
-    /**
-     * Dispatcher是否stopped
-     */
+    /** Dispatcher是否stopped */
     protected volatile boolean stopped = true;
 
     public AbstractDispatcher(ExecutionContext executionContext) {
         this.executionContext = executionContext;
     }
-
-    public abstract void doInit();
 
     public abstract void doClose();
 
@@ -33,16 +27,6 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
     public abstract void doUnRegister(KEY key);
 
     public abstract void doPostMessage(KEY key, MSG message);
-
-    @Override
-    public final void init() {
-        synchronized (this) {
-            if (stopped) {
-                stopped = false;
-                doInit();
-            }
-        }
-    }
 
     @Override
     public final void register(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {

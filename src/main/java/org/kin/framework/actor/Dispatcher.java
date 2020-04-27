@@ -8,11 +8,6 @@ import org.kin.framework.Closeable;
  */
 public interface Dispatcher<KEY, MSG> extends Closeable {
     /**
-     * 初始化
-     */
-    void init();
-
-    /**
      * 注册Receiver
      *
      * @param key              Receiver标识

@@ -19,13 +19,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class ActorLike<AL extends ActorLike<?>> implements Actor<AL>, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ActorLike.class);
-
+    /** key -> ActorLike实例 value -> 对应ActorLike已启动的调度 */
     private static Map<ActorLike<?>, Queue<Future>> FUTURES = new ConcurrentHashMap<>();
-
+    /** 线程池 */
     private ExecutionContext executionContext;
+    /** 消息队列 */
     private final Queue<Message<AL>> inBox = new LinkedBlockingQueue<>();
+    /** 消息数量 */
     private final AtomicInteger boxSize = new AtomicInteger();
+    /** 当前占用线程 */
     private volatile Thread currentThread;
+    /** ActorLike是否已关闭 */
     private volatile boolean isStopped = false;
 
     protected ActorLike(ExecutionContext executionContext) {

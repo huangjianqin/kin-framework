@@ -19,24 +19,23 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     private static final Logger log = LoggerFactory.getLogger(EventBasedDispatcher.class);
+    /** 毒药, 终止message loop */
     private final ReceiverData<MSG> POISON_PILL = new ReceiverData<>(null, false);
 
+    /** 并发数 */
     private int parallelism;
+    /** Receiver数据 */
     private Map<KEY, ReceiverData<MSG>> receiverDatas = new ConcurrentHashMap<>();
+    /** 等待数据处理的receivers */
     private LinkedBlockingQueue<ReceiverData<MSG>> pendingDatas = new LinkedBlockingQueue<>();
+    /** 是否已启动message loop */
+    private boolean isMessageLoopRun;
 
     public EventBasedDispatcher(int parallelism) {
         super(ExecutionContext.forkjoin(
                 parallelism, "EventBasedDispatcher",
                 SysUtils.getSuitableThreadNum() / 2 + 1, "EventBasedDispatcher-schedule"));
         this.parallelism = parallelism;
-    }
-
-    @Override
-    public void doInit() {
-        for (int i = 0; i < parallelism; i++) {
-            executionContext.execute(new MessageLoop());
-        }
     }
 
     @Override
@@ -47,6 +46,14 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
 
         ReceiverData<MSG> data = receiverDatas.get(key);
         pendingDatas.offer(data);
+
+        //lazy init
+        if (!isMessageLoopRun) {
+            for (int i = 0; i < parallelism; i++) {
+                executionContext.execute(new MessageLoop());
+            }
+            isMessageLoopRun = true;
+        }
     }
 
     @Override

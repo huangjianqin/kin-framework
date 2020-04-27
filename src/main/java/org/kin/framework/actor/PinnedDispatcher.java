@@ -17,18 +17,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     private static final Logger log = LoggerFactory.getLogger(EventBasedDispatcher.class);
+    /** Receiver数据 */
     private Map<KEY, ActorLikeReceiver<MSG>> actorLikeReceivers = new ConcurrentHashMap<>();
 
     public PinnedDispatcher(int parallelism) {
         super(ExecutionContext.fix(
                 parallelism, "pinnedDispatcher",
                 SysUtils.getSuitableThreadNum() / 2 + 1, "pinnedDispatcher-schedule"));
-    }
-
-
-    @Override
-    public void doInit() {
-
     }
 
     @Override

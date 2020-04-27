@@ -17,7 +17,6 @@ public class DispatcherTest {
         ExecutionContext executionContext = ExecutionContext.cache("dispatcher-test");
 
         Dispatcher<Integer, IntMessage> eventBaseDispatcher = new EventBasedDispatcher<>(5);
-        eventBaseDispatcher.init();
         int key = 1;
         eventBaseDispatcher.register(key, new TestReceiver(), false);
 
