@@ -27,6 +27,7 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     /** Receiver数据 */
     private Map<KEY, ReceiverData<MSG>> receiverDatas = new ConcurrentHashMap<>();
     /** 等待数据处理的receivers */
+    //TODO 考虑增加标志位, 在线程安全模式下, 如果Receiver消息正在被处理, 则不需要入队, 减少队列长度, 但这样子就会存在'比较忙'的Receiver长期占用, 其他Receiver消息得不到处理的问题
     private LinkedBlockingQueue<ReceiverData<MSG>> pendingDatas = new LinkedBlockingQueue<>();
     /** 是否已启动message loop */
     private boolean isMessageLoopRun;
