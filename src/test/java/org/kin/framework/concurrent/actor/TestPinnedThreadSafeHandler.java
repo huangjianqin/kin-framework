@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2019/7/9
  */
-public class TestActorLike {
+public class TestPinnedThreadSafeHandler {
     public static void main(String[] args) {
         CountDownLatch latch = new CountDownLatch(1);
         SimplePinnedThreadSafeHandler threadSafeHandler = new SimplePinnedThreadSafeHandler();

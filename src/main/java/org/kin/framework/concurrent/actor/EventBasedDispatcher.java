@@ -70,7 +70,7 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     public void doPostMessage(KEY key, MSG message) {
         ReceiverData<MSG> data = receiverDatas.get(key);
         if (Objects.nonNull(data)) {
-            data.inBox.post(new OnMessageSignal<>(message));
+            data.inBox.post(new InBox.OnMessageSignal<>(message));
             pendingDatas.offer(data);
         }
     }

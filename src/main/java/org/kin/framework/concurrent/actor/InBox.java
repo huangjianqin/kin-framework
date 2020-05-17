@@ -91,4 +91,54 @@ class InBox<MSG> implements Closeable {
             }
         }
     }
+
+    //-------------------------------------------------------------------------------------------------------
+
+    /**
+     * 内部消息
+     *
+     * @author huangjianqin
+     * @date 2020-04-16
+     */
+    static class InBoxMessage {
+    }
+
+    /**
+     * 封装真正的message的InBoxMessage
+     *
+     * @author huangjianqin
+     * @date 2020-04-17
+     */
+    final static class OnMessageSignal<M> extends InBoxMessage {
+        private M message;
+
+        OnMessageSignal(M message) {
+            this.message = message;
+        }
+
+
+        public M getMessage() {
+            return message;
+        }
+    }
+
+    /**
+     * 启动InBoxMessage
+     *
+     * @author huangjianqin
+     * @date 2020-04-16
+     */
+    final static class OnStartSignal extends InBoxMessage {
+        static final InBoxMessage INSTANCE = new OnStartSignal();
+    }
+
+    /**
+     * shutdown InBoxMessage
+     *
+     * @author huangjianqin
+     * @date 2020-04-16
+     */
+    final static class OnStopSignal extends InBoxMessage {
+        static final InBoxMessage INSTANCE = new OnStopSignal();
+    }
 }

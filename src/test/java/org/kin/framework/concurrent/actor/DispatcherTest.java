@@ -54,7 +54,7 @@ public class DispatcherTest {
         }
     }
 
-    static class IntMessage extends InBoxMessage {
+    static class IntMessage extends InBox.InBoxMessage {
         private int i;
 
         public IntMessage(int i) {
