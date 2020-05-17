@@ -1,9 +1,9 @@
 package org.kin.framework.event.impl;
 
 import com.google.common.base.Preconditions;
-import org.kin.framework.concurrent.PartitionTaskExecutor;
 import org.kin.framework.concurrent.SimpleThreadFactory;
-import org.kin.framework.concurrent.impl.EfficientHashPartitioner;
+import org.kin.framework.concurrent.partition.PartitionTaskExecutor;
+import org.kin.framework.concurrent.partition.impl.EfficientHashPartitioner;
 import org.kin.framework.event.AbstractEvent;
 import org.kin.framework.event.EventCallback;
 import org.kin.framework.event.NullEventDispatcher;

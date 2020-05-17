@@ -1,4 +1,4 @@
-package org.kin.framework.concurrent.domain;
+package org.kin.framework.concurrent.partition.domain;
 
 /**
  * @author huangjianqin

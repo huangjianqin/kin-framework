@@ -1,8 +1,9 @@
-package org.kin.framework.concurrent;
+package org.kin.framework.concurrent.partition;
 
 import com.google.common.base.Preconditions;
-import org.kin.framework.concurrent.domain.PartitionTaskReport;
-import org.kin.framework.concurrent.impl.HashPartitioner;
+import org.kin.framework.concurrent.ExecutionContext;
+import org.kin.framework.concurrent.partition.domain.PartitionTaskReport;
+import org.kin.framework.concurrent.partition.impl.HashPartitioner;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.TimeUtils;
