@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public interface ActorLikeDispatcher {
+public interface ThreadSafeDispatcher {
     /**
      * 注册事件处理器
      *

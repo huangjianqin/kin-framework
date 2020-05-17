@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public interface ScheduledActorLikeDispatcher extends ActorLikeDispatcher {
+public interface ScheduledThreadSafeDispatcher extends ThreadSafeDispatcher {
     /**
      * 延迟调度事件分发
      * 该事件处理会在同一线程处理(根据 @param partitionId 区分)

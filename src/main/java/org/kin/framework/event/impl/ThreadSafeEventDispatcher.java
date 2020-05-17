@@ -1,7 +1,7 @@
 package org.kin.framework.event.impl;
 
 import org.kin.framework.event.EventCallback;
-import org.kin.framework.event.ScheduledActorLikeDispatcher;
+import org.kin.framework.event.ScheduledThreadSafeDispatcher;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -13,13 +13,13 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public class ActorLikeEventDispatcher extends EventDispatcher implements ScheduledActorLikeDispatcher {
+public class ThreadSafeEventDispatcher extends EventDispatcher implements ScheduledThreadSafeDispatcher {
 
-    public ActorLikeEventDispatcher(int parallelism) {
+    public ThreadSafeEventDispatcher(int parallelism) {
         super(parallelism);
     }
 
-    public ActorLikeEventDispatcher(int parallelism, boolean isEnhance) {
+    public ThreadSafeEventDispatcher(int parallelism, boolean isEnhance) {
         super(parallelism, isEnhance);
     }
 
