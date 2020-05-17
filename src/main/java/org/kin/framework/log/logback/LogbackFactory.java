@@ -10,7 +10,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
-import org.kin.framework.log.AbstractLogEvent;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;

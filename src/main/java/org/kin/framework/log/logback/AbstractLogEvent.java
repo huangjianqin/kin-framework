@@ -1,4 +1,4 @@
-package org.kin.framework.log;
+package org.kin.framework.log.logback;
 
 import org.kin.framework.utils.StringUtils;
 

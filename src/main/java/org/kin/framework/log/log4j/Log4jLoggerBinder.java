@@ -1,4 +1,4 @@
-package org.kin.framework.log;
+package org.kin.framework.log.log4j;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
