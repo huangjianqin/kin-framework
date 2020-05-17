@@ -1,4 +1,4 @@
-package org.kin.framework.actor;
+package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.utils.SysUtils;
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     private static final Logger log = LoggerFactory.getLogger(EventBasedDispatcher.class);
     /** Receiver数据 */
-    private Map<KEY, ActorLikeReceiver<MSG>> actorLikeReceivers = new ConcurrentHashMap<>();
+    private Map<KEY, PinnedThreadSafeReceiver<MSG>> actorLikeReceivers = new ConcurrentHashMap<>();
 
     public PinnedDispatcher(int parallelism) {
         super(ExecutionContext.fix(
@@ -37,7 +37,7 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
             throw new IllegalArgumentException("pinnedDispatcher doesn't support concurrent");
         }
 
-        if (Objects.nonNull(actorLikeReceivers.putIfAbsent(key, new ActorLikeReceiver<>(receiver)))) {
+        if (Objects.nonNull(actorLikeReceivers.putIfAbsent(key, new PinnedThreadSafeReceiver<>(receiver)))) {
             throw new IllegalArgumentException(String.format("%s has registried", key));
         }
 
@@ -46,48 +46,42 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
 
     @Override
     public void doUnRegister(KEY key) {
-        ActorLikeReceiver<MSG> actorLikeReceiver = actorLikeReceivers.remove(key);
-        if (Objects.nonNull(actorLikeReceiver)) {
-            actorLikeReceiver.onStart();
+        PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = actorLikeReceivers.remove(key);
+        if (Objects.nonNull(pinnedThreadSafeReceiver)) {
+            pinnedThreadSafeReceiver.onStart();
         }
     }
 
     @Override
     public void doPostMessage(KEY key, MSG message) {
-        ActorLikeReceiver<MSG> actorLikeReceiver = actorLikeReceivers.get(key);
-        if (Objects.nonNull(actorLikeReceiver)) {
-            actorLikeReceiver.receive(message);
+        PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = actorLikeReceivers.get(key);
+        if (Objects.nonNull(pinnedThreadSafeReceiver)) {
+            pinnedThreadSafeReceiver.receive(message);
         }
     }
 
-    private class PinnedActorLike extends ActorLike<PinnedActorLike> {
-        private PinnedActorLike() {
-            super(PinnedDispatcher.super.executionContext);
-        }
-    }
-
-    private class ActorLikeReceiver<M> extends Receiver<M> {
-        private PinnedActorLike pinnedActorLike;
+    private class PinnedThreadSafeReceiver<M> extends Receiver<M> {
+        private PinnedThreadSafeHandler threadSafeHandler;
         private Receiver<M> proxy;
 
-        private ActorLikeReceiver(Receiver<M> receiver) {
-            this.pinnedActorLike = new PinnedActorLike();
+        private PinnedThreadSafeReceiver(Receiver<M> receiver) {
+            this.threadSafeHandler = new PinnedThreadSafeHandler(PinnedDispatcher.super.executionContext);
             this.proxy = receiver;
         }
 
         @Override
         public void receive(M mail) {
-            pinnedActorLike.tell(pal -> proxy.receive(mail));
+            threadSafeHandler.handle(pal -> proxy.receive(mail));
         }
 
         @Override
         protected void onStart() {
-            pinnedActorLike.tell(pal -> proxy.onStart());
+            threadSafeHandler.handle(pal -> proxy.onStart());
         }
 
         @Override
         protected void onStop() {
-            pinnedActorLike.tell(pal -> proxy.onStop());
+            threadSafeHandler.handle(pal -> proxy.onStop());
         }
     }
 }

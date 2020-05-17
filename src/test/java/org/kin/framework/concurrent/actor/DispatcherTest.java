@@ -1,4 +1,4 @@
-package org.kin.framework.actor;
+package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.concurrent.ExecutionContext;

@@ -1,4 +1,4 @@
-package org.kin.framework.actor;
+package org.kin.framework.concurrent.actor;
 
 /**
  * 封装真正的message的InBoxMessage

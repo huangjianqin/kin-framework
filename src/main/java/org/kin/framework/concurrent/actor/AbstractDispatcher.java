@@ -1,4 +1,4 @@
-package org.kin.framework.actor;
+package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
 import org.slf4j.Logger;

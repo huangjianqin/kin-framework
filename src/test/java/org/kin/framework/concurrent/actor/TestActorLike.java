@@ -1,4 +1,4 @@
-package org.kin.framework.actor;
+package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
 
@@ -13,8 +13,8 @@ import java.util.concurrent.TimeUnit;
 public class TestActorLike {
     public static void main(String[] args) {
         CountDownLatch latch = new CountDownLatch(1);
-        SimpleActorLike actorLike = new SimpleActorLike();
-        actorLike.tell((actor) -> {
+        SimplePinnedThreadSafeHandler threadSafeHandler = new SimplePinnedThreadSafeHandler();
+        threadSafeHandler.handle((actor) -> {
             System.out.println(1);
             try {
                 TimeUnit.SECONDS.sleep(2);
@@ -31,9 +31,9 @@ public class TestActorLike {
         }
     }
 
-    static class SimpleActorLike extends ActorLike<SimpleActorLike>{
+    static class SimplePinnedThreadSafeHandler extends PinnedThreadSafeHandler<SimplePinnedThreadSafeHandler> {
 
-        public SimpleActorLike() {
+        public SimplePinnedThreadSafeHandler() {
             super(new ExecutionContext(ForkJoinPool.commonPool()));
         }
     }
