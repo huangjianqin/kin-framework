@@ -1,4 +1,4 @@
-package org.kin.framework.event.impl;
+package org.kin.framework.listener;
 
 import org.kin.framework.event.annotation.Listener;
 

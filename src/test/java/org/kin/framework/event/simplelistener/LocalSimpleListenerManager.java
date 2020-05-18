@@ -1,6 +1,6 @@
 package org.kin.framework.event.simplelistener;
 
-import org.kin.framework.event.impl.SpringListenerManager;
+import org.kin.framework.listener.SpringListenerManager;
 import org.springframework.stereotype.Component;
 
 /**
