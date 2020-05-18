@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class TestPinnedThreadSafeHandler {
     public static void main(String[] args) {
         CountDownLatch latch = new CountDownLatch(1);
-        SimplePinnedThreadSafeHandler threadSafeHandler = new SimplePinnedThreadSafeHandler();
+        PinnedThreadSafeHandler threadSafeHandler = new PinnedThreadSafeHandler(new ExecutionContext(ForkJoinPool.commonPool()));
         threadSafeHandler.handle((actor) -> {
             System.out.println(1);
             try {
@@ -28,13 +28,6 @@ public class TestPinnedThreadSafeHandler {
             latch.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-    }
-
-    static class SimplePinnedThreadSafeHandler extends PinnedThreadSafeHandler<SimplePinnedThreadSafeHandler> {
-
-        public SimplePinnedThreadSafeHandler() {
-            super(new ExecutionContext(ForkJoinPool.commonPool()));
         }
     }
 }
