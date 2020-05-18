@@ -56,7 +56,7 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     }
 
     @Override
-    protected void doUnregister(KEY key) {
+    protected void doUnRegister(KEY key) {
         ReceiverData<MSG> data = receiverDatas.remove(key);
         if (Objects.nonNull(data)) {
             data.inBox.close();

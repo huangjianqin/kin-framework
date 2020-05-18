@@ -10,8 +10,8 @@ import org.kin.framework.concurrent.partition.partitioner.impl.HashPartitioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * @author huangjianqin
@@ -49,7 +49,7 @@ public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, M
         this.pinnedDispatcher = new PinnedDispatcher<>(partitionNum, workerNamePrefix);
         this.partitionNum = partitionNum;
         this.partitioner = partitioner;
-        this.registeredKeies = new ConcurrentSkipListSet<>();
+        this.registeredKeies = new HashSet<>();
     }
 
     //------------------------------------------------------------------------------------------------------------------

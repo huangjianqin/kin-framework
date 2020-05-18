@@ -49,7 +49,7 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     }
 
     @Override
-    protected void doUnregister(KEY key) {
+    protected void doUnRegister(KEY key) {
         PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = typeSafeReceivers.remove(key);
         if (Objects.nonNull(pinnedThreadSafeReceiver)) {
             pinnedThreadSafeReceiver.onStart();

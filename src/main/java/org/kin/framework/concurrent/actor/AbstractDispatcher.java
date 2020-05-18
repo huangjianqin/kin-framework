@@ -24,7 +24,7 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
 
     protected abstract void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent);
 
-    protected abstract void doUnregister(KEY key);
+    protected abstract void doUnRegister(KEY key);
 
     protected abstract void doPostMessage(KEY key, MSG message);
 
@@ -45,7 +45,7 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
             return;
         }
 
-        doUnregister(key);
+        doUnRegister(key);
     }
 
     @Override
