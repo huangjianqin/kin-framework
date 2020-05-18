@@ -1,6 +1,8 @@
 package org.kin.framework.concurrent.actor;
 
+import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
+import org.kin.framework.concurrent.SimpleThreadFactory;
 
 import java.util.Map;
 import java.util.Objects;
@@ -11,12 +13,13 @@ import java.util.concurrent.*;
  * @author huangjianqin
  * @date 2020-05-17
  */
-public class PinnedThreadSafeFuturesManager {
+public class PinnedThreadSafeFuturesManager implements Closeable {
     public static PinnedThreadSafeFuturesManager INSTANCE;
 
     /** key -> PinnedThreadSafeHandler实例 value -> 对应PinnedThreadSafeHandler已启动的调度 */
     private Map<PinnedThreadSafeHandler<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
-    private ExecutionContext executionContext = new ExecutionContext(ForkJoinPool.commonPool());
+    private ExecutionContext executionContext = new ExecutionContext(ForkJoinPool.commonPool(),
+            2, new SimpleThreadFactory("pinnedThreadSafeFuturesManager"));
 
     public static PinnedThreadSafeFuturesManager instance() {
         if (Objects.isNull(INSTANCE)) {
@@ -32,6 +35,7 @@ public class PinnedThreadSafeFuturesManager {
 
     //------------------------------------------------------------------------------------------------------------------
     private PinnedThreadSafeFuturesManager() {
+        monitorJVMClose();
         //每1h清理已结束的调度
         executionContext.scheduleAtFixedRate(() -> futures.keySet().forEach(this::clearFinishedFutures), 0, 1, TimeUnit.HOURS);
     }
@@ -71,5 +75,10 @@ public class PinnedThreadSafeFuturesManager {
 
     public Map<PinnedThreadSafeHandler<?>, Queue<Future>> getFutures() {
         return futures;
+    }
+
+    @Override
+    public void close() {
+        executionContext.shutdownNow();
     }
 }

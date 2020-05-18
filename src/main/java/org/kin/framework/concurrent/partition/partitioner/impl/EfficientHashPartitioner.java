@@ -1,6 +1,6 @@
-package org.kin.framework.concurrent.partition.impl;
+package org.kin.framework.concurrent.partition.partitioner.impl;
 
-import org.kin.framework.concurrent.partition.Partitioner;
+import org.kin.framework.concurrent.partition.partitioner.Partitioner;
 import org.kin.framework.utils.HashUtils;
 
 /**
@@ -11,7 +11,7 @@ public class EfficientHashPartitioner<K> implements Partitioner<K> {
     public static final Partitioner INSTANCE = new EfficientHashPartitioner();
 
     @Override
-    public int toPartition(K key, int numPartition) {
-        return HashUtils.efficientHash(key, numPartition);
+    public int toPartition(K key, int partitionNum) {
+        return HashUtils.efficientHash(key, partitionNum);
     }
 }

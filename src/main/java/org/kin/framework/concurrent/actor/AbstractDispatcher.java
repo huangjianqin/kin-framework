@@ -14,19 +14,19 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
     /** 底层线程池 */
     protected ExecutionContext executionContext;
     /** Dispatcher是否stopped */
-    protected volatile boolean stopped = true;
+    protected volatile boolean stopped;
 
     public AbstractDispatcher(ExecutionContext executionContext) {
         this.executionContext = executionContext;
     }
 
-    public abstract void doClose();
+    protected abstract void doClose();
 
-    public abstract void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent);
+    protected abstract void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent);
 
-    public abstract void doUnRegister(KEY key);
+    protected abstract void doUnregister(KEY key);
 
-    public abstract void doPostMessage(KEY key, MSG message);
+    protected abstract void doPostMessage(KEY key, MSG message);
 
     @Override
     public final void register(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
@@ -40,12 +40,12 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
     }
 
     @Override
-    public final void unRegister(KEY key) {
+    public final void unregister(KEY key) {
         if (stopped) {
             return;
         }
 
-        doUnRegister(key);
+        doUnregister(key);
     }
 
     @Override
@@ -57,6 +57,11 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
 
             doPostMessage(key, message);
         }
+    }
+
+    @Override
+    public final void shutdown() {
+        close();
     }
 
     @Override
@@ -72,6 +77,11 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
 
             executionContext.shutdown();
         }
+    }
+
+    @Override
+    public final ExecutionContext executionContext() {
+        return executionContext;
     }
 
     public final boolean isStopped() {

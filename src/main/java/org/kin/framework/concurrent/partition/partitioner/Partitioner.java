@@ -1,4 +1,4 @@
-package org.kin.framework.concurrent.partition;
+package org.kin.framework.concurrent.partition.partitioner;
 
 /**
  * @author huangjianqin
@@ -10,8 +10,8 @@ public interface Partitioner<K> {
      * 获取分区
      *
      * @param key          key
-     * @param numPartition 分区数
+     * @param partitionNum 分区数
      * @return 分区id
      */
-    int toPartition(K key, int numPartition);
+    int toPartition(K key, int partitionNum);
 }

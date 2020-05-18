@@ -2,7 +2,6 @@ package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,13 +33,12 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
 
     public EventBasedDispatcher(int parallelism) {
         super(ExecutionContext.forkjoin(
-                parallelism, "EventBasedDispatcher",
-                SysUtils.getSuitableThreadNum() / 2 + 1, "EventBasedDispatcher-schedule"));
+                parallelism, "EventBasedDispatcher"));
         this.parallelism = parallelism;
     }
 
     @Override
-    public void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
+    protected void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
         if (Objects.nonNull(receiverDatas.putIfAbsent(key, new ReceiverData<>(receiver, enableConcurrent)))) {
             throw new IllegalArgumentException(String.format("%s has registried", key));
         }
@@ -58,7 +56,7 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     }
 
     @Override
-    public void doUnRegister(KEY key) {
+    protected void doUnregister(KEY key) {
         ReceiverData<MSG> data = receiverDatas.remove(key);
         if (Objects.nonNull(data)) {
             data.inBox.close();
@@ -67,7 +65,7 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     }
 
     @Override
-    public void doPostMessage(KEY key, MSG message) {
+    protected void doPostMessage(KEY key, MSG message) {
         ReceiverData<MSG> data = receiverDatas.get(key);
         if (Objects.nonNull(data)) {
             data.inBox.post(new InBox.OnMessageSignal<>(message));
@@ -76,8 +74,8 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     }
 
     @Override
-    public void doClose() {
-        receiverDatas.keySet().forEach(this::unRegister);
+    protected void doClose() {
+        receiverDatas.keySet().forEach(this::unregister);
         pendingDatas.offer(POISON_PILL);
     }
 

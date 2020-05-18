@@ -1,7 +1,6 @@
 package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
-import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2020-04-26
  * <p>
+ * 无上限分区dispatcher
  * 可以blocking, 但要控制好parallelism, 保证有足够的线程数
  */
 public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
@@ -21,18 +21,22 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     private Map<KEY, PinnedThreadSafeReceiver<MSG>> typeSafeReceivers = new ConcurrentHashMap<>();
 
     public PinnedDispatcher(int parallelism) {
+        this(parallelism, "pinnedDispatcher");
+    }
+
+    public PinnedDispatcher(int parallelism, String workerNamePrefix) {
         super(ExecutionContext.fix(
-                parallelism, "pinnedDispatcher",
-                SysUtils.getSuitableThreadNum() / 2 + 1, "pinnedDispatcher-schedule"));
+                parallelism, workerNamePrefix,
+                parallelism / 2 + 1, workerNamePrefix.concat("-schedule")));
     }
 
     @Override
-    public void doClose() {
-        typeSafeReceivers.keySet().forEach(this::unRegister);
+    protected void doClose() {
+        typeSafeReceivers.keySet().forEach(this::unregister);
     }
 
     @Override
-    public void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
+    protected void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
         if (enableConcurrent) {
             throw new IllegalArgumentException("pinnedDispatcher doesn't support concurrent");
         }
@@ -45,7 +49,7 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     }
 
     @Override
-    public void doUnRegister(KEY key) {
+    protected void doUnregister(KEY key) {
         PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = typeSafeReceivers.remove(key);
         if (Objects.nonNull(pinnedThreadSafeReceiver)) {
             pinnedThreadSafeReceiver.onStart();
@@ -53,7 +57,7 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     }
 
     @Override
-    public void doPostMessage(KEY key, MSG message) {
+    protected void doPostMessage(KEY key, MSG message) {
         PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = typeSafeReceivers.get(key);
         if (Objects.nonNull(pinnedThreadSafeReceiver)) {
             pinnedThreadSafeReceiver.receive(message);
