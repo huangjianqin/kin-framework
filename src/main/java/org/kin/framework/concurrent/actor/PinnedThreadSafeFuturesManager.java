@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 public class PinnedThreadSafeFuturesManager {
     public static PinnedThreadSafeFuturesManager INSTANCE;
 
-    /** key -> ActorLike实例 value -> 对应ActorLike已启动的调度 */
+    /** key -> PinnedThreadSafeHandler实例 value -> 对应PinnedThreadSafeHandler已启动的调度 */
     private Map<PinnedThreadSafeHandler<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
     private ExecutionContext executionContext = new ExecutionContext(ForkJoinPool.commonPool());
 

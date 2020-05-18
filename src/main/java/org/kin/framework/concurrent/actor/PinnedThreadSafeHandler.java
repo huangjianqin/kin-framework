@@ -29,7 +29,7 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<?>> impl
     private final AtomicInteger boxSize = new AtomicInteger();
     /** 当前占用线程 */
     private volatile Thread currentThread;
-    /** ActorLike是否已关闭 */
+    /** PinnedThreadSafeHandler是否已关闭 */
     private volatile boolean isStopped = false;
 
     public PinnedThreadSafeHandler(ExecutionContext executionContext) {

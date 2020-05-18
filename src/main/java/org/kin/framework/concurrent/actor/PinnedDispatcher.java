@@ -16,9 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * 可以blocking, 但要控制好parallelism, 保证有足够的线程数
  */
 public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
-    private static final Logger log = LoggerFactory.getLogger(EventBasedDispatcher.class);
+    private static final Logger log = LoggerFactory.getLogger(PinnedDispatcher.class);
     /** Receiver数据 */
-    private Map<KEY, PinnedThreadSafeReceiver<MSG>> actorLikeReceivers = new ConcurrentHashMap<>();
+    private Map<KEY, PinnedThreadSafeReceiver<MSG>> typeSafeReceivers = new ConcurrentHashMap<>();
 
     public PinnedDispatcher(int parallelism) {
         super(ExecutionContext.fix(
@@ -28,7 +28,7 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
 
     @Override
     public void doClose() {
-        actorLikeReceivers.keySet().forEach(this::unRegister);
+        typeSafeReceivers.keySet().forEach(this::unRegister);
     }
 
     @Override
@@ -37,16 +37,16 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
             throw new IllegalArgumentException("pinnedDispatcher doesn't support concurrent");
         }
 
-        if (Objects.nonNull(actorLikeReceivers.putIfAbsent(key, new PinnedThreadSafeReceiver<>(receiver)))) {
+        if (Objects.nonNull(typeSafeReceivers.putIfAbsent(key, new PinnedThreadSafeReceiver<>(receiver)))) {
             throw new IllegalArgumentException(String.format("%s has registried", key));
         }
 
-        actorLikeReceivers.get(key).onStart();
+        typeSafeReceivers.get(key).onStart();
     }
 
     @Override
     public void doUnRegister(KEY key) {
-        PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = actorLikeReceivers.remove(key);
+        PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = typeSafeReceivers.remove(key);
         if (Objects.nonNull(pinnedThreadSafeReceiver)) {
             pinnedThreadSafeReceiver.onStart();
         }
@@ -54,7 +54,7 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
 
     @Override
     public void doPostMessage(KEY key, MSG message) {
-        PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = actorLikeReceivers.get(key);
+        PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = typeSafeReceivers.get(key);
         if (Objects.nonNull(pinnedThreadSafeReceiver)) {
             pinnedThreadSafeReceiver.receive(message);
         }

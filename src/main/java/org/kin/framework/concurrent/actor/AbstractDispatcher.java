@@ -74,7 +74,7 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
         }
     }
 
-    public boolean isStopped() {
+    public final boolean isStopped() {
         return stopped;
     }
 }
