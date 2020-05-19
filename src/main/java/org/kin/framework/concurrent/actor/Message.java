@@ -7,7 +7,7 @@ package org.kin.framework.concurrent.actor;
 @FunctionalInterface
 public interface Message<TS extends PinnedThreadSafeHandler<?>> {
     /**
-     * @param actor 处理该时间的PinnedThreadSafeHandler
+     * @param threadSafeHandler 处理该时间的PinnedThreadSafeHandler
      */
     void handle(TS threadSafeHandler);
 }

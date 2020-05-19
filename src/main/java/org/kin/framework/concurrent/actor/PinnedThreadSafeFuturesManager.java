@@ -39,7 +39,7 @@ public class PinnedThreadSafeFuturesManager implements Closeable {
     private PinnedThreadSafeFuturesManager() {
         monitorJVMClose();
         //每1h清理已结束的调度
-        executionContext.scheduleAtFixedRate(() -> futures.keySet().forEach(this::clearUnvalidFutures), 0, 1, TimeUnit.HOURS);
+        executionContext.scheduleAtFixedRate(() -> futures.keySet().forEach(this::clearUnvalidFutures), 0, 20, TimeUnit.MINUTES);
     }
 
     /**

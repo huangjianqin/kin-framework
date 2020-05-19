@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 推荐使用继承实现
  * 每个实例绑定一个线程处理消息, 支持阻塞(线程池需要足够大)
  */
-public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<?>> implements Runnable {
+public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<TS>> implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(PinnedThreadSafeHandler.class);
 
     /** 线程池 */
@@ -85,14 +85,14 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<?>> impl
     public void run() {
         this.currentThread = Thread.currentThread();
         while (!isStopped && !this.currentThread.isInterrupted()) {
-            Message message = inBox.poll();
+            Message<TS> message = inBox.poll();
             if (message == null) {
                 break;
             }
 
             long st = System.currentTimeMillis();
             try {
-                message.handle(this);
+                message.handle((TS) this);
             } catch (Exception e) {
                 ExceptionUtils.log(e);
             }
