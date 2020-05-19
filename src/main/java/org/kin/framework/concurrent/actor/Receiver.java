@@ -3,6 +3,8 @@ package org.kin.framework.concurrent.actor;
 /**
  * @author huangjianqin
  * @date 2020-04-16
+ *
+ * 消息逻辑处理实现
  */
 public abstract class Receiver<MSG> {
     /**

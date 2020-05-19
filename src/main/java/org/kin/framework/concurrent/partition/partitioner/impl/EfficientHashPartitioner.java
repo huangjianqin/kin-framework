@@ -6,6 +6,8 @@ import org.kin.framework.utils.HashUtils;
 /**
  * @author huangjianqin
  * @date 2018/11/5
+ *
+ * 高效的hash算法
  */
 public class EfficientHashPartitioner<K> implements Partitioner<K> {
     public static final Partitioner INSTANCE = new EfficientHashPartitioner();

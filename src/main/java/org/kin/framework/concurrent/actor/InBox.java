@@ -9,17 +9,23 @@ import java.util.LinkedList;
 import java.util.Objects;
 
 /**
+ * '邮箱'
+ * 消息队列, 存储待处理的消息
  * @author huangjianqin
  * @date 2020-04-15
  */
 class InBox<MSG> implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(InBox.class);
 
+    /** 与'邮箱'绑定的Receiver */
     private final Receiver<MSG> receiver;
+    /** 是否允许并发 */
     private final boolean enableConcurrent;
-
+    /** 消息队列 */
     private LinkedList<InBoxMessage> mail = new LinkedList<>();
+    /** 正在处理该'邮箱'消息的线程数 */
     private int activeThreads = 0;
+    /** '邮箱'是否关了 */
     private boolean stopped;
 
     InBox(Receiver receiver, boolean enableConcurrent) {
@@ -28,6 +34,9 @@ class InBox<MSG> implements Closeable {
         mail.add(OnStartSignal.INSTANCE);
     }
 
+    /**
+     * 消息入队
+     */
     public void post(InBoxMessage message) {
         synchronized (this) {
             if (stopped) {
@@ -38,6 +47,9 @@ class InBox<MSG> implements Closeable {
         }
     }
 
+    /**
+     * 处理消息
+     */
     public void process(EventBasedDispatcher eventBasedDispatcher) {
         InBoxMessage message;
         synchronized (this) {

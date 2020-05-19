@@ -8,6 +8,9 @@ import java.util.concurrent.*;
 /**
  * @author huangjianqin
  * @date 2020-05-18
+ *
+ * 利用Message的某种属性将Message分区,从而达到同一类的Message按顺序在同一线程执行
+ * 仅仅处理Runnable或者Callable, 不区分不同的Receiver实例
  */
 public class PartitionTaskExecutor<KEY> extends PartitionDispatcher<KEY, FutureTask<?>> {
 
@@ -65,21 +68,11 @@ public class PartitionTaskExecutor<KEY> extends PartitionDispatcher<KEY, FutureT
     }
 
     //------------------------------------------------------------------------------------------------------------------
-    private class PartitionTask implements Runnable {
-        private final KEY key;
-        private final Runnable target;
 
-        PartitionTask(KEY key, Runnable target) {
-            this.key = key;
-            this.target = target;
-        }
-
-        @Override
-        public void run() {
-            target.run();
-        }
-    }
-
+    /**
+     * 处理Runnable或者Callable的Receiver实现
+     * 单例模式
+     */
     private static class PartitionTaskReceiver extends Receiver<FutureTask<?>> {
         private static final PartitionTaskReceiver INSTANCE = new PartitionTaskReceiver();
 

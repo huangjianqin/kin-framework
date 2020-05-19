@@ -4,6 +4,8 @@ import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
 
 /**
+ * 分派器
+ * 根据指定KEY, 分派消息
  * @author huangjianqin
  * @date 2020-04-26
  */

@@ -6,6 +6,7 @@ import org.kin.framework.utils.HashUtils;
 /**
  * @author huangjianqin
  * @date 2017/10/26
+ *
  * HashTable的Hash方式
  */
 public class HashPartitioner<K> implements Partitioner<K> {

@@ -14,6 +14,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @author huangjianqin
  * @date 2020-04-15
  * <p>
+ * 底层消息处理实现是基于事件处理
  * 尽量不要blocking
  */
 public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {

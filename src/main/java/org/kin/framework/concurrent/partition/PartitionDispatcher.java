@@ -16,8 +16,8 @@ import java.util.Set;
 /**
  * @author huangjianqin
  * @date 2017/10/26
+ *
  * 有限分区Dispatcher
- * <p>
  * 利用Message的某种属性将Message分区,从而达到同一类的Message按顺序在同一线程执行
  */
 public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, MSG> {
@@ -57,6 +57,7 @@ public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, M
     public final void register(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
         int realKey = getRealKey(key);
         if (registeredKeies.size() != partitionNum) {
+            //保证每个分区仅仅注册一次
             synchronized (registeredKeies) {
                 if (registeredKeies.size() != partitionNum && registeredKeies.add(realKey)) {
                     pinnedDispatcher.register(realKey, receiver(), false);
@@ -97,14 +98,20 @@ public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, M
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * @return 处理特定消息的Receiver
+     * @return 返回处理特定消息的Receiver
      */
     protected abstract Receiver<MSG> receiver();
 
+    /**
+     * 根据分区算法计算分区id
+     */
     private int getRealKey(KEY key) {
         return partitioner.toPartition(key, partitionNum);
     }
 
+    /**
+     * 给特定分区id注册Receiver
+     */
     protected void register(KEY key) {
         register(key, null, false);
     }

@@ -37,6 +37,9 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<?>> impl
         PinnedThreadSafeFuturesManager.instance().register(this);
     }
 
+    /**
+     * 处理消息
+     */
     public void handle(Message<TS> message) {
         if (!isStopped) {
             inBox.add(message);
@@ -44,6 +47,9 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<?>> impl
         }
     }
 
+    /**
+     * 调度处理消息
+     */
     public Future<?> schedule(Message<TS> message, long delay, TimeUnit unit) {
         if (!isStopped) {
             Future future = executionContext.schedule(() -> handle(message), delay, unit);
@@ -53,6 +59,9 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<?>> impl
         return null;
     }
 
+    /**
+     * 固定事件间隔处理消息
+     */
     public Future<?> scheduleAtFixedRate(Message<TS> message, long initialDelay, long period, TimeUnit unit) {
         if (!isStopped) {
             Future future = executionContext.scheduleAtFixedRate(() -> handle(message), initialDelay, period, unit);
@@ -69,6 +78,9 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<?>> impl
         }
     }
 
+    /**
+     * 消息处理实现逻辑
+     */
     @Override
     public void run() {
         this.currentThread = Thread.currentThread();
@@ -97,6 +109,9 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<?>> impl
         this.currentThread = null;
     }
 
+    /**
+     * 尝试绑定线程, 并执行消息处理
+     */
     private void tryRun() {
         if (!isStopped && boxSize.incrementAndGet() == 1) {
             executionContext.execute(this);

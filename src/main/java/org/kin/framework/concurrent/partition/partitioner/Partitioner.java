@@ -3,6 +3,8 @@ package org.kin.framework.concurrent.partition.partitioner;
 /**
  * @author huangjianqin
  * @date 2017/10/26
+ *
+ * 分区算法实现
  */
 @FunctionalInterface
 public interface Partitioner<K> {
