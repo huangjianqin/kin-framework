@@ -29,7 +29,9 @@ public class ExecutionContext implements ScheduledExecutorService {
     public ExecutionContext(ExecutorService worker, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         this.worker = worker;
         if (scheduleParallelism > 0) {
-            this.scheduleExecutor = new ScheduledThreadPoolExecutor(scheduleParallelism, scheduleThreadFactory);
+            ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(scheduleParallelism, scheduleThreadFactory);
+            scheduledExecutor.setRemoveOnCancelPolicy(true);
+            this.scheduleExecutor = scheduledExecutor;
         }
     }
 
