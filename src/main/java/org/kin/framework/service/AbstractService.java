@@ -5,6 +5,7 @@ import org.kin.framework.utils.StringUtils;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -13,20 +14,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 服务抽象
  */
 public abstract class AbstractService implements Service {
+    private static final List<ServiceStateChangeListener> GLOBAL_LISTENERS = new CopyOnWriteArrayList<>();
+
+    public static void registerGlogalListener(ServiceStateChangeListener listener) {
+        GLOBAL_LISTENERS.add(listener);
+    }
+
+    public static void unregisterGlogalListener(ServiceStateChangeListener listener) {
+        GLOBAL_LISTENERS.remove(listener);
+    }
+
     private final String serviceName;
     private final ServiceState state;
     private long startTime;
     private final List<ServiceStateChangeListener> listeners = new LinkedList<>();
-    private static final List<ServiceStateChangeListener> GLOBAL_LISTENERS = new LinkedList<>();
 
     //----------------------------------------------------------------------------------------------
 
     private final Object lock = new Object();
     private final AtomicBoolean terminationNotification = new AtomicBoolean(false);
-
-    public AbstractService() {
-        this("");
-    }
 
     public AbstractService(String serviceName) {
         if (StringUtils.isNotBlank(serviceName)) {
@@ -49,10 +55,6 @@ public abstract class AbstractService implements Service {
             if (pre != State.INITED) {
                 serviceInit();
                 notifyAllListeners(pre);
-//                //再次判断
-//                if(isInState(State.INITED)){
-//                    notifyAllListeners(pre);
-//                }
             }
         }
     }
@@ -69,11 +71,6 @@ public abstract class AbstractService implements Service {
                 startTime = System.currentTimeMillis();
                 serviceStart();
                 notifyAllListeners(pre);
-
-//                //再次判断
-//                if(isInState(State.STARTED)){
-//                    notifyAllListeners(pre);
-//                }
             }
         }
     }
@@ -149,6 +146,7 @@ public abstract class AbstractService implements Service {
         return startTime;
     }
 
+
     protected void serviceInit() {
     }
 
@@ -157,6 +155,7 @@ public abstract class AbstractService implements Service {
 
     protected void serviceStop() {
     }
+
 
     private void notifyAllListeners(State pre) {
         notifyListeners(listeners, pre);
@@ -167,14 +166,6 @@ public abstract class AbstractService implements Service {
         for (ServiceStateChangeListener listener : listeners) {
             listener.onStateChanged(this, pre);
         }
-    }
-
-    public void registerGlogalListener(ServiceStateChangeListener listener) {
-        GLOBAL_LISTENERS.add(listener);
-    }
-
-    public void unregisterGlogalListener(ServiceStateChangeListener listener) {
-        GLOBAL_LISTENERS.remove(listener);
     }
 
     @Override
