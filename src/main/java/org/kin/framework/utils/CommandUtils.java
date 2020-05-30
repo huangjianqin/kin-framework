@@ -19,7 +19,7 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2020-02-19
  */
-public class ScriptUtils {
+public class CommandUtils {
     private static final int NON_TIMEOUT = -1;
 
     /**
@@ -73,7 +73,7 @@ public class ScriptUtils {
                 fileOutputStream = new FileOutputStream(out, true);
                 streamHandler = new PumpStreamHandler(fileOutputStream, fileOutputStream, null);
             } else {
-                streamHandler = new PumpStreamHandler(System.out, System.err, System.in);
+                streamHandler = new PumpStreamHandler();
             }
 
             // command
