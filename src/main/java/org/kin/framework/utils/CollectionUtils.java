@@ -1,6 +1,8 @@
 package org.kin.framework.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,5 +32,13 @@ public class CollectionUtils {
 
     public static <K, V> boolean isNonEmpty(Map<K, V> map) {
         return !isEmpty(map);
+    }
+
+    public static <ITEM> List<ITEM> toList(ITEM[] array) {
+        List<ITEM> list = new ArrayList<>();
+        for (ITEM item : array) {
+            list.add(item);
+        }
+        return list;
     }
 }
