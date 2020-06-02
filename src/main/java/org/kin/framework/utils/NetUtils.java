@@ -3,10 +3,7 @@ package org.kin.framework.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.*;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
@@ -167,7 +164,6 @@ public class NetUtils {
     }
 
     /**
-     *
      * @param port 端口号
      * @return String ip:port
      */
@@ -250,7 +246,7 @@ public class NetUtils {
     /**
      * 读取远程服务器文件, 需保留两服务器连通
      */
-    public static boolean copyRemoteFile(String url, String fileName) {
+    public static boolean copyRemoteFile(String url, String sinkFileName) {
         URL u;
         try {
             u = new URL(url);
@@ -281,7 +277,12 @@ public class NetUtils {
                     throw new IOException("Only read " + offset + " bytes; Expected " + contentLength + " bytes");
                 }
 
-                FileOutputStream out = new FileOutputStream(fileName);
+                File sinkFile = new File(sinkFileName);
+                if (!sinkFile.exists()) {
+                    sinkFile.getParentFile().mkdirs();
+                }
+
+                FileOutputStream out = new FileOutputStream(sinkFileName);
                 out.write(data);
                 out.flush();
                 out.close();
