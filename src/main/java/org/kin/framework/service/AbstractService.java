@@ -45,7 +45,7 @@ public abstract class AbstractService implements Service {
     }
 
     @Override
-    public void init() {
+    public final void init() {
         if (isInState(State.INITED)) {
             return;
         }
@@ -60,7 +60,7 @@ public abstract class AbstractService implements Service {
     }
 
     @Override
-    public void start() {
+    public final void start() {
         if (isInState(State.STARTED)) {
             return;
         }
@@ -76,7 +76,7 @@ public abstract class AbstractService implements Service {
     }
 
     @Override
-    public void stop() {
+    public final void stop() {
         if (isInState(State.STOPPED)) {
             return;
         }
@@ -96,7 +96,7 @@ public abstract class AbstractService implements Service {
     }
 
     @Override
-    public void close() {
+    public final void close() {
         stop();
     }
 
@@ -117,32 +117,32 @@ public abstract class AbstractService implements Service {
     }
 
     @Override
-    public void registerServiceListener(ServiceStateChangeListener listener) {
+    public final void registerServiceListener(ServiceStateChangeListener listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void unregisterServiceListener(ServiceStateChangeListener listener) {
+    public final void unregisterServiceListener(ServiceStateChangeListener listener) {
         listeners.remove(listener);
     }
 
     @Override
-    public boolean isInState(State that) {
+    public final boolean isInState(State that) {
         return state.isInState(that);
     }
 
     @Override
-    public String getName() {
+    public final String getName() {
         return serviceName;
     }
 
     @Override
-    public State getCurrentState() {
+    public final State getCurrentState() {
         return state.getState();
     }
 
     @Override
-    public long getStartTime() {
+    public final long getStartTime() {
         return startTime;
     }
 
