@@ -80,6 +80,11 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
         pendingDatas.offer(POISON_PILL);
     }
 
+    @Override
+    public boolean isRegistered(KEY key) {
+        return receiverDatas.containsKey(key);
+    }
+
     private class MessageLoop implements Runnable {
         @Override
         public void run() {

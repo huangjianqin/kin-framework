@@ -75,6 +75,12 @@ public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, M
     }
 
     @Override
+    public boolean isRegistered(KEY key) {
+        int realKey = getRealKey(key);
+        return pinnedDispatcher.isRegistered(realKey);
+    }
+
+    @Override
     public final void postMessage(KEY key, MSG message) {
         register(key, null, false);
         pinnedDispatcher.postMessage(getRealKey(key), message);

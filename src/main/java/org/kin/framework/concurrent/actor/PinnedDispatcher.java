@@ -65,6 +65,11 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
         }
     }
 
+    @Override
+    public boolean isRegistered(KEY key) {
+        return typeSafeReceivers.containsKey(key);
+    }
+
     private class PinnedThreadSafeReceiver<M> extends Receiver<M> {
         private PinnedThreadSafeHandler threadSafeHandler;
         private Receiver<M> proxy;

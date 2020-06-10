@@ -26,6 +26,14 @@ public interface Dispatcher<KEY, MSG> extends Closeable {
     void unregister(KEY key);
 
     /**
+     * 判断Receiver是否已注册
+     *
+     * @param key Receiver标识
+     * @return 是否已注册
+     */
+    boolean isRegistered(KEY key);
+
+    /**
      * 处理消息
      * @param key Receiver标识
      * @param message 消息实现
