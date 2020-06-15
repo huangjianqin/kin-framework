@@ -24,7 +24,7 @@
         <slf4j.version>1.7.21</slf4j.version>
         <guava.version>27.1-jre</guava.version>
         <fastutil.version>8.1.0</fastutil.version>
-        <spring.version>5.0.8.RELEASE</spring.version>
+        <spring.version>5.2.7.RELEASE</spring.version>
         <kin-java-agent.version>0.1.0.0</kin-java-agent.version>
         <reflections.version>0.9.11</reflections.version>
         <jmh.version>1.21</jmh.version>
