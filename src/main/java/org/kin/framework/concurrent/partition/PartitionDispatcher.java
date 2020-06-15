@@ -12,11 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author huangjianqin
  * @date 2017/10/26
- *
+ * <p>
  * 有限分区Dispatcher
  * 利用Message的某种属性将Message分区,从而达到同一类的Message按顺序在同一线程执行
  */
@@ -84,6 +85,21 @@ public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, M
     public final void postMessage(KEY key, MSG message) {
         register(key, null, false);
         pinnedDispatcher.postMessage(getRealKey(key), message);
+    }
+
+    @Override
+    public void schedule(KEY key, MSG message, long delay, TimeUnit unit) {
+        executionContext().schedule(() -> postMessage(key, message), delay, unit);
+    }
+
+    @Override
+    public void scheduleAtFixedRate(KEY key, MSG message, long initialDelay, long period, TimeUnit unit) {
+        executionContext().scheduleAtFixedRate(() -> postMessage(key, message), initialDelay, period, unit);
+    }
+
+    @Override
+    public void scheduleWithFixedDelay(KEY key, MSG message, long initialDelay, long delay, TimeUnit unit) {
+        executionContext().scheduleWithFixedDelay(() -> postMessage(key, message), initialDelay, delay, unit);
     }
 
     @Override

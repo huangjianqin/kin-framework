@@ -34,7 +34,8 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
 
     public EventBasedDispatcher(int parallelism) {
         super(ExecutionContext.forkjoin(
-                parallelism, "eventBasedDispatcher"));
+                parallelism, "eventBasedDispatcher",
+                parallelism / 2 + 1, "eventBasedDispatcher-scheduler"));
         this.parallelism = parallelism;
     }
 

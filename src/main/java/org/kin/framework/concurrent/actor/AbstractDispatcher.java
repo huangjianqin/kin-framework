@@ -4,6 +4,8 @@ import org.kin.framework.concurrent.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author huangjianqin
  * @date 2020-04-26
@@ -39,24 +41,51 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
         }
     }
 
-    @Override
-    public final void unregister(KEY key) {
-        if (stopped) {
-            return;
-        }
-
-        doUnRegister(key);
-    }
-
-    @Override
-    public final void postMessage(KEY key, MSG message) {
+    private void sync(Runnable func) {
         synchronized (this) {
             if (stopped) {
                 return;
             }
 
-            doPostMessage(key, message);
+            func.run();
         }
+    }
+
+    @Override
+    public final void unregister(KEY key) {
+        sync(() -> doUnRegister(key));
+    }
+
+    @Override
+    public final void postMessage(KEY key, MSG message) {
+        sync(() -> doPostMessage(key, message));
+    }
+
+    @Override
+    public void schedule(KEY key, MSG message, long delay, TimeUnit unit) {
+        sync(() -> {
+            if (executionContext.withSchedule()) {
+                executionContext.schedule(() -> postMessage(key, message), delay, unit);
+            }
+        });
+    }
+
+    @Override
+    public void scheduleAtFixedRate(KEY key, MSG message, long initialDelay, long period, TimeUnit unit) {
+        sync(() -> {
+            if (executionContext.withSchedule()) {
+                executionContext.scheduleAtFixedRate(() -> postMessage(key, message), initialDelay, period, unit);
+            }
+        });
+    }
+
+    @Override
+    public void scheduleWithFixedDelay(KEY key, MSG message, long initialDelay, long delay, TimeUnit unit) {
+        sync(() -> {
+            if (executionContext.withSchedule()) {
+                executionContext.scheduleWithFixedDelay(() -> postMessage(key, message), initialDelay, delay, unit);
+            }
+        });
     }
 
     @Override
@@ -66,17 +95,13 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
 
     @Override
     public final void close() {
-        synchronized (this) {
-            if (stopped) {
-                return;
-            }
-
+        sync(() -> {
             stopped = true;
 
             doClose();
 
             executionContext.shutdown();
-        }
+        });
     }
 
     @Override

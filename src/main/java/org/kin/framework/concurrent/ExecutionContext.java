@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 /**
@@ -245,5 +246,9 @@ public class ExecutionContext implements ScheduledExecutorService {
         if (!isStopped) {
             worker.execute(command);
         }
+    }
+
+    public boolean withSchedule() {
+        return Objects.nonNull(scheduleExecutor) && !scheduleExecutor.isShutdown();
     }
 }
