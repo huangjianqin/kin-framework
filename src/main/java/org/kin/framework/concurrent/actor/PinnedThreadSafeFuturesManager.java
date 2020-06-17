@@ -43,14 +43,14 @@ public class PinnedThreadSafeFuturesManager implements Closeable {
     }
 
     /**
-     * 注册{@link threadSafeHandler}
+     * 注册{@link PinnedThreadSafeHandler}
      */
     public void register(PinnedThreadSafeHandler<?> threadSafeHandler) {
         futures.putIfAbsent(threadSafeHandler, new ConcurrentLinkedQueue<>());
     }
 
     /**
-     * 注销{@link threadSafeHandler}
+     * 注销{@link PinnedThreadSafeHandler}
      */
     public void unRegister(PinnedThreadSafeHandler<?> threadSafeHandler) {
         /**
@@ -92,6 +92,6 @@ public class PinnedThreadSafeFuturesManager implements Closeable {
 
     @Override
     public void close() {
-        executionContext.shutdownNow();
+        executionContext.shutdown();
     }
 }
