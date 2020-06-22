@@ -89,6 +89,7 @@
             <groupId>it.unimi.dsi</groupId>
             <artifactId>fastutil</artifactId>
             <version>${fastutil.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- spring-->
@@ -191,6 +192,7 @@
             <groupId>org.tmatesoft.svnkit</groupId>
             <artifactId>svnkit</artifactId>
             <version>${svnkit.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
