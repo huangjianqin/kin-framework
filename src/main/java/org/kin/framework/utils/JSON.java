@@ -17,7 +17,7 @@ import java.io.IOException;
 public class JSON {
     private static Logger logger = LoggerFactory.getLogger(JSON.class);
 
-    private static final ObjectMapper PARSER = new ObjectMapper();
+    public static final ObjectMapper PARSER = new ObjectMapper();
 
     private JSON() {
     }
