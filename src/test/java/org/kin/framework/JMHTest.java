@@ -1,4 +1,4 @@
-package org.kin.jmh;
+package org.kin.framework;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
