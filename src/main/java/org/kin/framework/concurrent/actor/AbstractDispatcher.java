@@ -30,6 +30,8 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
 
     protected abstract void doPostMessage(KEY key, MSG message);
 
+    protected abstract void doPost2All(MSG message);
+
     @Override
     public final void register(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
         synchronized (this) {
@@ -59,6 +61,11 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
     @Override
     public final void postMessage(KEY key, MSG message) {
         sync(() -> doPostMessage(key, message));
+    }
+
+    @Override
+    public void post2All(MSG message) {
+        sync(() -> doPost2All(message));
     }
 
     @Override

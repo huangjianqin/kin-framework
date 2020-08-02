@@ -66,6 +66,13 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     }
 
     @Override
+    protected void doPost2All(MSG message) {
+        for (KEY key : typeSafeReceivers.keySet()) {
+            doPostMessage(key, message);
+        }
+    }
+
+    @Override
     public boolean isRegistered(KEY key) {
         return typeSafeReceivers.containsKey(key);
     }

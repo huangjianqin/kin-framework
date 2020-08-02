@@ -88,6 +88,11 @@ public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, M
     }
 
     @Override
+    public void post2All(MSG message) {
+        throw new UnsupportedOperationException("Partition Dispatch doesn't support post to all receviers");
+    }
+
+    @Override
     public void schedule(KEY key, MSG message, long delay, TimeUnit unit) {
         executionContext().schedule(() -> postMessage(key, message), delay, unit);
     }

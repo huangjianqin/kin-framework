@@ -37,10 +37,16 @@ public interface Dispatcher<KEY, MSG> extends Closeable {
 
     /**
      * 推送消息
-     * @param key Receiver标识
+     *
+     * @param key     Receiver标识
      * @param message 消息实现
      */
     void postMessage(KEY key, MSG message);
+
+    /**
+     * 向所有已注册Receiver推送消息
+     */
+    void post2All(MSG message);
 
     /**
      * 延迟调度推送消息

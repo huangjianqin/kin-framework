@@ -76,6 +76,13 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     }
 
     @Override
+    protected void doPost2All(MSG message) {
+        for (KEY key : receiverDatas.keySet()) {
+            doPostMessage(key, message);
+        }
+    }
+
+    @Override
     protected void doClose() {
         receiverDatas.keySet().forEach(this::unregister);
         pendingDatas.offer(POISON_PILL);
