@@ -334,6 +334,7 @@
                             </Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                            <Class-Path>lib/*</Class-Path>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -366,6 +367,7 @@
                             </Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                            <Class-Path>lib/*</Class-Path>
                         </manifestEntries>
                     </archive>
                     <descriptorRefs>
