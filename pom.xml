@@ -15,7 +15,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.home>/Library/Java/JavaVirtualMachines/jdk1.8.0_151.jdk/Contents/Home</java.home>
+        <java.home>/Library/Java/JavaVirtualMachines/jdk1.8.0_241.jdk/Contents/Home</java.home>
 
         <scala.version>2.12.10</scala.version>
         <scala.version.head>2.12</scala.version.head>
@@ -334,7 +334,7 @@
                             </Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
-                            <Class-Path>lib/*</Class-Path>
+                            <!--                            <Class-Path>lib/*</Class-Path>-->
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -367,7 +367,7 @@
                             </Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
-                            <Class-Path>lib/*</Class-Path>
+                            <!--                            <Class-Path>lib/*</Class-Path>-->
                         </manifestEntries>
                     </archive>
                     <descriptorRefs>
