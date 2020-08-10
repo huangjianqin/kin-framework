@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * @date 2018/1/28
  */
 public class NetUtils {
-    private static final Logger logger = LoggerFactory.getLogger(NetUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(NetUtils.class);
 
     private static final String ANYHOST = "0.0.0.0";
     private static final String LOCALHOST = "127.0.0.1";
@@ -76,7 +76,7 @@ public class NetUtils {
                 return InetAddress.getByName(addr.substring(0, i) + '%' + address.getScopeId());
             } catch (UnknownHostException e) {
                 // ignore
-                logger.debug("Unknown IPV6 address: ", e);
+                log.debug("Unknown IPV6 address: ", e);
             }
         }
         return address;
@@ -97,7 +97,7 @@ public class NetUtils {
                 return localAddress;
             }
         } catch (Throwable e) {
-            logger.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
@@ -120,15 +120,15 @@ public class NetUtils {
                                 return address;
                             }
                         } catch (Throwable e) {
-                            logger.error(e.getMessage(), e);
+                            log.error(e.getMessage(), e);
                         }
                     }
                 } catch (Throwable e) {
-                    logger.error(e.getMessage(), e);
+                    log.error(e.getMessage(), e);
                 }
             }
         } catch (Throwable e) {
-            logger.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         }
         return localAddress;
     }
@@ -290,7 +290,7 @@ public class NetUtils {
 
             return true;
         } catch (IOException e) {
-            ExceptionUtils.log(e);
+            log.error("", e);
         }
 
         return false;

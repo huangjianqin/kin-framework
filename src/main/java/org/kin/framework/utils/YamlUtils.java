@@ -2,6 +2,8 @@ package org.kin.framework.utils;
 
 import com.google.common.collect.ImmutableMap;
 import org.ho.yaml.Yaml;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,6 +16,8 @@ import java.util.*;
  * @date 2019/7/6
  */
 public class YamlUtils {
+    private static final Logger log = LoggerFactory.getLogger(YamlUtils.class);
+
     public static YamlConfig loadYaml(String configPath) {
         //从classpath寻找
         URL url = Thread.currentThread().getContextClassLoader().getResource(configPath);
@@ -22,7 +26,7 @@ public class YamlUtils {
             try {
                 return new YamlConfig((Map<String, Object>) Yaml.load(url.openStream()));
             } catch (IOException e) {
-                ExceptionUtils.log(e);
+                log.error("", e);
             }
         } else {
             //从file path寻找
@@ -30,7 +34,7 @@ public class YamlUtils {
                 //返回多层嵌套map
                 return new YamlConfig((Map<String, Object>) Yaml.load(new File(configPath)));
             } catch (FileNotFoundException e) {
-                ExceptionUtils.log(e);
+                log.error("", e);
             }
         }
 

@@ -1,7 +1,6 @@
 package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
-import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +93,7 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<TS>> imp
             try {
                 message.handle((TS) this);
             } catch (Exception e) {
-                ExceptionUtils.log(e);
+                log.error("", e);
             }
             long cost = System.currentTimeMillis() - st;
 

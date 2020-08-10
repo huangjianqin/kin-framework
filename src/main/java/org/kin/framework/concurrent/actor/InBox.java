@@ -1,7 +1,6 @@
 package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.Closeable;
-import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +76,7 @@ class InBox<MSG> implements Closeable {
                     log.error("unknown InBoxMessage >>>> {}", message);
                 }
             } catch (Exception e) {
-                ExceptionUtils.log(e);
+                log.error("", e);
             }
 
             synchronized (this) {

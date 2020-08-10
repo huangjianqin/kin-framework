@@ -1,7 +1,6 @@
 package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
-import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +107,7 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
             } catch (InterruptedException e) {
 
             } catch (Exception e) {
-                ExceptionUtils.log(e);
+                log.error("", e);
                 try {
                     //re-run
                     executionContext.execute(new MessageLoop());

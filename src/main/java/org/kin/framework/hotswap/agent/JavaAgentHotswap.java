@@ -6,7 +6,6 @@ import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.classfile.ClassFile;
 import com.sun.tools.classfile.ConstantPoolException;
-import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,7 @@ import java.util.Map;
  * 单例模式
  */
 public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
-    private static final Logger log = LoggerFactory.getLogger("hotSwap");
+    private static final Logger log = LoggerFactory.getLogger(JavaAgentHotswap.class);
     private static final String JAR_SUFFIX = ".jar";
     /**
      * 热更class文件放另外一个目录
@@ -76,7 +75,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
             ObjectName name = new ObjectName(this + ":type=JavaAgentHotswap");
             mBeanServer.registerMBean(this, name);
         } catch (MalformedObjectNameException | NotCompliantMBeanException | InstanceAlreadyExistsException | MBeanRegistrationException e) {
-            ExceptionUtils.log(e);
+            log.error("", e);
         }
     }
 
@@ -91,7 +90,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
             // 转化为utf-8编码
             filePath = URLDecoder.decode(url.getPath(), "utf-8");
         } catch (Exception e) {
-            ExceptionUtils.log(e);
+            log.error("", e);
             return null;
         }
         // 可执行jar包运行的结果里包含".jar"
@@ -127,7 +126,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                         ClassFile cf = ClassFile.read(dis);
                         className = cf.getName().replaceAll("/", "\\.");
                     } catch (IOException | ConstantPoolException e) {
-                        ExceptionUtils.log(e);
+                        log.error("", e);
                     }
 
                     ClassFileInfo cfi = new ClassFileInfo(classFilePath, className, bytes, classFileLastModifiedTime);
@@ -172,22 +171,22 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                     try {
                         Files.deleteIfExists(childpath);
                     } catch (IOException e) {
-                        ExceptionUtils.log(e);
+                        log.error("", e);
                     }
                 });
             } catch (AttachNotSupportedException | AgentLoadException | AgentInitializationException | IOException e) {
-                ExceptionUtils.log(e);
+                log.error("", e);
             } finally {
                 if (vm != null) {
                     try {
                         vm.detach();
                     } catch (IOException e) {
-                        ExceptionUtils.log(e);
+                        log.error("", e);
                     }
                 }
             }
         } catch (IOException | UnmodifiableClassException | ClassNotFoundException e) {
-            ExceptionUtils.log(e);
+            log.error("", e);
         } finally {
             long endTime = System.currentTimeMillis();
             log.info("...热更类结束, 耗时 {} ms", endTime - startTime);

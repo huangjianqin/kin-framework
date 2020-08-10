@@ -4,7 +4,6 @@ import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.hotswap.agent.JavaAgentHotswap;
 import org.kin.framework.utils.ClassUtils;
-import org.kin.framework.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +26,7 @@ import java.util.Map;
  * 异步热加载文件 同步类热更新
  */
 public class FileMonitor extends Thread implements Closeable {
-    private static final Logger log = LoggerFactory.getLogger("hotSwap");
+    private static final Logger log = LoggerFactory.getLogger(FileMonitor.class);
     private WatchService watchService;
     /** hash(file name) -> Reloadable 实例 */
     private Map<Integer, AbstractFileReloadable> monitorItems;
@@ -60,7 +59,7 @@ public class FileMonitor extends Thread implements Closeable {
         try {
             watchService = FileSystems.getDefault().newWatchService();
         } catch (IOException e) {
-            ExceptionUtils.log(e);
+            log.error("", e);
         }
 
         monitorItems = new HashMap<>();
@@ -79,7 +78,7 @@ public class FileMonitor extends Thread implements Closeable {
         try {
             classesPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
         } catch (IOException e) {
-            ExceptionUtils.log(e);
+            log.error("", e);
         }
 
         monitorJVMClose();
@@ -127,7 +126,7 @@ public class FileMonitor extends Thread implements Closeable {
                                             long endTime = System.currentTimeMillis();
                                             log.info("hotswap file '{}' finished, time cost {} ms", childPath.toString(), endTime - startTime);
                                         } catch (IOException e) {
-                                            ExceptionUtils.log(e);
+                                            log.error("", e);
                                         }
                                     });
                                 }
@@ -138,7 +137,7 @@ public class FileMonitor extends Thread implements Closeable {
                 //重置状态，让key等待事件
                 key.reset();
             } catch (InterruptedException e) {
-                ExceptionUtils.log(e);
+                log.error("", e);
             }
 
             if (changedClasses.size() > 0) {
@@ -163,7 +162,7 @@ public class FileMonitor extends Thread implements Closeable {
             try {
                 watchService.close();
             } catch (IOException e) {
-                ExceptionUtils.log(e);
+                log.error("", e);
             }
             executionContext.shutdown();
             //help GC
@@ -206,7 +205,7 @@ public class FileMonitor extends Thread implements Closeable {
         try {
             file.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
         } catch (IOException e) {
-            ExceptionUtils.log(e);
+            log.error("", e);
         }
 
         int key = itemName.hashCode();

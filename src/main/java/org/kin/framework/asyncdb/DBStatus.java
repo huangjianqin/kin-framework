@@ -67,7 +67,7 @@ public enum DBStatus {
     },
     ;
 
-    private static final Logger log = LoggerFactory.getLogger("asyncDB");
+    private static final Logger log = LoggerFactory.getLogger(DBStatus.class);
 
     public abstract boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity);
 

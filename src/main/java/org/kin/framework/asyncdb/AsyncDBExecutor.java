@@ -2,7 +2,6 @@ package org.kin.framework.asyncdb;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
-import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  * @date 2019/4/1
  */
 public class AsyncDBExecutor implements Closeable {
-    private static final Logger log = LoggerFactory.getLogger("asyncDB");
+    private static final Logger log = LoggerFactory.getLogger(AsyncDBExecutor.class);
     private final AsyncDBEntity POISON = new AsyncDBEntity() {
     };
     private static final int WAITTING_OPR_NUM_THRESHOLD = 500;
@@ -104,7 +103,7 @@ public class AsyncDBExecutor implements Closeable {
                 try {
                     queue.put(asyncDBEntity);
                 } catch (InterruptedException e) {
-                    ExceptionUtils.log(e);
+                    log.error("", e);
                 }
             }
         }

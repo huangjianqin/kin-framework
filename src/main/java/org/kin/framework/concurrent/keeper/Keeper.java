@@ -2,7 +2,8 @@ package org.kin.framework.concurrent.keeper;
 
 import org.kin.framework.JvmCloseCleaner;
 import org.kin.framework.concurrent.ExecutionContext;
-import org.kin.framework.utils.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @date 2019/7/10
  */
 public class Keeper {
+    private static final Logger log = LoggerFactory.getLogger(Keeper.class);
     private static final ExecutionContext EXECUTION_CONTEXT = ExecutionContext.cache("keeper");
     private static final Set<RunnableKeeperAction> RUNNABLE_KEEPER_ACTIONS = new CopyOnWriteArraySet<>();
 
@@ -53,7 +55,7 @@ public class Keeper {
                     try {
                         target.action();
                     } catch (Exception e) {
-                        ExceptionUtils.log(e);
+                        log.error("", e);
                     }
                 }
             } finally {

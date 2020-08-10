@@ -170,10 +170,6 @@
     </appender>
 
     <!--                                       logger                                                       -->
-    <logger name="error" level="WARN" additivity="false">
-        <appender-ref ref="asyncERROR"/>
-    </logger>
-
     <logger name="org.kin.framework.hotswap" level="INFO" additivity="false">
         <appender-ref ref="asyncHotSwapAppender"/>
         <appender-ref ref="asyncERROR" level="ERROR"/>

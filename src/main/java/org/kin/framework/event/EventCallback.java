@@ -1,7 +1,5 @@
 package org.kin.framework.event;
 
-import org.kin.framework.utils.ExceptionUtils;
-
 /**
  * 事件处理回调
  *
@@ -12,12 +10,12 @@ public interface EventCallback {
     EventCallback EMPTY = new EventCallback() {
         @Override
         public void finish(Object result) {
-
+            //empty
         }
 
         @Override
         public void failure(Throwable throwable) {
-            ExceptionUtils.log(throwable);
+            //empty
         }
     };
 
