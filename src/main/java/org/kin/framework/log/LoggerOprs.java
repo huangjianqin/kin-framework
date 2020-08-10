@@ -71,6 +71,10 @@ public interface LoggerOprs {
         log().debug(msg, t);
     }
 
+    default void debug(Throwable t) {
+        log().debug("", t);
+    }
+
     //-------------------------------------------info-------------------------------------------
     default void info(String msg) {
         log().info(msg);
