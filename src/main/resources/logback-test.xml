@@ -176,7 +176,7 @@
     </logger>
 
     <logger name="org.kin.framework.concurrent.actor" level="INFO" additivity="false">
-        <appender-ref ref="asyncActor"/>
+        <appender-ref ref="asyncActorAppender"/>
         <appender-ref ref="asyncERROR" level="ERROR"/>
     </logger>
 
