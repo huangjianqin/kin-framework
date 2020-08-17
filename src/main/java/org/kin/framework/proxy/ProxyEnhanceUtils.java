@@ -1,12 +1,8 @@
-package org.kin.framework.proxy.utils;
+package org.kin.framework.proxy;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import javassist.*;
-import org.kin.framework.proxy.MethodBodyConstructor;
-import org.kin.framework.proxy.ProxyDefinition;
-import org.kin.framework.proxy.ProxyInvoker;
-import org.kin.framework.proxy.ProxyMethodDefinition;
 import org.kin.framework.utils.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

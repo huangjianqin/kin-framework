@@ -1,7 +1,4 @@
-package org.kin.framework.event.impl;
-
-import org.kin.framework.event.EventCallback;
-import org.kin.framework.event.ScheduledThreadSafeDispatcher;
+package org.kin.framework.event;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -13,13 +10,13 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public class ThreadSafeEventDispatcher extends EventDispatcher implements ScheduledThreadSafeDispatcher {
+public class PinnedEventDispatcher extends EventDispatcher implements PinnedScheduledDispatcher {
 
-    public ThreadSafeEventDispatcher(int parallelism) {
+    public PinnedEventDispatcher(int parallelism) {
         super(parallelism);
     }
 
-    public ThreadSafeEventDispatcher(int parallelism, boolean isEnhance) {
+    public PinnedEventDispatcher(int parallelism, boolean isEnhance) {
         super(parallelism, isEnhance);
     }
 

@@ -1,6 +1,6 @@
 package org.kin.framework.event.dispatcher;
 
-import org.kin.framework.event.annotation.HandleEvent;
+import org.kin.framework.event.HandleEvent;
 
 /**
  * @author huangjianqin

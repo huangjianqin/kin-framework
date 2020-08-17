@@ -1,8 +1,5 @@
-package org.kin.framework.event.impl;
+package org.kin.framework.event;
 
-import org.kin.framework.event.AbstractEvent;
-import org.kin.framework.event.annotation.Event;
-import org.kin.framework.event.annotation.HandleEvent;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -47,7 +44,12 @@ public class SpringEventDispatcher extends EventDispatcher implements Applicatio
             //在所有  public & 有注解的  方法中寻找一个匹配的方法作为事件处理方法
             for (Method method : claxx.getMethods()) {
                 if (isClassWithAnno || method.isAnnotationPresent(HandleEvent.class)) {
-                    for (Class<?> parameterClass : method.getParameterTypes()) {
+                    Class<?>[] parameterTypes = method.getParameterTypes();
+                    if (parameterTypes.length != 1) {
+                        //只有一个参数才处理
+                        continue;
+                    }
+                    for (Class<?> parameterClass : parameterTypes) {
                         if (AbstractEvent.class.isAssignableFrom(parameterClass) ||
                                 parameterClass.isAnnotationPresent(Event.class)) {
                             //只要一个参数继承了Event, 则注册

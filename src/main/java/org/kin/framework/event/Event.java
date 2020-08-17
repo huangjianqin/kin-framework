@@ -1,4 +1,4 @@
-package org.kin.framework.event.annotation;
+package org.kin.framework.event;
 
 import java.lang.annotation.*;
 

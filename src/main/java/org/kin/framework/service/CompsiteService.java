@@ -1,8 +1,6 @@
-package org.kin.framework.service.impl;
+package org.kin.framework.service;
 
 
-import org.kin.framework.service.AbstractService;
-import org.kin.framework.service.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

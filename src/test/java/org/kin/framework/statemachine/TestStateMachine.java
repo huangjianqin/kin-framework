@@ -1,10 +1,10 @@
 package org.kin.framework.statemachine;
 
 
+import org.kin.framework.event.EventDispatcher;
 import org.kin.framework.event.EventHandler;
 import org.kin.framework.event.dispatcher.FirstEvent;
 import org.kin.framework.event.dispatcher.FirstEventType;
-import org.kin.framework.event.impl.EventDispatcher;
 import org.kin.framework.utils.SysUtils;
 
 import java.util.EnumSet;

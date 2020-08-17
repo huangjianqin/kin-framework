@@ -1,6 +1,5 @@
 package org.kin.framework.asyncdb;
 
-import org.kin.framework.asyncdb.impl.DefaultAsyncDBStrategy;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;

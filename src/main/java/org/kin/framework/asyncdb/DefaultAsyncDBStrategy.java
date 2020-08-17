@@ -1,6 +1,4 @@
-package org.kin.framework.asyncdb.impl;
-
-import org.kin.framework.asyncdb.AsyncDBStrategy;
+package org.kin.framework.asyncdb;
 
 /**
  * @author huangjianqin

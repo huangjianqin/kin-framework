@@ -1,7 +1,5 @@
 package org.kin.framework.concurrent.lock;
 
-import org.kin.framework.concurrent.lock.exception.LockRunFailException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -1,6 +1,6 @@
 package org.kin.framework.event.dispatcher.springdispatcher;
 
-import org.kin.framework.event.impl.SpringEventDispatcher;
+import org.kin.framework.event.SpringEventDispatcher;
 import org.kin.framework.utils.SysUtils;
 import org.springframework.stereotype.Component;
 

@@ -1,7 +1,6 @@
 package org.kin.framework.concurrent.partition;
 
 import org.kin.framework.concurrent.actor.Receiver;
-import org.kin.framework.concurrent.partition.partitioner.Partitioner;
 
 import java.util.concurrent.*;
 

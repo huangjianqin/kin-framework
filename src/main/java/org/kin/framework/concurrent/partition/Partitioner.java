@@ -1,4 +1,4 @@
-package org.kin.framework.concurrent.partition.partitioner;
+package org.kin.framework.concurrent.partition;
 
 /**
  * @author huangjianqin

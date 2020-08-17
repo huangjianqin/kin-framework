@@ -1,8 +1,8 @@
 package org.kin.framework.event.dispatcher.springdispatcher;
 
+import org.kin.framework.event.SpringEventDispatcher;
 import org.kin.framework.event.dispatcher.FirstEvent;
 import org.kin.framework.event.dispatcher.FirstEventType;
-import org.kin.framework.event.impl.SpringEventDispatcher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 

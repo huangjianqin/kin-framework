@@ -1,6 +1,6 @@
 package org.kin.framework.event.dispatcher.springdispatcher;
 
-import org.kin.framework.event.annotation.HandleEvent;
+import org.kin.framework.event.HandleEvent;
 import org.kin.framework.event.dispatcher.FirstEvent;
 import org.springframework.stereotype.Component;
 

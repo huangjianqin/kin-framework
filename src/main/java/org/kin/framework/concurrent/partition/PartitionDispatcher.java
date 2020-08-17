@@ -5,8 +5,6 @@ import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.concurrent.actor.Dispatcher;
 import org.kin.framework.concurrent.actor.PinnedDispatcher;
 import org.kin.framework.concurrent.actor.Receiver;
-import org.kin.framework.concurrent.partition.partitioner.Partitioner;
-import org.kin.framework.concurrent.partition.partitioner.impl.HashPartitioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package org.kin.framework.concurrent.lock.exception;
+package org.kin.framework.concurrent.lock;
 
 /**
  * @author huangjianqin

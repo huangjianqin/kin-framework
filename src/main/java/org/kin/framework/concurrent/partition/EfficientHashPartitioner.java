@@ -1,6 +1,5 @@
-package org.kin.framework.concurrent.partition.partitioner.impl;
+package org.kin.framework.concurrent.partition;
 
-import org.kin.framework.concurrent.partition.partitioner.Partitioner;
 import org.kin.framework.utils.HashUtils;
 
 /**
