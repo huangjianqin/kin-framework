@@ -2,8 +2,6 @@ package org.kin.framework.concurrent.lock;
 
 import org.kin.framework.concurrent.ExecutionContext;
 
-import java.util.concurrent.Executors;
-
 /**
  * @author huangjianqin
  * @date 2020-01-15
@@ -11,7 +9,7 @@ import java.util.concurrent.Executors;
 public class LockBoxTest {
     public static void main(String[] args) throws InterruptedException {
         LockBox<Integer> lockBox = new LockBox<>();
-        ExecutionContext executionContext = new ExecutionContext(Executors.newCachedThreadPool());
+        ExecutionContext executionContext = ExecutionContext.cache("worker");
 
         executionContext.execute(() -> lockBox.lockRun(1, () -> {
             System.out.println(1111);

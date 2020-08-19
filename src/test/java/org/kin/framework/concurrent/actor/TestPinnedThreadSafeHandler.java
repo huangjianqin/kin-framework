@@ -3,7 +3,6 @@ package org.kin.framework.concurrent.actor;
 import org.kin.framework.concurrent.ExecutionContext;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -13,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class TestPinnedThreadSafeHandler {
     public static void main(String[] args) {
         CountDownLatch latch = new CountDownLatch(1);
-        PinnedThreadSafeHandler<?> threadSafeHandler = new PinnedThreadSafeHandler(new ExecutionContext(ForkJoinPool.commonPool()));
+        PinnedThreadSafeHandler<?> threadSafeHandler = new PinnedThreadSafeHandler(ExecutionContext.cache("worker"));
         threadSafeHandler.handle((actor) -> {
             System.out.println(1);
             try {

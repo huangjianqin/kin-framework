@@ -26,7 +26,7 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     }
 
     public PinnedDispatcher(int parallelism, String workerNamePrefix) {
-        super(ExecutionContext.fix(
+        super(ExecutionContext.cache(
                 parallelism, workerNamePrefix,
                 parallelism / 2 + 1, workerNamePrefix.concat("-schedule")));
     }

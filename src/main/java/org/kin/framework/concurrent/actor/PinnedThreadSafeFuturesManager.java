@@ -2,12 +2,14 @@ package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
-import org.kin.framework.concurrent.SimpleThreadFactory;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author huangjianqin
@@ -20,8 +22,8 @@ public class PinnedThreadSafeFuturesManager implements Closeable {
 
     /** key -> PinnedThreadSafeHandler实例 value -> 对应PinnedThreadSafeHandler已启动的调度 */
     private Map<PinnedThreadSafeHandler<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
-    private ExecutionContext executionContext = new ExecutionContext(ForkJoinPool.commonPool(),
-            2, new SimpleThreadFactory("pinnedThreadSafeFuturesManager"));
+    private ExecutionContext executionContext = ExecutionContext.fix(2, "pinnedThreadSafeFuturesWorker",
+            2, "pinnedThreadSafeFuturesScheduler");
 
     public static PinnedThreadSafeFuturesManager instance() {
         if (Objects.isNull(INSTANCE)) {
