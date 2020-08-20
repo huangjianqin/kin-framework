@@ -295,4 +295,29 @@ public class NetUtils {
 
         return false;
     }
+
+    /**
+     * hash ip
+     */
+    public static long ipHashCode(String ip) {
+        String[] splits = ip.split("/");
+        if (splits.length > 1) {
+            ip = splits[splits.length - 1];
+        }
+        splits = ip.split("\\.");
+        long hashcode = 0L;
+        int offset = 24;
+        for (String item : splits) {
+            hashcode += Long.parseLong(item) << offset;
+            offset -= 8;
+        }
+        return hashcode;
+    }
+
+    /**
+     * hash ip+port
+     */
+    public static long ipHashCode(String ip, int port) {
+        return ipHashCode(ip) + port;
+    }
 }
