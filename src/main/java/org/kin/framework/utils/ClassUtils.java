@@ -609,4 +609,23 @@ public class ClassUtils {
         methodDeclarationStr = methodDeclarationStr.replace("native ", "");
         return methodDeclarationStr;
     }
+
+    /**
+     * 获取类泛型具体实现类型
+     * 由于类型擦除, 获取不了本类的泛型类型参数具体类型, 但其保存的父类的泛型类型参数具体类型, 所以可以获取父类的泛型类型参数具体类型
+     */
+    public static List<Class<?>> getClassGenericActualType(Class<?> claxx) {
+        List<Class<?>> result = new ArrayList<>();
+
+        Type genericSuperclass = claxx.getGenericSuperclass();
+        for (Type actualTypeArgument : ((ParameterizedType) genericSuperclass).getActualTypeArguments()) {
+            if (actualTypeArgument instanceof ParameterizedType) {
+                result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
+            } else {
+                result.add((Class<?>) actualTypeArgument);
+            }
+        }
+
+        return result;
+    }
 }
