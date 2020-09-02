@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 计数器
+ * 内部统计需保证一致性
  *
  * @author huangjianqin
  * @date 2020/9/2
@@ -55,6 +56,8 @@ public class Counter implements Reporter {
 
     @Override
     public String report() {
-        return uuid.concat("-").concat(String.valueOf(count()));
+        //上报后会重置
+        long count = this.count.getAndSet(0);
+        return uuid.concat("-").concat(String.valueOf(count));
     }
 }
