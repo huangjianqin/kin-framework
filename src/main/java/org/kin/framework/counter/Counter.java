@@ -38,6 +38,15 @@ public class Counter implements Reporter {
     }
 
     /**
+     * 重置计数器
+     *
+     * @return 当前计数值
+     */
+    public long reset() {
+        return count.getAndSet(0);
+    }
+
+    /**
      * @return 当前计数值
      */
     public long count() {

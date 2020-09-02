@@ -40,4 +40,11 @@ public class Counters {
     public static void increment(String group, String counter, long amount) {
         counterGroup(group).counter(counter).increment(amount);
     }
+
+    /**
+     * 重置counter
+     */
+    public static void reset() {
+        counterGroups.values().forEach(CounterGroup::reset);
+    }
 }

@@ -31,4 +31,11 @@ public class CounterGroup {
             return old;
         }
     }
+
+    /**
+     * 重置counter
+     */
+    public void reset() {
+        counters.values().forEach(Counter::reset);
+    }
 }
