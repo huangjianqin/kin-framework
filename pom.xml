@@ -35,6 +35,8 @@
         <jgit.version>5.6.1.202002131546-r</jgit.version>
         <svnkit.version>1.10.1</svnkit.version>
         <commons-io.version>2.7</commons-io.version>
+        <qdox.version>2.0.0</qdox.version>
+        <groovy.version>3.0.5</groovy.version>
     </properties>
 
     <dependencies>
@@ -202,6 +204,22 @@
             <artifactId>commons-io</artifactId>
             <version>${commons-io.version}</version>
         </dependency>
+
+        <!-- javadoc 解析工具 -->
+        <dependency>
+            <groupId>com.thoughtworks.qdox</groupId>
+            <artifactId>qdox</artifactId>
+            <version>${qdox.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- groovy 用来编写idea live templates 脚本 -->
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>${groovy.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -279,7 +297,9 @@
                     <compilerArguments>
                         <!--<verbose/>-->
                         <!-- 热更实现依赖了jdk的tools.jar-->
-                        <bootclasspath>${java.home}/jre/lib/rt.jar:${java.home}/jre/lib/jce.jar:${java.home}/lib/tools.jar</bootclasspath>
+                        <bootclasspath>
+                            ${java.home}/jre/lib/rt.jar:${java.home}/jre/lib/jce.jar:${java.home}/lib/tools.jar
+                        </bootclasspath>
                     </compilerArguments>
                 </configuration>
             </plugin>
@@ -310,21 +330,21 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
                 <executions>
-<!--                    <execution>-->
-<!--                        <id>jar</id>-->
-<!--                        <goals>-->
-<!--                            &lt;!&ndash; 打包同时触发打包测试类, 此处再多一个<goal>jar</goal>的话, 会触发两次打包, 而且包名与默认的一样, 会导致包名冲突报错&ndash;&gt;-->
-<!--                            <goal>test-jar</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
+                    <!--                    <execution>-->
+                    <!--                        <id>jar</id>-->
+                    <!--                        <goals>-->
+                    <!--                            &lt;!&ndash; 打包同时触发打包测试类, 此处再多一个<goal>jar</goal>的话, 会触发两次打包, 而且包名与默认的一样, 会导致包名冲突报错&ndash;&gt;-->
+                    <!--                            <goal>test-jar</goal>-->
+                    <!--                        </goals>-->
+                    <!--                    </execution>-->
                 </executions>
                 <configuration>
                     <archive>
                         <manifest>
                             <!-- 添加依赖路径-->
-<!--                            <addClasspath>true</addClasspath>-->
+                            <!--                            <addClasspath>true</addClasspath>-->
                             <!-- 依赖路径前缀-->
-<!--                            <classpathPrefix>lib/</classpathPrefix>-->
+                            <!--                            <classpathPrefix>lib/</classpathPrefix>-->
                             <!--<mainClass>spark.demo.run.Service</mainClass>-->
                         </manifest>
                         <manifestEntries>
@@ -346,19 +366,19 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.5.5</version>
                 <executions>
-<!--                    <execution>-->
-<!--                        <id>make-assembly</id>-->
-<!--                        <goals>-->
-<!--                            &lt;!&ndash; 会把依赖直接写进jar包&ndash;&gt;-->
-<!--                            <goal>single</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
+                    <!--                    <execution>-->
+                    <!--                        <id>make-assembly</id>-->
+                    <!--                        <goals>-->
+                    <!--                            &lt;!&ndash; 会把依赖直接写进jar包&ndash;&gt;-->
+                    <!--                            <goal>single</goal>-->
+                    <!--                        </goals>-->
+                    <!--                    </execution>-->
                 </executions>
                 <configuration>
                     <archive>
                         <manifest>
-<!--                            <addClasspath>true</addClasspath>-->
-<!--                            <classpathPrefix>lib/</classpathPrefix>-->
+                            <!--                            <addClasspath>true</addClasspath>-->
+                            <!--                            <classpathPrefix>lib/</classpathPrefix>-->
                             <!--<mainClass></mainClass>-->
                         </manifest>
                         <manifestEntries>
@@ -425,30 +445,30 @@
 
             <!-- jmh插件, install时会触发-->
             <!--<plugin>-->
-                <!--<groupId>org.codehaus.mojo</groupId>-->
-                <!--<artifactId>exec-maven-plugin</artifactId>-->
-                <!--<version>1.6.0</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>run-benchmarks</id>-->
-                        <!--<phase>integration-test</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>exec</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-                <!--<configuration>-->
-                    <!--<classpathScope>test</classpathScope>-->
-                    <!--&lt;!&ndash; 以java执行&ndash;&gt;-->
-                    <!--<executable>java</executable>-->
-                    <!--<arguments>-->
-                        <!--<argument>-classpath</argument>-->
-                        <!--<classpath />-->
-                        <!--&lt;!&ndash; 会自动扫描jmh注解并执行相应测试&ndash;&gt;-->
-                        <!--<argument>org.openjdk.jmh.Main</argument>-->
-                        <!--<argument>.*</argument>-->
-                    <!--</arguments>-->
-                <!--</configuration>-->
+            <!--<groupId>org.codehaus.mojo</groupId>-->
+            <!--<artifactId>exec-maven-plugin</artifactId>-->
+            <!--<version>1.6.0</version>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>run-benchmarks</id>-->
+            <!--<phase>integration-test</phase>-->
+            <!--<goals>-->
+            <!--<goal>exec</goal>-->
+            <!--</goals>-->
+            <!--</execution>-->
+            <!--</executions>-->
+            <!--<configuration>-->
+            <!--<classpathScope>test</classpathScope>-->
+            <!--&lt;!&ndash; 以java执行&ndash;&gt;-->
+            <!--<executable>java</executable>-->
+            <!--<arguments>-->
+            <!--<argument>-classpath</argument>-->
+            <!--<classpath />-->
+            <!--&lt;!&ndash; 会自动扫描jmh注解并执行相应测试&ndash;&gt;-->
+            <!--<argument>org.openjdk.jmh.Main</argument>-->
+            <!--<argument>.*</argument>-->
+            <!--</arguments>-->
+            <!--</configuration>-->
             <!--</plugin>-->
         </plugins>
     </build>
