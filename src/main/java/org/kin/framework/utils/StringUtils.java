@@ -3,13 +3,17 @@ package org.kin.framework.utils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author huangjianqin
  * @date 2018/5/25
  */
 public class StringUtils {
-    private static final String MKSTRING_SEPARATOR = ",";
+    private static final String DELIMITER = ",";
+    private static final String KV_DELIMITER = "=";
 
     /**
      * 字符串是否为空(null or 空串)
@@ -40,35 +44,63 @@ public class StringUtils {
      */
     @SafeVarargs
     public static <E> String mkString(E... contents) {
-        return mkString(MKSTRING_SEPARATOR, contents);
+        return mkString(DELIMITER, contents);
     }
 
     /**
      * 数组格式化
      */
     @SafeVarargs
-    public static <E> String mkString(String separator, E... contents) {
-        return mkString(separator, Arrays.asList(contents));
+    public static <E> String mkString(String delimiter, E... contents) {
+        return mkString(delimiter, Objects::toString, Arrays.asList(contents));
+    }
+
+    /**
+     * 数组格式化
+     */
+    @SafeVarargs
+    public static <E> String mkString(Function<E, String> mapper, E... contents) {
+        return mkString(DELIMITER, Arrays.asList(contents), mapper);
+    }
+
+    /**
+     * 数组格式化
+     */
+    @SafeVarargs
+    public static <E> String mkString(String delimiter, Function<E, String> mapper, E... contents) {
+        return mkString(delimiter, Arrays.asList(contents), mapper);
     }
 
     /**
      * 集合格式化
      */
     public static <E> String mkString(Collection<E> collection) {
-        return mkString(MKSTRING_SEPARATOR, collection);
+        return mkString(DELIMITER, collection, Objects::toString);
     }
 
     /**
      * 集合格式化
      */
-    public static <E> String mkString(String separator, Collection<E> collection) {
-        if (collection != null && collection.size() > 0) {
-            StringBuilder sb = new StringBuilder();
-            for (E e : collection) {
-                sb.append(e).append(separator);
-            }
-            sb.deleteCharAt(sb.length() - 1);
-            return sb.toString();
+    public static <E> String mkString(Collection<E> collection, Function<E, String> mapper) {
+        return mkString(DELIMITER, collection, mapper);
+    }
+
+    /**
+     * 集合格式化
+     */
+    public static <E> String mkString(String delimiter, Collection<E> collection) {
+        return mkString(delimiter, collection, Objects::toString);
+    }
+
+    /**
+     * 集合格式化
+     */
+    public static <E> String mkString(String delimiter, Collection<E> collection, Function<E, String> mapper) {
+        if (CollectionUtils.isNonEmpty(collection)) {
+            return collection
+                    .stream()
+                    .map(mapper)
+                    .collect(Collectors.joining(delimiter));
         }
         return "";
     }
@@ -77,20 +109,41 @@ public class StringUtils {
      * map格式化
      */
     public static <K, V> String mkString(Map<K, V> map) {
-        return mkString(MKSTRING_SEPARATOR, map);
+        return mkString(DELIMITER, map);
     }
 
     /**
      * map格式化
      */
-    public static <K, V> String mkString(String separator, Map<K, V> map) {
-        if (map != null && map.size() > 0) {
-            StringBuilder sb = new StringBuilder();
-            for (Map.Entry<K, V> entry : map.entrySet()) {
-                sb.append("(").append(entry.getKey()).append("-").append(entry.getValue()).append(")").append(separator);
-            }
-            sb.deleteCharAt(sb.length() - 1);
-            return sb.toString();
+    public static <K, V> String mkString(String delimiter,
+                                         Map<K, V> map) {
+        return mkString(delimiter, map, KV_DELIMITER, Objects::toString, Objects::toString);
+    }
+
+    /**
+     * map格式化
+     */
+    public static <K, V> String mkString(Map<K, V> map,
+                                         String kvDelimiter,
+                                         Function<K, String> keyMapper,
+                                         Function<V, String> valueMapper) {
+        return mkString(DELIMITER, map, kvDelimiter, keyMapper, valueMapper);
+    }
+
+    /**
+     * map格式化
+     */
+    public static <K, V> String mkString(String delimiter,
+                                         Map<K, V> map,
+                                         String kvDelimiter,
+                                         Function<K, String> keyMapper,
+                                         Function<V, String> valueMapper) {
+        if (CollectionUtils.isNonEmpty(map)) {
+            return map.entrySet()
+                    .stream()
+                    .map(entry -> keyMapper.apply(entry.getKey()).concat(kvDelimiter)
+                            .concat(valueMapper.apply(entry.getValue())))
+                    .collect(Collectors.joining(delimiter));
         }
         return "";
     }

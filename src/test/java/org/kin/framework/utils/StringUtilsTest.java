@@ -1,5 +1,8 @@
 package org.kin.framework.utils;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 /**
  * @author huangjianqin
  * @date 2020/9/21
@@ -22,6 +25,11 @@ public class StringUtilsTest {
         System.out.println(hexUrl);
         System.out.println(url2);
         System.out.println(url.equals(url2));
+
+        System.out.println("-------------------------------------------------------------");
+        System.out.println(StringUtils.mkString(Arrays.asList(1, 2, 3, 4)));
+        System.out.println(StringUtils.mkString(Arrays.asList(1, 2, 3, 4).stream().collect(Collectors.toMap(item -> item, item -> item + 1)),
+                "->", k -> String.valueOf(k + 1), v -> String.valueOf(v + 1)));
 
     }
 }
