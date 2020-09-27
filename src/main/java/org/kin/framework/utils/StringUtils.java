@@ -1,9 +1,7 @@
 package org.kin.framework.utils;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,7 +50,7 @@ public class StringUtils {
      */
     @SafeVarargs
     public static <E> String mkString(String delimiter, E... contents) {
-        return mkString(delimiter, Objects::toString, Arrays.asList(contents));
+        return mkString(delimiter, CollectionUtils.toList(contents), Object::toString);
     }
 
     /**
@@ -60,7 +58,7 @@ public class StringUtils {
      */
     @SafeVarargs
     public static <E> String mkString(Function<E, String> mapper, E... contents) {
-        return mkString(DELIMITER, Arrays.asList(contents), mapper);
+        return mkString(DELIMITER, CollectionUtils.toList(contents), mapper);
     }
 
     /**
@@ -68,14 +66,14 @@ public class StringUtils {
      */
     @SafeVarargs
     public static <E> String mkString(String delimiter, Function<E, String> mapper, E... contents) {
-        return mkString(delimiter, Arrays.asList(contents), mapper);
+        return mkString(delimiter, CollectionUtils.toList(contents), mapper);
     }
 
     /**
      * 集合格式化
      */
     public static <E> String mkString(Collection<E> collection) {
-        return mkString(DELIMITER, collection, Objects::toString);
+        return mkString(DELIMITER, collection, Object::toString);
     }
 
     /**
@@ -89,7 +87,7 @@ public class StringUtils {
      * 集合格式化
      */
     public static <E> String mkString(String delimiter, Collection<E> collection) {
-        return mkString(delimiter, collection, Objects::toString);
+        return mkString(delimiter, collection, Object::toString);
     }
 
     /**
@@ -117,7 +115,7 @@ public class StringUtils {
      */
     public static <K, V> String mkString(String delimiter,
                                          Map<K, V> map) {
-        return mkString(delimiter, map, KV_DELIMITER, Objects::toString, Objects::toString);
+        return mkString(delimiter, map, KV_DELIMITER, Object::toString, Object::toString);
     }
 
     /**
