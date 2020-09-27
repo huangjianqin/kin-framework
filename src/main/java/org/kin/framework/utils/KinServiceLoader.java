@@ -1,6 +1,5 @@
 package org.kin.framework.utils;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -8,9 +7,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.security.AccessControlContext;
 import java.security.AccessController;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Properties;
+import java.security.PrivilegedAction;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 类spi机制, 与spring.factories加载类似, 内容是properties格式
@@ -27,9 +26,9 @@ public class KinServiceLoader {
     /** The access control context taken when the ServiceLoader is created */
     private final AccessControlContext acc;
     /** key -> service class name, value -> service implement class name */
-    private final Multimap<String, String> service2Implement = HashMultimap.create();
+    private volatile Multimap<String, String> service2Implement;
     /** key -> service class, value -> service implement instance */
-    private final Multimap<Class<?>, Object> service2ImplementInst = LinkedListMultimap.create();
+    private volatile Map<Class<?>, ServiceLoader<?>> service2Loader;
 
     private KinServiceLoader(ClassLoader cl) {
         this(FILE_NAME, cl);
@@ -41,12 +40,32 @@ public class KinServiceLoader {
         reload(fileName);
     }
 
+    //-------------------------------------------------------------------------------------------------------------------
+    public static KinServiceLoader load(String fileName) {
+        return load(fileName, Thread.currentThread().getContextClassLoader());
+    }
+
+    public static KinServiceLoader loadInstalled(String fileName) {
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        ClassLoader prev = null;
+        while (cl != null) {
+            prev = cl;
+            cl = cl.getParent();
+        }
+        return load(fileName, prev);
+    }
+
+    public static KinServiceLoader load(String fileName, ClassLoader loader) {
+        return new KinServiceLoader(fileName, loader);
+    }
+    //-------------------------------------------------------------------------------------------------------------------
+
     /**
      * 重新加载
      */
     public synchronized void reload(String fileName) {
-        service2Implement.clear();
-        service2ImplementInst.clear();
+        service2Implement = LinkedListMultimap.create();
+        service2Loader = new ConcurrentHashMap<>();
 
         Enumeration<URL> configs;
         try {
@@ -63,9 +82,6 @@ public class KinServiceLoader {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        //TODO
-//        lookupIterator = new ServiceLoader.LazyIterator(service, loader);
     }
 
     /**
@@ -77,107 +93,141 @@ public class KinServiceLoader {
             properties.load(url.openStream());
             for (String serviceClassName : properties.stringPropertyNames()) {
                 String implementClassNames = properties.getProperty(serviceClassName);
-                service2Implement.putAll(serviceClassName, Arrays.asList(implementClassNames.split(",")));
+                HashSet<String> filtered = new HashSet<>(Arrays.asList(implementClassNames.split(",")));
+                service2Implement.putAll(serviceClassName, filtered);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * 获取某接口的{@link ServiceLoader}的迭代器
+     */
+    public synchronized <S> Iterator<S> iterator(Class<S> serviceClass) {
+        ServiceLoader<?> loader = service2Loader.putIfAbsent(serviceClass, new ServiceLoader<>(serviceClass, new ArrayList<>(service2Implement.get(serviceClass.getName()))));
+        return (Iterator<S>) loader.iterator();
+    }
+
     //-------------------------------------------------------------------------------------------------------------------
-//    private class LazyIterator
-//            implements Iterator<S>
-//    {
-//
-//        Class<S> service;
-//        ClassLoader loader;
-//        Enumeration<URL> configs = null;
-//        Iterator<String> pending = null;
-//        String nextName = null;
-//
-//        private LazyIterator(Class<S> service, ClassLoader loader) {
-//            this.service = service;
-//            this.loader = loader;
-//        }
-//
-//        private boolean hasNextService() {
-//            if (nextName != null) {
-//                return true;
-//            }
-//            if (configs == null) {
-//                try {
-//                    String fullName = PREFIX + service.getName();
-//                    if (loader == null)
-//                        configs = ClassLoader.getSystemResources(fullName);
-//                    else
-//                        configs = loader.getResources(fullName);
-//                } catch (IOException x) {
-//                    fail(service, "Error locating configuration files", x);
-//                }
-//            }
-//            while ((pending == null) || !pending.hasNext()) {
-//                if (!configs.hasMoreElements()) {
-//                    return false;
-//                }
-//                pending = parse(service, configs.nextElement());
-//            }
-//            nextName = pending.next();
-//            return true;
-//        }
-//
-//        private S nextService() {
-//            if (!hasNextService())
-//                throw new NoSuchElementException();
-//            String cn = nextName;
-//            nextName = null;
-//            Class<?> c = null;
-//            try {
-//                c = Class.forName(cn, false, loader);
-//            } catch (ClassNotFoundException x) {
-//                fail(service,
-//                        "Provider " + cn + " not found");
-//            }
-//            if (!service.isAssignableFrom(c)) {
-//                fail(service,
-//                        "Provider " + cn  + " not a subtype");
-//            }
-//            try {
-//                S p = service.cast(c.newInstance());
-//                providers.put(cn, p);
-//                return p;
-//            } catch (Throwable x) {
-//                fail(service,
-//                        "Provider " + cn + " could not be instantiated",
-//                        x);
-//            }
-//            throw new Error();          // This cannot happen
-//        }
-//
-//        public boolean hasNext() {
-//            if (acc == null) {
-//                return hasNextService();
-//            } else {
-//                PrivilegedAction<Boolean> action = new PrivilegedAction<Boolean>() {
-//                    public Boolean run() { return hasNextService(); }
-//                };
-//                return AccessController.doPrivileged(action, acc);
-//            }
-//        }
-//
-//        public S next() {
-//            if (acc == null) {
-//                return nextService();
-//            } else {
-//                PrivilegedAction<S> action = new PrivilegedAction<S>() {
-//                    public S run() { return nextService(); }
-//                };
-//                return AccessController.doPrivileged(action, acc);
-//            }
-//        }
-//
-//        public void remove() {
-//            throw new UnsupportedOperationException();
-//        }
-//
-//    }
+    private class ServiceLoader<S> implements Iterable<S> {
+        /** 接口类 */
+        private final Class<S> service;
+        /** lazy 加载 */
+        private final LazyIterator lookupIterator;
+        /** service cache */
+        private final LinkedHashMap<String, S> providers = new LinkedHashMap<>();
+
+        private ServiceLoader(Class<S> service, List<String> source) {
+            this.service = service;
+            this.lookupIterator = new LazyIterator(source);
+        }
+
+        @Override
+        public Iterator<S> iterator() {
+            return new Iterator<S>() {
+                Iterator<Map.Entry<String, S>> knownProviders
+                        = providers.entrySet().iterator();
+
+                @Override
+                public boolean hasNext() {
+                    if (knownProviders.hasNext()) {
+                        return true;
+                    }
+                    return lookupIterator.hasNext();
+                }
+
+                @Override
+                public S next() {
+                    if (knownProviders.hasNext()) {
+                        return knownProviders.next().getValue();
+                    }
+                    return lookupIterator.next();
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+
+        //----------------------------------------------------------------------------------------------------------------
+
+        /**
+         * lazy加载接口实现类的迭代器
+         */
+        private class LazyIterator implements Iterator<S> {
+            /** iterator 当前下标 */
+            private int index;
+            /** 接口实现类名 */
+            private final List<String> source;
+
+            public LazyIterator(List<String> source) {
+                this.source = source;
+            }
+
+            /**
+             * @return 是否可以继续迭代
+             */
+            private boolean hasNextService() {
+                return index + 1 < source.size();
+            }
+
+            /**
+             * 下一接口实现类
+             */
+            private S nextService() {
+                if (!hasNextService()) {
+                    throw new NoSuchElementException();
+                }
+                int nextIndex = index + 1;
+                String cn = source.get(nextIndex);
+                Class<?> c;
+                try {
+                    c = Class.forName(cn, false, classLoader);
+                } catch (ClassNotFoundException x) {
+                    throw new ServiceConfigurationError(String.format("%s: Provider %s not found", service.getName(), cn));
+                }
+
+                if (!service.isAssignableFrom(c)) {
+                    throw new ServiceConfigurationError(String.format("%s: Provider %s not a subtype", service.getName(), cn));
+                }
+                try {
+                    S p = service.cast(c.newInstance());
+                    providers.put(cn, p);
+                    index = nextIndex;
+                    return p;
+                } catch (Throwable x) {
+                    throw new ServiceConfigurationError(String.format("%s: Provider %s could not be instantiated", service.getName(), cn), x);
+                }
+            }
+
+            @Override
+            public boolean hasNext() {
+                if (acc == null) {
+                    return hasNextService();
+                } else {
+                    PrivilegedAction<Boolean> action = this::hasNextService;
+                    return AccessController.doPrivileged(action, acc);
+                }
+            }
+
+            @Override
+            public S next() {
+                if (acc == null) {
+                    return nextService();
+                } else {
+                    PrivilegedAction<S> action = this::nextService;
+                    return AccessController.doPrivileged(action, acc);
+                }
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+        }
+    }
 }
