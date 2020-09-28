@@ -4,6 +4,7 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -19,20 +20,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class KinServiceLoader {
     /** 默认路径 */
-    private static final String FILE_NAME = "META-INF/kin.factories";
+    private static final String DEFAULT_FILE_NAME = "META-INF/kin.factories";
 
     /** The class loader used to locate, load, and instantiate providers */
     private final ClassLoader classLoader;
     /** The access control context taken when the ServiceLoader is created */
     private final AccessControlContext acc;
-    /** key -> service class name, value -> service implement class name */
+    /** key -> service class name || {@link SPI}注解的值, value -> service implement class name */
     private volatile Multimap<String, String> service2Implement;
     /** key -> service class, value -> service implement instance */
     private volatile Map<Class<?>, ServiceLoader<?>> service2Loader;
-
-    private KinServiceLoader(ClassLoader cl) {
-        this(FILE_NAME, cl);
-    }
 
     private KinServiceLoader(String fileName, ClassLoader cl) {
         classLoader = (cl == null) ? ClassLoader.getSystemClassLoader() : cl;
@@ -41,6 +38,10 @@ public class KinServiceLoader {
     }
 
     //-------------------------------------------------------------------------------------------------------------------
+    public static KinServiceLoader load() {
+        return load(DEFAULT_FILE_NAME, Thread.currentThread().getContextClassLoader());
+    }
+
     public static KinServiceLoader load(String fileName) {
         return load(fileName, Thread.currentThread().getContextClassLoader());
     }
@@ -90,11 +91,13 @@ public class KinServiceLoader {
     private void parse(URL url) {
         try {
             Properties properties = new Properties();
-            properties.load(url.openStream());
-            for (String serviceClassName : properties.stringPropertyNames()) {
-                String implementClassNames = properties.getProperty(serviceClassName);
-                HashSet<String> filtered = new HashSet<>(Arrays.asList(implementClassNames.split(",")));
-                service2Implement.putAll(serviceClassName, filtered);
+            try (InputStream is = url.openStream()) {
+                properties.load(is);
+                for (String serviceClassName : properties.stringPropertyNames()) {
+                    String implementClassNames = properties.getProperty(serviceClassName);
+                    HashSet<String> filtered = new HashSet<>(Arrays.asList(implementClassNames.split(",")));
+                    service2Implement.putAll(serviceClassName, filtered);
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -105,7 +108,20 @@ public class KinServiceLoader {
      * 获取某接口的{@link ServiceLoader}的迭代器
      */
     public synchronized <S> Iterator<S> iterator(Class<S> serviceClass) {
-        ServiceLoader<?> loader = service2Loader.putIfAbsent(serviceClass, new ServiceLoader<>(serviceClass, new ArrayList<>(service2Implement.get(serviceClass.getName()))));
+        //从接口名 或者 @SPI注解的提供的value 获取该接口实现类
+        HashSet<String> filtered = new HashSet<>(service2Implement.get(serviceClass.getName()));
+
+        SPI spi = serviceClass.getAnnotation(SPI.class);
+        if (Objects.nonNull(spi)) {
+            filtered.addAll(service2Implement.get(spi.value()));
+        }
+
+        ServiceLoader<S> newLoader = new ServiceLoader<>(serviceClass, new ArrayList<>(filtered));
+        ServiceLoader<?> loader = service2Loader.putIfAbsent(serviceClass, newLoader);
+        if (Objects.isNull(loader)) {
+            //本来没有值
+            loader = newLoader;
+        }
         return (Iterator<S>) loader.iterator();
     }
 
@@ -171,7 +187,7 @@ public class KinServiceLoader {
              * @return 是否可以继续迭代
              */
             private boolean hasNextService() {
-                return index + 1 < source.size();
+                return index < source.size();
             }
 
             /**
@@ -181,8 +197,7 @@ public class KinServiceLoader {
                 if (!hasNextService()) {
                     throw new NoSuchElementException();
                 }
-                int nextIndex = index + 1;
-                String cn = source.get(nextIndex);
+                String cn = source.get(index);
                 Class<?> c;
                 try {
                     c = Class.forName(cn, false, classLoader);
@@ -196,7 +211,7 @@ public class KinServiceLoader {
                 try {
                     S p = service.cast(c.newInstance());
                     providers.put(cn, p);
-                    index = nextIndex;
+                    index++;
                     return p;
                 } catch (Throwable x) {
                     throw new ServiceConfigurationError(String.format("%s: Provider %s could not be instantiated", service.getName(), cn), x);
