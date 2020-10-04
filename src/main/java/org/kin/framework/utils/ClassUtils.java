@@ -280,7 +280,7 @@ public class ClassUtils {
      */
     public static Object getFieldValue(Object instance, Field field) {
         try {
-            Method m = getterMethod(instance, field.getName());
+            Method m = getterMethod(instance.getClass(), field);
             if (m != null) {
                 return m.invoke(instance);
             } else {
@@ -304,7 +304,7 @@ public class ClassUtils {
      */
     public static void setFieldValue(Object instance, Field field, Object value) {
         try {
-            Method m = setterMethod(instance, field.getName(), value);
+            Method m = setterMethod(instance.getClass(), field);
             if (m != null) {
                 m.invoke(instance, value);
             } else {
@@ -320,11 +320,21 @@ public class ClassUtils {
         }
     }
 
-    public static Method getterMethod(Object instance, String fieldName) {
-        byte[] items = fieldName.getBytes();
+    /**
+     * 获取getter方法
+     */
+    public static Method getterMethod(Class<?> target, Field field) {
+        byte[] items = field.getName().getBytes();
         items[0] = (byte) ((char) items[0] - 'a' + 'A');
         try {
-            return instance.getClass().getMethod("get" + new String(items));
+            if (isBoolean(field.getType())) {
+                //如果是boolean, 先尝试is开头的getter方法, 找不到再尝试get开头
+                Method getterMethod = target.getMethod("is" + new String(items));
+                if (getterMethod != null) {
+                    return getterMethod;
+                }
+            }
+            return target.getMethod("get" + new String(items));
         } catch (NoSuchMethodException e) {
 
         }
@@ -332,11 +342,11 @@ public class ClassUtils {
         return null;
     }
 
-    public static Method setterMethod(Object instance, String fieldName, Object value) {
-        byte[] items = fieldName.getBytes();
+    public static Method setterMethod(Class<?> target, Field field) {
+        byte[] items = field.getName().getBytes();
         items[0] = (byte) ((char) items[0] - 'a' + 'A');
         try {
-            return instance.getClass().getMethod("set" + new String(items), value.getClass());
+            return target.getMethod("set" + new String(items), field.getType());
         } catch (NoSuchMethodException e) {
 
         }
@@ -350,6 +360,7 @@ public class ClassUtils {
 
     /**
      * 获取claxx -> parent的所有field
+     * field顺序, 子类 -> 父类 -> 父父类
      */
     public static List<Field> getFields(Class<?> claxx, Class<?> parent) {
         if (claxx == null || parent == null) {
@@ -411,6 +422,9 @@ public class ClassUtils {
         return null;
     }
 
+    /**
+     * bytes -> 基础类型
+     */
     public static <T> T convertBytes2PrimitiveObj(Class<T> claxx, byte[] bytes) {
         if (bytes == null || bytes.length <= 0) {
             return null;
@@ -420,6 +434,9 @@ public class ClassUtils {
         return convertStr2PrimitiveObj(claxx, strValue);
     }
 
+    /**
+     * string -> 基础类型
+     */
     public static <T> T convertStr2PrimitiveObj(Class<T> claxx, String strValue) {
         if (StringUtils.isNotBlank(strValue)) {
             if (String.class.equals(claxx)) {
@@ -446,6 +463,9 @@ public class ClassUtils {
         return null;
     }
 
+    /**
+     * @return 该类实现的接口是否有指定注解标识
+     */
     public static boolean isInterfaceAnnotationPresent(Object o, Class annotation) {
         Class claxx = o.getClass();
         while (claxx != null) {
@@ -460,6 +480,9 @@ public class ClassUtils {
         return false;
     }
 
+    /**
+     * string -> 基础类型
+     */
     public static Object string2Obj(Field field, String value) {
         Class<?> fieldType = field.getType();
 
@@ -498,6 +521,9 @@ public class ClassUtils {
         return null;
     }
 
+    /**
+     * 基础类型封箱
+     */
     public static String primitivePackage(Class claxx, String code) {
         StringBuilder sb = new StringBuilder();
         // 需要手动装箱, 不然编译会报错
@@ -525,6 +551,9 @@ public class ClassUtils {
         return sb.toString();
     }
 
+    /**
+     * 基础类型拆箱
+     */
     public static String primitiveUnpackage(Class claxx, String code) {
         //需要手动拆箱, 不然编译会报错
         if (Integer.TYPE.equals(claxx)) {
@@ -547,6 +576,9 @@ public class ClassUtils {
         return code;
     }
 
+    /**
+     * 获取{@link Method}唯一标识
+     */
     public static String getUniqueName(Method method) {
         StringBuilder sb = new StringBuilder();
         sb.append(method.getName());
@@ -627,5 +659,12 @@ public class ClassUtils {
         }
 
         return result;
+    }
+
+    /**
+     * @return 是否是boolean
+     */
+    public static boolean isBoolean(Class<?> target) {
+        return Boolean.class.equals(target) || Boolean.TYPE.equals(target);
     }
 }

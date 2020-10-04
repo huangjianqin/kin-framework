@@ -127,7 +127,7 @@ public class ProxyEnhanceUtils {
         Method proxyMethod = definition.getMethod();
         String proxyCtClassName = definition.getClassName();
 
-        Class realProxyClass = null;
+        Class<?> realProxyClass = null;
         try {
             realProxyClass = Class.forName(proxyCtClassName);
         } catch (ClassNotFoundException e) {
@@ -174,7 +174,7 @@ public class ProxyEnhanceUtils {
         StringBuilder oneLineCode = new StringBuilder();
         oneLineCode.append(proxyFieldName.concat(".").concat(proxyMethod.getName()).concat("("));
 
-        Class[] paramTypes = proxyMethod.getParameterTypes();
+        Class<?>[] paramTypes = proxyMethod.getParameterTypes();
         StringJoiner paramBody = new StringJoiner(", ");
         for (int i = 0; i < paramTypes.length; i++) {
             if (paramTypes[i].isPrimitive()) {
@@ -255,7 +255,7 @@ public class ProxyEnhanceUtils {
             String packageName,
             String proxyCtClassName,
             MethodBodyConstructor methodBodyConstructor) {
-        Class realProxyClass = null;
+        Class<?> realProxyClass = null;
         try {
             realProxyClass = Class.forName(proxyCtClassName);
         } catch (ClassNotFoundException e) {
