@@ -2,8 +2,6 @@ package org.kin.framework.utils;
 
 import com.google.common.collect.Sets;
 import org.kin.framework.collection.Tuple;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.*;
@@ -25,8 +23,6 @@ import java.util.stream.Stream;
  * Created by huangjianqin on 2018/1/26.
  */
 public class ClassUtils {
-    private static final Logger log = LoggerFactory.getLogger(ClassUtils.class);
-
     public static final String CLASS_SUFFIX = ".class";
     /** 用于匹配内部类 */
     private static final Pattern INNER_PATTERN = Pattern.compile("\\$(\\d+).", Pattern.CASE_INSENSITIVE);
@@ -53,9 +49,8 @@ public class ClassUtils {
         try {
             return claxx.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            log.error("", e);
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
     public static <T> T instance(String classStr) {
@@ -66,9 +61,8 @@ public class ClassUtils {
             Class<T> claxx = (Class<T>) Class.forName(classStr);
             return instance(claxx);
         } catch (ClassNotFoundException e) {
-            log.error("", e);
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
     /**
@@ -87,9 +81,8 @@ public class ClassUtils {
             return constructor.newInstance(args);
         } catch (InstantiationException | IllegalAccessException |
                 NoSuchMethodException | InvocationTargetException e) {
-            log.error("", e);
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
     public static Class getClass(String className) {
@@ -99,9 +92,8 @@ public class ClassUtils {
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
-            log.error("", e);
+            throw new RuntimeException(e);
         }
-        return null;
     }
 
     /**
@@ -195,7 +187,7 @@ public class ClassUtils {
                                     try {
                                         return (Class<T>) contextClassLoader.loadClass(className);
                                     } catch (ClassNotFoundException e) {
-
+                                        throw new RuntimeException(e);
                                     }
                                 }
                                 return null;
@@ -232,13 +224,13 @@ public class ClassUtils {
                                 subClasses.add(claxx);
                             }
                         } catch (ClassNotFoundException e) {
-
+                            throw new RuntimeException(e);
                         }
                     }
                 }
             }
         } catch (IOException | URISyntaxException e) {
-
+            throw new RuntimeException(e);
         }
 
         return subClasses;
@@ -251,7 +243,7 @@ public class ClassUtils {
                 try {
                     return (T) field.get(target);
                 } catch (IllegalAccessException e) {
-                    log.error("", e);
+                    throw new RuntimeException(e);
                 } finally {
                     field.setAccessible(false);
                 }
@@ -268,7 +260,7 @@ public class ClassUtils {
                 try {
                     field.set(target, newValue);
                 } catch (IllegalAccessException e) {
-                    log.error("", e);
+                    throw new RuntimeException(e);
                 } finally {
                     field.setAccessible(false);
                 }
@@ -294,10 +286,8 @@ public class ClassUtils {
             }
 
         } catch (Exception e) {
-            log.error("", e);
+            throw new RuntimeException(e);
         }
-
-        return getDefaultValue(field.getType());
     }
 
     /**
@@ -317,7 +307,7 @@ public class ClassUtils {
                 }
             }
         } catch (Exception e) {
-            log.error("", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -337,10 +327,8 @@ public class ClassUtils {
             }
             return target.getMethod("get" + new String(items));
         } catch (NoSuchMethodException e) {
-
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
 
     public static Method setterMethod(Class<?> target, Field field) {
@@ -349,10 +337,8 @@ public class ClassUtils {
         try {
             return target.getMethod("set" + new String(items), field.getType());
         } catch (NoSuchMethodException e) {
-
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
 
     public static List<Field> getAllFields(Class<?> claxx) {
@@ -516,10 +502,8 @@ public class ClassUtils {
                 throw new RuntimeException("illeagal data type, type=" + fieldType);
             }
         } catch (Exception e) {
-            log.error("", e);
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
 
     /**
