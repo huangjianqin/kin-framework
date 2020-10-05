@@ -1,6 +1,7 @@
 package org.kin.framework.utils;
 
 import com.google.common.collect.Sets;
+import org.kin.framework.collection.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -522,6 +523,64 @@ public class ClassUtils {
     }
 
     /**
+     * 获取类泛型具体实现类型
+     * 由于类型擦除, 获取不了本类的泛型类型参数具体类型, 但其保存的父类的泛型类型参数具体类型, 所以可以获取父类的泛型类型参数具体类型
+     */
+    public static List<Class<?>> getSuperClassGenericActualTypes(Class<?> claxx) {
+        List<Class<?>> result = new ArrayList<>();
+
+        Type genericSuperclass = claxx.getGenericSuperclass();
+        for (Type actualTypeArgument : ((ParameterizedType) genericSuperclass).getActualTypeArguments()) {
+            if (actualTypeArgument instanceof ParameterizedType) {
+                result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
+            } else {
+                result.add((Class<?>) actualTypeArgument);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @return 是否是boolean
+     */
+    public static boolean isBoolean(Class<?> target) {
+        return Boolean.class.equals(target) || Boolean.TYPE.equals(target);
+    }
+
+    /**
+     * @param field 数组 | 集合类 成员变量
+     * @return 元素类型
+     */
+    public static Class<?> getItemType(Field field) {
+        Class<?> fieldType = field.getType();
+        if (fieldType.isArray()) {
+            //数组
+            return fieldType.getComponentType();
+        } else if (Collection.class.isAssignableFrom(fieldType)) {
+            //集合
+            ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
+            return (Class<?>) parameterizedType.getActualTypeArguments()[0];
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @param field map 成员变量
+     * @return key value 类型
+     */
+    public static Tuple<Class<?>, Class<?>> getKVType(Field field) {
+        if (!Map.class.isAssignableFrom(field.getType())) {
+            throw new UnsupportedOperationException();
+        }
+        ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
+        return new Tuple<>((Class<?>) parameterizedType.getActualTypeArguments()[0], (Class<?>) parameterizedType.getActualTypeArguments()[1]);
+    }
+
+    //------------------------------------------------------------字节码相关------------------------------------------------------------
+
+    /**
      * 基础类型封箱
      */
     public static String primitivePackage(Class claxx, String code) {
@@ -640,31 +699,5 @@ public class ClassUtils {
         methodDeclarationStr = methodDeclarationStr.replace("transient ", "");
         methodDeclarationStr = methodDeclarationStr.replace("native ", "");
         return methodDeclarationStr;
-    }
-
-    /**
-     * 获取类泛型具体实现类型
-     * 由于类型擦除, 获取不了本类的泛型类型参数具体类型, 但其保存的父类的泛型类型参数具体类型, 所以可以获取父类的泛型类型参数具体类型
-     */
-    public static List<Class<?>> getSuperClassGenericActualTypes(Class<?> claxx) {
-        List<Class<?>> result = new ArrayList<>();
-
-        Type genericSuperclass = claxx.getGenericSuperclass();
-        for (Type actualTypeArgument : ((ParameterizedType) genericSuperclass).getActualTypeArguments()) {
-            if (actualTypeArgument instanceof ParameterizedType) {
-                result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
-            } else {
-                result.add((Class<?>) actualTypeArgument);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * @return 是否是boolean
-     */
-    public static boolean isBoolean(Class<?> target) {
-        return Boolean.class.equals(target) || Boolean.TYPE.equals(target);
     }
 }
