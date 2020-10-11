@@ -200,4 +200,19 @@ public class StringUtils {
         }
         return new String(bytes);
     }
+
+    /**
+     * str移除指定后缀suffix
+     */
+    public static String removeSuffix(String origin, String suffix) {
+        if (!isBlank(origin) && !isBlank(suffix)) {
+            if (origin.endsWith(suffix)) {
+                return origin.substring(0, origin.length() - suffix.length());
+            } else {
+                return origin;
+            }
+        } else {
+            return origin;
+        }
+    }
 }

@@ -684,4 +684,17 @@ public class ClassUtils {
         methodDeclarationStr = methodDeclarationStr.replace("native ", "");
         return methodDeclarationStr;
     }
+
+    /**
+     * @param className 类名
+     * @return 判断一个类是否存在
+     */
+    public static boolean isClassPresent(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

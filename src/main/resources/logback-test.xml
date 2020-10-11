@@ -38,7 +38,7 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="hotSwapAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="HOTSWAP" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <Append>true</Append>
         <encoder>
             <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
@@ -52,21 +52,7 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="actorAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Append>true</Append>
-        <encoder>
-            <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logDir}/%d{yyyy-MM-dd}/actor.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <!--<maxHistory>30</maxHistory>-->
-        </rollingPolicy>
-    </appender>
-
-    <appender name="asyncDBAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="ASYNC_DB" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <Append>true</Append>
         <encoder>
             <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
@@ -80,129 +66,19 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="partitionTaskAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Append>true</Append>
-        <encoder>
-            <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logDir}/%d{yyyy-MM-dd}/partitionTask.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <!--<maxHistory>30</maxHistory>-->
-        </rollingPolicy>
-    </appender>
-
-    <appender name="concurrentAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Append>true</Append>
-        <encoder>
-            <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logDir}/%d{yyyy-MM-dd}/concurrent.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <!--<maxHistory>30</maxHistory>-->
-        </rollingPolicy>
-    </appender>
-
-    <appender name="eventAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Append>true</Append>
-        <encoder>
-            <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logDir}/%d{yyyy-MM-dd}/event.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <!--<maxHistory>30</maxHistory>-->
-        </rollingPolicy>
-    </appender>
-
-    <appender name="httpAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Append>true</Append>
-        <encoder>
-            <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logDir}/%d{yyyy-MM-dd}/http.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <!--<maxHistory>30</maxHistory>-->
-        </rollingPolicy>
-    </appender>
-
-    <!--                                       async                                                       -->
-    <appender name="asyncSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="STDOUT"/>
-    </appender>
-
-    <appender name="asyncERROR" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="ERROR"/>
-    </appender>
-
-    <appender name="asyncHotSwapAppender" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="hotSwapAppender"/>
-    </appender>
-
-    <appender name="asyncActorAppender" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="actorAppender"/>
-    </appender>
-
-    <appender name="asyncAsyncDBAppender" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="asyncDBAppender"/>
-    </appender>
-
-    <appender name="asyncConcurrentAppender" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="concurrentAppender"/>
-    </appender>
-
-    <appender name="asyncEventAppender" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="eventAppender"/>
-    </appender>
-
-    <appender name="asyncHttpAppender" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="httpAppender"/>
-    </appender>
-
     <!--                                       logger                                                       -->
     <logger name="org.kin.framework.hotswap" level="INFO" additivity="false">
-        <appender-ref ref="asyncHotSwapAppender"/>
-        <appender-ref ref="asyncERROR" level="ERROR"/>
-    </logger>
-
-    <logger name="org.kin.framework.concurrent.actor" level="INFO" additivity="false">
-        <appender-ref ref="asyncActorAppender"/>
-        <appender-ref ref="asyncERROR" level="ERROR"/>
+        <appender-ref ref="HOTSWAP"/>
     </logger>
 
     <logger name="org.kin.framework.asyncdb" level="INFO" additivity="false">
-        <appender-ref ref="asyncAsyncDBAppender"/>
-        <appender-ref ref="asyncERROR" level="ERROR"/>
-    </logger>
-
-    <logger name="org.kin.framework.concurrent" level="INFO" additivity="false">
-        <appender-ref ref="asyncConcurrentAppender"/>
-        <appender-ref ref="asyncERROR" level="ERROR"/>
-    </logger>
-
-    <logger name="org.kin.framework.event" level="INFO" additivity="false">
-        <appender-ref ref="asyncEventAppender"/>
-        <appender-ref ref="asyncERROR" level="ERROR"/>
-    </logger>
-
-    <logger name="org.kin.framework.utils.HttpUtils" level="INFO" additivity="false">
-        <appender-ref ref="asyncHttpAppender"/>
-        <appender-ref ref="asyncERROR" level="ERROR"/>
+        <appender-ref ref="ASYNC_DB"/>
     </logger>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="asyncSTDOUT"/>
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="ERROR"/>
     </root>
 
 
