@@ -69,10 +69,12 @@
     <!--                                       logger                                                       -->
     <logger name="org.kin.framework.hotswap" level="INFO" additivity="false">
         <appender-ref ref="HOTSWAP"/>
+        <appender-ref ref="ERROR"/>
     </logger>
 
     <logger name="org.kin.framework.asyncdb" level="INFO" additivity="false">
         <appender-ref ref="ASYNC_DB"/>
+        <appender-ref ref="ERROR"/>
     </logger>
 
     <root level="INFO">
