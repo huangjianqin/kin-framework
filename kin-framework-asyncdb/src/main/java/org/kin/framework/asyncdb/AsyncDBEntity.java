@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -14,9 +15,12 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class AsyncDBEntity implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(AsyncDBEntity.class);
-
+    /** 数据库状态 */
     private volatile AtomicReference<DBStatus> status = new AtomicReference<>(DBStatus.NORMAL);
+    /** 数据库同步操作 */
     private volatile DBSynchronzier DBSynchronzier;
+    /** 实体进行过update标识, 主要用于减少update的次数 */
+    private AtomicBoolean updating = new AtomicBoolean();
 
     public void insert() {
         AsyncDBService.getInstance().dbOpr(this, DBOperation.Insert);
@@ -68,8 +72,24 @@ public abstract class AsyncDBEntity implements Serializable {
         return true;
     }
 
-    //setter && getter
+    /**
+     * 尝试获取进行更新, 如果前一次更新还未进行完, 本次则skip
+     */
+    boolean tryUpdate() {
+        return updating.compareAndSet(false, true);
+    }
 
+    /**
+     * 重置实体更新中标识
+     */
+    void resetUpdate() {
+        if (!updating.compareAndSet(true, false)) {
+            //异常, 直接set
+            updating.set(false);
+        }
+    }
+
+    //setter && getter
     DBSynchronzier getAsyncPersistent() {
         return DBSynchronzier;
     }
