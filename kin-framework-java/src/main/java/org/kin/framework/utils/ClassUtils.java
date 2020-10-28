@@ -327,7 +327,7 @@ public class ClassUtils {
             }
             return target.getMethod("get" + new String(items));
         } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 
@@ -337,7 +337,7 @@ public class ClassUtils {
         try {
             return target.getMethod("set" + new String(items), field.getType());
         } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 

@@ -1,7 +1,6 @@
 package org.kin.framework.utils;
 
 import com.google.common.base.Preconditions;
-import com.sun.xml.internal.ws.util.UtilException;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -37,7 +36,7 @@ public class Urls {
                 try {
                     return (new File(url)).toURI().toURL();
                 } catch (MalformedURLException var4) {
-                    throw new UtilException(var5);
+                    throw new RuntimeException(var5);
                 }
             }
         }

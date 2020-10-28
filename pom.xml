@@ -4,9 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kin-framework</artifactId>
+    <modules>
+        <module>kin-framework-java</module>
+        <module>kin-framework-scala</module>
+        <module>kin-framework-asyncdb</module>
+        <module>kin-framework-hotswap</module>
+        <module>kin-framework-groovy</module>
+    </modules>
     <groupId>org.kin</groupId>
     <version>0.1.0.0</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <properties>
         <java.version>1.8</java.version>
@@ -15,7 +22,6 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.home>/Library/Java/JavaVirtualMachines/jdk1.8.0_241.jdk/Contents/Home</java.home>
 
         <scala.version>2.12.10</scala.version>
         <scala.version.head>2.12</scala.version.head>
@@ -39,250 +45,8 @@
         <groovy.version>3.0.5</groovy.version>
     </properties>
 
-    <dependencies>
-        <!-- scala-->
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- 日志包-->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>${logback.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- 工具包-->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>it.unimi.dsi</groupId>
-            <artifactId>fastutil</artifactId>
-            <version>${fastutil.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- spring-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>${spring.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- java agent 依赖-->
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-java-agent</artifactId>
-            <version>${kin-java-agent.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- java运行时元数据分析工具-->
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>${reflections.version}</version>
-        </dependency>
-
-        <!-- java微基准测试工具   用于较细粒度测试-->
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openjdk.jmh</groupId>
-            <artifactId>jmh-generator-annprocess</artifactId>
-            <version>${jmh.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- 解析yml-->
-        <dependency>
-            <groupId>org.jyaml</groupId>
-            <artifactId>jyaml</artifactId>
-            <version>${jyaml.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- jackson-->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- 字节码技术 -->
-        <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>${javassist.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- 命令行工具 -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-exec</artifactId>
-            <version>${commons-exec.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- git操作工具 -->
-        <dependency>
-            <groupId>org.eclipse.jgit</groupId>
-            <artifactId>org.eclipse.jgit</artifactId>
-            <version>${jgit.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- svn操作工具 -->
-        <dependency>
-            <groupId>org.tmatesoft.svnkit</groupId>
-            <artifactId>svnkit</artifactId>
-            <version>${svnkit.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- io操作工具 -->
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
-        </dependency>
-
-        <!-- javadoc 解析工具 -->
-        <dependency>
-            <groupId>com.thoughtworks.qdox</groupId>
-            <artifactId>qdox</artifactId>
-            <version>${qdox.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- groovy 用来编写idea live templates 脚本 -->
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
-            <version>${groovy.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
     <build>
-        <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
-        <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
-        <resources>
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-            </resource>
-        </resources>
-        <testResources>
-            <testResource>
-                <directory>${basedir}/src/test/resources</directory>
-            </testResource>
-        </testResources>
-
         <plugins>
-            <!-- maven scala编译插件-->
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>3.3.1</version>
-                <executions>
-                    <execution>
-                        <id>scala-compile</id>
-                        <!-- 触发mvn compiler时 触发<goal>操作-->
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <!-- <configuration>写到<execution>里面似乎不会生效, 但不会报错-->
-                <configuration>
-                    <sourceDir>src/main/scala</sourceDir>
-                    <scalaVersion>${scala.version}</scalaVersion>
-                    <recompileMode>incremental</recompileMode>
-                    <useZincServer>true</useZincServer>
-                    <args>
-                        <arg>-unchecked</arg>
-                        <arg>-deprecation</arg>
-                        <arg>-feature</arg>
-                    </args>
-                    <jvmArgs>
-                        <jvmArg>-Xms1024m</jvmArg>
-                        <jvmArg>-Xmx1024m</jvmArg>
-                        <jvmArg>-XX:ReservedCodeCacheSize=${CodeCacheSize}</jvmArg>
-                    </jvmArgs>
-                    <javacArgs>
-                        <!-- key value要分开两个标签写-->
-                        <javacArg>-source</javacArg>
-                        <javacArg>${java.version}</javacArg>
-                        <javacArg>-target</javacArg>
-                        <javacArg>${java.version}</javacArg>
-                        <javacArg>-Xlint:all,-serial,-path</javacArg>
-                        <javacArg>-bootclasspath</javacArg>
-                        <!-- 热更实现依赖了jdk的tools.jar-->
-                        <javacArg>.:${java.home}/jre/lib/rt.jar:${java.home}/jre/lib/jce.jar:${java.home}/lib/tools.jar</javacArg>
-                    </javacArgs>
-                </configuration>
-            </plugin>
-
             <!-- maven编译插件, 只编译java-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -296,10 +60,6 @@
                     <!--<fork>true</fork>-->
                     <compilerArguments>
                         <!--<verbose/>-->
-                        <!-- 热更实现依赖了jdk的tools.jar-->
-                        <bootclasspath>
-                            ${java.home}/jre/lib/rt.jar:${java.home}/jre/lib/jce.jar:${java.home}/lib/tools.jar
-                        </bootclasspath>
                     </compilerArguments>
                 </configuration>
             </plugin>
@@ -411,36 +171,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-
-            <!-- 添加多个源代码目录-->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>add-test-sources</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <sources>
-                        <!-- 会自动根据源代码类型, 决定是否导入该source-->
-                        <source>${basedir}/src/main/scala</source>
-                        <source>${basedir}/src/test/scala</source>
-                    </sources>
-                </configuration>
             </plugin>
 
             <!-- jmh插件, install时会触发-->
