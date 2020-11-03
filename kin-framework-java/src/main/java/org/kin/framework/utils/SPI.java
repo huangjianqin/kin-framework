@@ -14,7 +14,12 @@ import java.lang.annotation.*;
 @Inherited
 public @interface SPI {
     /**
-     * 配置文件的key
+     * 默认扩展service class name | service simple class name | 前缀 + service simple class name
      */
     String value() default "";
+
+    /**
+     * 配置文件的key
+     */
+    String key() default "";
 }

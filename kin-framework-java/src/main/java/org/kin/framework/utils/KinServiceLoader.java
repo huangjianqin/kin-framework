@@ -10,6 +10,7 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -113,7 +114,10 @@ public class KinServiceLoader {
 
         SPI spi = serviceClass.getAnnotation(SPI.class);
         if (Objects.nonNull(spi)) {
-            filtered.addAll(service2Implement.get(spi.value()));
+            String key = spi.key();
+            if (StringUtils.isNotBlank(key)) {
+                filtered.addAll(service2Implement.get(key));
+            }
         }
 
         ServiceLoader<S> newLoader = new ServiceLoader<>(serviceClass, new ArrayList<>(filtered));
@@ -123,6 +127,57 @@ public class KinServiceLoader {
             loader = newLoader;
         }
         return (Iterator<S>) loader.iterator();
+    }
+
+    /**
+     * 获取合适的扩展service类
+     */
+    public synchronized <S> S getAdaptiveExtension(Class<S> serviceClass) {
+        return getAdaptiveExtension(serviceClass, () -> null);
+    }
+
+    /**
+     * 获取合适的扩展service类
+     */
+    public synchronized <S> S getAdaptiveExtension(Class<S> serviceClass, Class<S> defaultServiceClass) {
+        return getAdaptiveExtension(serviceClass, () -> ClassUtils.instance(defaultServiceClass));
+    }
+
+    /**
+     * 获取合适的扩展service类
+     */
+    private <S> S getAdaptiveExtension(Class<S> serviceClass, Callable<S> serviceGetter) {
+        String defaultServiceName = "";
+        SPI spi = serviceClass.getAnnotation(SPI.class);
+        if (Objects.nonNull(spi)) {
+            defaultServiceName = spi.value();
+        }
+
+        Iterator<S> serviceIterator = iterator(serviceClass);
+        while (serviceIterator.hasNext()) {
+            S implService = serviceIterator.next();
+            String implServiceSimpleName = implService.getClass().getSimpleName();
+            if (StringUtils.isNotBlank(defaultServiceName) &&
+                    //扩展service class name |
+                    (defaultServiceName.equals(implService.getClass().getName()) ||
+                            //service simple class name |
+                            defaultServiceName.equals(implServiceSimpleName) ||
+                            //前缀 + service simple class name |
+                            defaultServiceName.concat(serviceClass.getSimpleName()).equals(implServiceSimpleName))) {
+                return implService;
+            }
+        }
+
+        //找不到任何符合的扩展service类, return 默认
+        if (StringUtils.isBlank(defaultServiceName) && Objects.nonNull(serviceGetter)) {
+            try {
+                return serviceGetter.call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return null;
     }
 
     //-------------------------------------------------------------------------------------------------------------------
