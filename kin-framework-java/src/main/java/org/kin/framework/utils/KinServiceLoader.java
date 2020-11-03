@@ -150,7 +150,7 @@ public class KinServiceLoader {
         String defaultServiceName = "";
         SPI spi = serviceClass.getAnnotation(SPI.class);
         if (Objects.nonNull(spi)) {
-            defaultServiceName = spi.value();
+            defaultServiceName = spi.value().toLowerCase();
         }
 
         Iterator<S> serviceIterator = iterator(serviceClass);
@@ -159,11 +159,11 @@ public class KinServiceLoader {
             String implServiceSimpleName = implService.getClass().getSimpleName();
             if (StringUtils.isNotBlank(defaultServiceName) &&
                     //扩展service class name |
-                    (defaultServiceName.equals(implService.getClass().getName()) ||
+                    (defaultServiceName.equals(implService.getClass().getName().toLowerCase()) ||
                             //service simple class name |
-                            defaultServiceName.equals(implServiceSimpleName) ||
+                            defaultServiceName.equals(implServiceSimpleName.toLowerCase()) ||
                             //前缀 + service simple class name |
-                            defaultServiceName.concat(serviceClass.getSimpleName()).equals(implServiceSimpleName))) {
+                            defaultServiceName.concat(serviceClass.getSimpleName()).toLowerCase().equals(implServiceSimpleName))) {
                 return implService;
             }
         }
