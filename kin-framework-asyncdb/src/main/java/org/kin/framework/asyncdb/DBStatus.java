@@ -40,9 +40,9 @@ public enum DBStatus {
         @Override
         public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
             try {
-                DBSynchronzier.update(asyncDBEntity);
                 //重置实体更新中标识
                 asyncDBEntity.resetUpdate();
+                DBSynchronzier.update(asyncDBEntity);
                 return true;
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
