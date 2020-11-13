@@ -507,6 +507,7 @@ public class ClassUtils {
     }
 
     /**
+     * 继承的父类
      * 获取类泛型具体实现类型
      * 由于类型擦除, 获取不了本类的泛型类型参数具体类型, 但其保存的父类的泛型类型参数具体类型, 所以可以获取父类的泛型类型参数具体类型
      */
@@ -521,6 +522,29 @@ public class ClassUtils {
                 result.add((Class<?>) actualTypeArgument);
             }
         }
+
+        return result;
+    }
+
+    /**
+     * 实现的接口
+     * 获取类泛型具体实现类型
+     * 由于类型擦除, 获取不了本类的泛型类型参数具体类型, 但其保存的父类的泛型类型参数具体类型, 所以可以获取父类的泛型类型参数具体类型
+     */
+    public static List<Class<?>> getSuperInterfacesGenericActualTypes(Class<?> claxx) {
+        List<Class<?>> result = new ArrayList<>();
+
+        Type[] genericInterfaces = claxx.getGenericInterfaces();
+        for (Type genericInterface : genericInterfaces) {
+            for (Type actualTypeArgument : ((ParameterizedType) genericInterface).getActualTypeArguments()) {
+                if (actualTypeArgument instanceof ParameterizedType) {
+                    result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
+                } else {
+                    result.add((Class<?>) actualTypeArgument);
+                }
+            }
+        }
+
 
         return result;
     }
