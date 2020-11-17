@@ -725,7 +725,7 @@ public class ClassUtils {
     /**
      * 生成方法
      */
-    public static String generateMethodDeclaration(Method method, String methodBody) {
+    public static String generateMethodContent(Method method, String methodBody) {
         StringBuilder sb = new StringBuilder();
         sb.append(generateMethodDeclaration(method));
         sb.append("{").append(System.lineSeparator());
