@@ -729,7 +729,7 @@ public class ClassUtils {
         StringBuilder sb = new StringBuilder();
         sb.append(generateMethodDeclaration(method));
         sb.append("{").append(System.lineSeparator());
-        sb.append(methodBody);
+        sb.append(methodBody).append(System.lineSeparator());
         sb.append("}");
         return sb.toString();
     }
