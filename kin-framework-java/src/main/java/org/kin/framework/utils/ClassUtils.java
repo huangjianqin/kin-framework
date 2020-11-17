@@ -721,4 +721,16 @@ public class ClassUtils {
             return false;
         }
     }
+
+    /**
+     * 生成方法
+     */
+    public static String generateMethodDeclaration(Method method, String methodBody) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(generateMethodDeclaration(method));
+        sb.append("{").append(System.lineSeparator());
+        sb.append(methodBody);
+        sb.append("}");
+        return sb.toString();
+    }
 }
