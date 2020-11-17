@@ -82,7 +82,7 @@ public class ProxyEnhanceUtils {
             //方法体
             //invoke
             Method invokeMethod = ProxyInvoker.class.getMethod("invoke", Object[].class);
-            StringBuffer methodBody = new StringBuffer();
+            StringBuilder methodBody = new StringBuilder();
             methodBody.append(ClassUtils.generateMethodDeclaration(invokeMethod).concat("{"));
             methodBody.append("Object result = null;");
             methodBody.append(generateProxyInvokerInvokeCode(prxoyFieldName, proxyMethod));
@@ -93,7 +93,7 @@ public class ProxyEnhanceUtils {
 
             //getProxyObj
             Method getProxyObjMethod = ProxyInvoker.class.getMethod("getProxyObj");
-            methodBody = new StringBuffer();
+            methodBody = new StringBuilder();
             methodBody.append(ClassUtils.generateMethodDeclaration(getProxyObjMethod).concat("{"));
             methodBody.append("return ".concat(prxoyFieldName).concat("; }"));
 
@@ -102,7 +102,7 @@ public class ProxyEnhanceUtils {
 
             //getMethod
             Method getMethodMethod = ProxyInvoker.class.getMethod("getMethod");
-            methodBody = new StringBuffer();
+            methodBody = new StringBuilder();
             methodBody.append(ClassUtils.generateMethodDeclaration(getMethodMethod).concat("{"));
             methodBody.append("return ".concat(methodFieldName).concat("; }"));
 

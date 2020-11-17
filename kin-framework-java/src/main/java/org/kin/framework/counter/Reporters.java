@@ -9,7 +9,7 @@ public class Reporters {
      * 生成指定的report
      */
     public static String report() {
-        StringBuffer out = new StringBuffer();
+        StringBuilder out = new StringBuilder();
         out.append("-------------------------------counter report-------------------------------");
         out.append(System.lineSeparator());
         for (CounterGroup counterGroup : Counters.counterGroups.values()) {
