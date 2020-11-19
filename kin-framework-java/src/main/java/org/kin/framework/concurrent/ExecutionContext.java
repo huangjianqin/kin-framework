@@ -27,6 +27,10 @@ public class ExecutionContext implements ScheduledExecutorService {
         this(worker, scheduleParallelism, new SimpleThreadFactory("default-schedule-thread-manager"));
     }
 
+    public ExecutionContext(ExecutorService worker, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        this(worker, scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+    }
+
     public ExecutionContext(ExecutorService worker, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         this.worker = worker;
         if (scheduleParallelism > 0) {
@@ -45,18 +49,18 @@ public class ExecutionContext implements ScheduledExecutorService {
         return forkjoin(parallelism, workerNamePrefix, null, scheduleParallelism, scheduleThreadNamePrefix);
     }
 
+    public static ExecutionContext forkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
+                                            int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return forkjoin(new ForkJoinPool(parallelism, new SimpleForkJoinWorkerThradFactory(workerNamePrefix), handler, false),
+                scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+    }
+
     public static ExecutionContext asyncForkjoin(int parallelism, String workerNamePrefix) {
         return asyncForkjoin(parallelism, workerNamePrefix, 0, "");
     }
 
     public static ExecutionContext asyncForkjoin(int parallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
         return asyncForkjoin(parallelism, workerNamePrefix, null, scheduleParallelism, scheduleThreadNamePrefix);
-    }
-
-    public static ExecutionContext forkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
-                                            int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return forkjoin(new ForkJoinPool(parallelism, new SimpleForkJoinWorkerThradFactory(workerNamePrefix), handler, false),
-                scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     public static ExecutionContext asyncForkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
@@ -74,18 +78,22 @@ public class ExecutionContext implements ScheduledExecutorService {
     }
 
     public static ExecutionContext cache(ThreadFactory workerThreadFactory) {
-        return cache(Integer.MAX_VALUE, workerThreadFactory, 0, null);
+        return cache(0, Integer.MAX_VALUE, workerThreadFactory, 0, null);
     }
 
     public static ExecutionContext cache(String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return cache(Integer.MAX_VALUE, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+        return cache(0, Integer.MAX_VALUE, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     public static ExecutionContext cache(int maxParallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return cache(maxParallelism, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+        return cache(0, maxParallelism, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
-    public static ExecutionContext cache(int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
+    public static ExecutionContext cache(int coreParallelism, int maxParallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return cache(coreParallelism, maxParallelism, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+    }
+
+    public static ExecutionContext cache(int coreParallelism, int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         return new ExecutionContext(
                 new ThreadPoolExecutor(0, maxParallelism, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), workerThreadFactory),
                 scheduleParallelism, scheduleThreadFactory);
