@@ -2,6 +2,7 @@ package org.kin.framework.concurrent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.kin.framework.utils.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -42,7 +43,7 @@ public class ExecutionContext implements ScheduledExecutorService {
 
     //--------------------------------------------------------------------------------------------
     public static ExecutionContext forkjoin(int parallelism, String workerNamePrefix) {
-        return forkjoin(parallelism, workerNamePrefix, 0, "");
+        return forkjoin(parallelism, workerNamePrefix, 0, null);
     }
 
     public static ExecutionContext forkjoin(int parallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
@@ -52,11 +53,11 @@ public class ExecutionContext implements ScheduledExecutorService {
     public static ExecutionContext forkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
                                             int scheduleParallelism, String scheduleThreadNamePrefix) {
         return forkjoin(new ForkJoinPool(parallelism, new SimpleForkJoinWorkerThradFactory(workerNamePrefix), handler, false),
-                scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+                scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     public static ExecutionContext asyncForkjoin(int parallelism, String workerNamePrefix) {
-        return asyncForkjoin(parallelism, workerNamePrefix, 0, "");
+        return asyncForkjoin(parallelism, workerNamePrefix, 0, null);
     }
 
     public static ExecutionContext asyncForkjoin(int parallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
@@ -66,7 +67,7 @@ public class ExecutionContext implements ScheduledExecutorService {
     public static ExecutionContext asyncForkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
                                                  int scheduleParallelism, String scheduleThreadNamePrefix) {
         return forkjoin(new ForkJoinPool(parallelism, new SimpleForkJoinWorkerThradFactory(workerNamePrefix), handler, true),
-                scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+                scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     private static ExecutionContext forkjoin(ForkJoinPool forkJoinPool, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
@@ -74,7 +75,7 @@ public class ExecutionContext implements ScheduledExecutorService {
     }
 
     public static ExecutionContext cache(String workerNamePrefix) {
-        return cache(Integer.MAX_VALUE, workerNamePrefix, 0, "");
+        return cache(Integer.MAX_VALUE, workerNamePrefix, 0, null);
     }
 
     public static ExecutionContext cache(ThreadFactory workerThreadFactory) {
@@ -82,15 +83,18 @@ public class ExecutionContext implements ScheduledExecutorService {
     }
 
     public static ExecutionContext cache(String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return cache(0, Integer.MAX_VALUE, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+        return cache(0, Integer.MAX_VALUE, new SimpleThreadFactory(workerNamePrefix),
+                scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     public static ExecutionContext cache(int maxParallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return cache(0, maxParallelism, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+        return cache(0, maxParallelism, new SimpleThreadFactory(workerNamePrefix),
+                scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     public static ExecutionContext cache(int coreParallelism, int maxParallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return cache(coreParallelism, maxParallelism, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+        return cache(coreParallelism, maxParallelism, new SimpleThreadFactory(workerNamePrefix),
+                scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     public static ExecutionContext cache(int coreParallelism, int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
@@ -100,7 +104,7 @@ public class ExecutionContext implements ScheduledExecutorService {
     }
 
     public static ExecutionContext fix(int parallelism, String workerNamePrefix) {
-        return fix(parallelism, workerNamePrefix, 0, "");
+        return fix(parallelism, workerNamePrefix, 0, null);
     }
 
     public static ExecutionContext fix(int parallelism, ThreadFactory workerThreadFactory) {
@@ -108,7 +112,8 @@ public class ExecutionContext implements ScheduledExecutorService {
     }
 
     public static ExecutionContext fix(int parallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return fix(parallelism, new SimpleThreadFactory(workerNamePrefix), scheduleParallelism, new SimpleThreadFactory(scheduleThreadNamePrefix));
+        return fix(parallelism, new SimpleThreadFactory(workerNamePrefix),
+                scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
     public static ExecutionContext fix(int parallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
