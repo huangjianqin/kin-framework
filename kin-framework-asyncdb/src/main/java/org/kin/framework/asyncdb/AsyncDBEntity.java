@@ -45,7 +45,7 @@ public abstract class AsyncDBEntity implements Serializable {
     boolean isCanPersist(DBOperation operation) {
         DBStatus now;
         do {
-            now = status.get();
+            now = getStatus();
             if (!operation.isCanTransfer(now)) {
                 throw new AsyncDBException("DB操作失败 -> " + toString() + " - " + now + " - " + operation);
             }
@@ -57,7 +57,7 @@ public abstract class AsyncDBEntity implements Serializable {
     boolean tryBDOpr(int tryTimes) {
         DBStatus now;
         do {
-            now = status.get();
+            now = getStatus();
         } while (!status.compareAndSet(now, now == DBStatus.DELETED ? DBStatus.DELETED : DBStatus.NORMAL));
 
 
@@ -96,5 +96,9 @@ public abstract class AsyncDBEntity implements Serializable {
 
     void setAsyncPersistent(DBSynchronzier DBSynchronzier) {
         this.DBSynchronzier = DBSynchronzier;
+    }
+
+    DBStatus getStatus() {
+        return status.get();
     }
 }

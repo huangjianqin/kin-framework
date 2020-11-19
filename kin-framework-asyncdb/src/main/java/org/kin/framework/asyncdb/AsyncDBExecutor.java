@@ -6,6 +6,7 @@ import org.kin.framework.utils.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -114,8 +115,9 @@ public class AsyncDBExecutor implements Closeable {
             while (true) {
                 int oprNum = asyncDBStrategy.getOprNum();
                 for (int i = 0; i < oprNum; i++) {
+                    AsyncDBEntity entity = null;
                     try {
-                        AsyncDBEntity entity = queue.take();
+                        entity = queue.take();
 
                         if (entity == POISON) {
                             log.info("AsyncDBOperator return");
@@ -125,8 +127,12 @@ public class AsyncDBExecutor implements Closeable {
                         entity.tryBDOpr(asyncDBStrategy.getTryTimes());
 
                         syncNum++;
-                    } catch (InterruptedException e) {
+                    } catch (Exception e) {
                         log.error(e.getMessage(), e);
+                        if (Objects.nonNull(entity) && DBStatus.UPDATE.equals(entity.getStatus())) {
+                            //update操作抛出异常, 重置updating状态
+                            entity.resetUpdate();
+                        }
                     }
                 }
 
