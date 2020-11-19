@@ -82,7 +82,7 @@ public abstract class AsyncDBEntity implements Serializable {
     /**
      * 重置实体更新中标识
      */
-    void resetUpdate() {
+    void resetUpdating() {
         if (!updating.compareAndSet(true, false)) {
             //异常, 直接set
             updating.set(false);

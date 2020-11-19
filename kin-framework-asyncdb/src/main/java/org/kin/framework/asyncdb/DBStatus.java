@@ -41,7 +41,7 @@ public enum DBStatus {
         public boolean execute(DBSynchronzier DBSynchronzier, AsyncDBEntity asyncDBEntity) {
             try {
                 //重置实体更新中标识
-                asyncDBEntity.resetUpdate();
+                asyncDBEntity.resetUpdating();
                 DBSynchronzier.update(asyncDBEntity);
                 return true;
             } catch (Exception e) {

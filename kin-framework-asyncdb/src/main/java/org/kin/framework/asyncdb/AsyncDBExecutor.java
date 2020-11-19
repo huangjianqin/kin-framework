@@ -99,14 +99,12 @@ public class AsyncDBExecutor implements Closeable {
         private String threadName = "";
         private long preSyncNum = 0;
 
-        void submit(AsyncDBEntity asyncDBEntity) {
+        boolean submit(AsyncDBEntity asyncDBEntity) {
             if (!isStopped) {
-                try {
-                    queue.put(asyncDBEntity);
-                } catch (InterruptedException e) {
-                    log.error("", e);
-                }
+                return queue.add(asyncDBEntity);
             }
+
+            return false;
         }
 
         @Override
@@ -131,7 +129,7 @@ public class AsyncDBExecutor implements Closeable {
                         log.error(e.getMessage(), e);
                         if (Objects.nonNull(entity) && DBStatus.UPDATE.equals(entity.getStatus())) {
                             //update操作抛出异常, 重置updating状态
-                            entity.resetUpdate();
+                            entity.resetUpdating();
                         }
                     }
                 }

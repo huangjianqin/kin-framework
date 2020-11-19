@@ -96,12 +96,14 @@ public class AsyncDBService implements Closeable {
                         //队列中有该实体的update操作, 不需要再执行了, 直接返回true, 表示操作成功的
                         return true;
                     }
-                    asyncDBExecutor.submit(asyncDBEntity);
 
-                    return true;
+                    return asyncDBExecutor.submit(asyncDBEntity);
                 }
             }
         } catch (Exception e) {
+            if (DBOperation.Update.equals(operation)) {
+                asyncDBEntity.resetUpdating();
+            }
             log.error(e.getMessage(), e);
         }
 
