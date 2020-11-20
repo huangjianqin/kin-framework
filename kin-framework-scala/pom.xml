@@ -26,6 +26,12 @@
             <artifactId>fastutil</artifactId>
             <version>${fastutil.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-framework-java</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
