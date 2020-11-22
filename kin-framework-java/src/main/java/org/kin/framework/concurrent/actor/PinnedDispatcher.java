@@ -1,6 +1,7 @@
 package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
+import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,12 +10,12 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author huangjianqin
- * @date 2020-04-26
- * <p>
  * 底层消息处理实现是每个Receiver绑定一条线程, 该线程由一个线程池管理(该线程池可以固定线程数, 也可以无限线程数)
  * 无上限分区
  * 可以blocking, 但要控制好parallelism, 保证有足够的线程数
+ *
+ * @author huangjianqin
+ * @date 2020-04-26
  */
 public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     private static final Logger log = LoggerFactory.getLogger(PinnedDispatcher.class);
@@ -26,9 +27,9 @@ public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     }
 
     public PinnedDispatcher(int parallelism, String workerNamePrefix) {
-        super(ExecutionContext.cache(
-                parallelism, workerNamePrefix,
-                parallelism / 2 + 1, workerNamePrefix.concat("-schedule")));
+        super(ExecutionContext.elastic(
+                Math.min(parallelism, SysUtils.CPU_NUM * 10), SysUtils.CPU_NUM * 10, workerNamePrefix,
+                SysUtils.CPU_NUM / 2 + 1, workerNamePrefix.concat("-schedule")));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
+import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,11 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
+ * 底层消息处理实现是基于事件处理
+ * 尽量不要blocking
+ *
  * @author huangjianqin
  * @date 2020-04-15
  * <p>
- * 底层消息处理实现是基于事件处理
- * 尽量不要blocking
  */
 public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     private static final Logger log = LoggerFactory.getLogger(EventBasedDispatcher.class);
@@ -34,7 +36,7 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     public EventBasedDispatcher(int parallelism) {
         super(ExecutionContext.forkjoin(
                 parallelism, "eventBasedDispatcher",
-                parallelism / 2 + 1, "eventBasedDispatcher-scheduler"));
+                SysUtils.CPU_NUM / 2 + 1, "eventBasedDispatcher-scheduler"));
         this.parallelism = parallelism;
     }
 
