@@ -21,7 +21,7 @@ import java.util.concurrent.*;
  * 事件分发器
  * 支持多线程事件处理
  */
-public class EventDispatcher implements ScheduleDispatcher, NullEventDispatcher {
+public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher {
     private static Logger log = LoggerFactory.getLogger(EventDispatcher.class);
 
     /** 事件处理线程(分区处理) */

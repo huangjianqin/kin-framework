@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public interface ScheduleDispatcher extends Dispatcher {
+public interface ScheduledDispatcher extends Dispatcher {
     /**
      * 延迟调度事件分发
      *
