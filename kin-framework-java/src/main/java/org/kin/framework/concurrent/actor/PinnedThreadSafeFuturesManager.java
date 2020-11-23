@@ -22,8 +22,8 @@ public class PinnedThreadSafeFuturesManager implements Closeable {
 
     /** key -> PinnedThreadSafeHandler实例 value -> 对应PinnedThreadSafeHandler已启动的调度 */
     private Map<PinnedThreadSafeHandler<?>, Queue<Future>> futures = new ConcurrentHashMap<>();
-    private ExecutionContext executionContext = ExecutionContext.fix(2, "pinnedThreadSafeFuturesWorker",
-            2, "pinnedThreadSafeFuturesScheduler");
+    private ExecutionContext executionContext = ExecutionContext.elastic(0, 2, "pinnedThreadSafeFuturesWorker",
+            1, "pinnedThreadSafeFuturesScheduler");
 
     public static PinnedThreadSafeFuturesManager instance() {
         if (Objects.isNull(INSTANCE)) {

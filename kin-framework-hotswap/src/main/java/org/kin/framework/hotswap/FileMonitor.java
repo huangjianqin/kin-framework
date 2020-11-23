@@ -4,6 +4,7 @@ import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.hotswap.agent.JavaAgentHotswap;
 import org.kin.framework.utils.ClassUtils;
+import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +71,7 @@ public class FileMonitor extends Thread implements Closeable {
 
         if (executionContext == null) {
             //默认设置
-            this.executionContext = ExecutionContext.fix(5, "file-monitor");
+            this.executionContext = ExecutionContext.elastic(0, SysUtils.CPU_NUM, "file-monitor");
         }
 
         //监听热更class存储目录

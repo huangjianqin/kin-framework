@@ -99,7 +99,7 @@ public class ExecutionContext implements ScheduledExecutorService {
 
     public static ExecutionContext cache(int coreParallelism, int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         return new ExecutionContext(
-                new ThreadPoolExecutor(0, maxParallelism, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), workerThreadFactory),
+                new ThreadPoolExecutor(coreParallelism, maxParallelism, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), workerThreadFactory),
                 scheduleParallelism, scheduleThreadFactory);
     }
 
@@ -119,6 +119,24 @@ public class ExecutionContext implements ScheduledExecutorService {
     public static ExecutionContext fix(int parallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         return new ExecutionContext(
                 new ThreadPoolExecutor(parallelism, parallelism, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), workerThreadFactory),
+                scheduleParallelism, scheduleThreadFactory);
+    }
+
+    public static ExecutionContext elastic(int coreParallelism, int maxParallelism, String workerNamePrefix) {
+        return elastic(coreParallelism, maxParallelism, new SimpleThreadFactory(workerNamePrefix), 0, null);
+    }
+
+    public static ExecutionContext elastic(int coreParallelism, int maxParallelism, String workerNamePrefix, int scheduleParallelism, String scheduleThreadNamePrefix) {
+        return elastic(coreParallelism, maxParallelism, new SimpleThreadFactory(workerNamePrefix),
+                scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
+    }
+
+    /**
+     * 有界扩容的线程池, 允许线程数扩容到一定程度(比如, 10倍CPU核心数), 如果超过这个能力, 则buffer
+     */
+    public static ExecutionContext elastic(int coreParallelism, int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
+        return new ExecutionContext(
+                new ThreadPoolExecutor(coreParallelism, maxParallelism, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), workerThreadFactory),
                 scheduleParallelism, scheduleThreadFactory);
     }
     //--------------------------------------------------------------------------------------------

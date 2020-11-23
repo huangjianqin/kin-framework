@@ -1,5 +1,6 @@
 package org.kin.framework.asyncdb;
 
+import org.kin.framework.utils.SysUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -22,7 +23,7 @@ public class SpringAsyncDBService extends AsyncDBService implements ApplicationC
 
     @PostConstruct
     public void init() {
-        super.init(10, new DefaultAsyncDBStrategy());
+        super.init(SysUtils.CPU_NUM, new DefaultAsyncDBStrategy());
     }
 
     /**

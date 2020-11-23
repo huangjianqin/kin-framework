@@ -1,6 +1,7 @@
 package org.kin.framework.asyncdb;
 
 import org.kin.framework.Closeable;
+import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,10 +11,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 一Entity(以hashcode分区)一条线程执行DB操作
+ *
  * @author huangjianqin
  * @date 2019/3/31
  * <p>
- * 一Entity(以hashcode分区)一条线程执行DB操作
  */
 public class AsyncDBService implements Closeable {
     protected static final Logger log = LoggerFactory.getLogger(AsyncDBService.class);
@@ -29,6 +31,7 @@ public class AsyncDBService implements Closeable {
             synchronized (AsyncDBService.class) {
                 if (INSTANCE == null) {
                     INSTANCE = new AsyncDBService();
+                    INSTANCE.init(SysUtils.CPU_NUM, new DefaultAsyncDBStrategy());
                 }
             }
         }
@@ -41,9 +44,9 @@ public class AsyncDBService implements Closeable {
         monitorJVMClose();
     }
 
-    public void init(int num, AsyncDBStrategy asyncDBStrategy) {
+    public void init(int threadNum, AsyncDBStrategy asyncDBStrategy) {
         asyncDBExecutor = new AsyncDBExecutor();
-        asyncDBExecutor.init(num, asyncDBStrategy);
+        asyncDBExecutor.init(threadNum, asyncDBStrategy);
     }
 
     /**

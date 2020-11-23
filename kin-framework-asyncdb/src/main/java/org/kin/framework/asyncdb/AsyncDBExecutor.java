@@ -1,5 +1,6 @@
 package org.kin.framework.asyncdb;
 
+import com.google.common.base.Preconditions;
 import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.utils.TimeUtils;
@@ -28,11 +29,12 @@ public class AsyncDBExecutor implements Closeable {
     private volatile boolean isStopped = false;
     private AsyncDBStrategy asyncDBStrategy;
 
-    void init(int num, AsyncDBStrategy asyncDBStrategy) {
-        executionContext = ExecutionContext.fix(num + 1, "asyncDB");
+    void init(int threadNum, AsyncDBStrategy asyncDBStrategy) {
+        Preconditions.checkArgument(threadNum > 0, "thread num must greater than 0");
+        executionContext = ExecutionContext.fix(threadNum, "asyncDB");
         this.asyncDBStrategy = asyncDBStrategy;
-        asyncDBOperators = new AsyncDBOperator[num];
-        for (int i = 0; i < num; i++) {
+        asyncDBOperators = new AsyncDBOperator[threadNum];
+        for (int i = 0; i < threadNum; i++) {
             AsyncDBOperator asyncDBOperator = new AsyncDBOperator();
             executionContext.execute(asyncDBOperator);
             asyncDBOperators[i] = asyncDBOperator;
