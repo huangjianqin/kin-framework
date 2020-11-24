@@ -39,7 +39,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     /** 状态值 */
     private volatile int state = ST_NOT_STARTED;
     /** 任务队列 */
-    private final BlockingQueue<ScheduledFutureTask<?>> taskQueue = new PriorityBlockingQueue<>();
+    private final BlockingQueue<ScheduledFutureTask<?>> taskQueue = new DelayQueue<>();
     /** 所在线程池 */
     private final ExecutorService parent;
     /** 绑定线程是否已interrupted */
@@ -442,21 +442,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
      * 取出task
      */
     private ScheduledFutureTask<?> takeTask() throws InterruptedException {
-        ScheduledFutureTask<?> task = taskQueue.peek();
-        if (Objects.nonNull(task)) {
-            long delay = task.getDelay(NANOSECONDS);
-            if (delay > 0) {
-                try {
-                    Thread.sleep(NANOSECONDS.toMillis(delay));
-                } catch (InterruptedException e) {
-                    throw e;
-                }
-                return takeTask();
-            } else {
-                return taskQueue.poll();
-            }
-        }
-        return null;
+        return taskQueue.take();
     }
 
     /**
@@ -466,9 +452,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
         for (; ; ) {
             try {
                 ScheduledFutureTask<?> task = takeTask();
-                if (Objects.nonNull(task)) {
-                    task.run();
-                }
+                task.run();
             } catch (Exception e) {
                 if (e instanceof InterruptedException) {
                     return;
