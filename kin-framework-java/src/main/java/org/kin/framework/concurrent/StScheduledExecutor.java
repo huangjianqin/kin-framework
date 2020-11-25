@@ -40,10 +40,14 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     private volatile int state = ST_NOT_STARTED;
     /** 任务队列 */
     private final BlockingQueue<ScheduledFutureTask<?>> taskQueue = new DelayQueue<>();
-    /** 所在线程池 */
+    /** 所属线程池 */
     private final ExecutorService parent;
     /** 绑定线程是否已interrupted */
     private volatile boolean interrupted;
+    /**
+     * 是否时间敏感(也就是随系统时间发生变化而变化), 则{@link TimeUnit.MILLISECONDS}, 否则是{@link TimeUnit.NANOSECONDS}
+     */
+    private final TimeUnit timeUnit;
 
     //------------------------------------------------------------------------------------------------------------------------
     private static void reject() {
@@ -52,15 +56,39 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
 
     //------------------------------------------------------------------------------------------------------------------------
     public StScheduledExecutor(ExecutorService parent) {
-        this(RejectedExecutionHandler.EMPTY, parent);
+        this(parent, false, RejectedExecutionHandler.EMPTY);
     }
 
-    public StScheduledExecutor(RejectedExecutionHandler rejectedExecutionHandler, ExecutorService parent) {
-        this.rejectedExecutionHandler = rejectedExecutionHandler;
+    public StScheduledExecutor(ExecutorService parent, boolean timeSensitive) {
+        this(parent, timeSensitive, RejectedExecutionHandler.EMPTY);
+    }
+
+    /**
+     * @param timeSensitive 是否时间敏感(也就是随系统时间发生变化而变化)
+     */
+    public StScheduledExecutor(ExecutorService parent, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
         this.parent = parent;
+        if (timeSensitive) {
+            timeUnit = TimeUnit.MILLISECONDS;
+        } else {
+            timeUnit = NANOSECONDS;
+        }
+        this.rejectedExecutionHandler = rejectedExecutionHandler;
     }
 
     //------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * 获取当前时间
+     */
+    private long now() {
+        if (TimeUnit.MILLISECONDS.equals(timeUnit)) {
+            return System.currentTimeMillis();
+        } else {
+            return System.nanoTime();
+        }
+    }
+
     @Override
     public void shutdown() {
         synchronized (this) {
@@ -106,17 +134,17 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
 
     @Override
     public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-        long nanos = unit.toNanos(timeout);
+        long realTimeout = timeUnit.convert(timeout, unit);
         synchronized (this) {
             for (; ; ) {
                 if (state >= ST_TERMINATED) {
                     return true;
                 }
-                if (nanos <= 0) {
+                if (realTimeout <= 0) {
                     return false;
                 }
 
-                threadLock.await(nanos, NANOSECONDS);
+                threadLock.await(realTimeout, timeUnit);
             }
         }
     }
@@ -178,7 +206,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     public <T> List<Future<T>> invokeAll(@Nonnull Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
         Preconditions.checkArgument(CollectionUtils.isNonEmpty(tasks), "tasks is empty");
 
-        long nanos = unit.toNanos(timeout);
+        long realTimeout = timeUnit.convert(timeout, unit);
         ArrayList<Future<T>> futures = new ArrayList<>(tasks.size());
         boolean done = false;
         try {
@@ -187,28 +215,28 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
                 futures.add(f);
             }
 
-            long deadline = System.nanoTime() + nanos;
+            long deadline = now() + realTimeout;
             for (Future<T> future : futures) {
                 execute((Runnable) future);
                 //减去调度任务耗时
-                nanos = deadline - System.nanoTime();
-                if (nanos <= 0L) {
+                realTimeout = deadline - now();
+                if (realTimeout <= 0L) {
                     return futures;
                 }
             }
 
             for (Future<T> f : futures) {
                 if (!f.isDone()) {
-                    if (nanos <= 0L) {
+                    if (realTimeout <= 0L) {
                         return futures;
                     }
                     try {
-                        f.get(nanos, TimeUnit.NANOSECONDS);
+                        f.get(realTimeout, timeUnit);
                     } catch (CancellationException | ExecutionException ignore) {
                     } catch (TimeoutException toe) {
                         return futures;
                     }
-                    nanos = deadline - System.nanoTime();
+                    realTimeout = deadline - now();
                 }
             }
             done = true;
@@ -237,7 +265,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
         Preconditions.checkArgument(CollectionUtils.isNonEmpty(tasks), "tasks is empty");
 
         boolean timed = timeout > 0;
-        long nanos = unit.toNanos(timeout);
+        long realTimeout = timeUnit.convert(timeout, unit);
         int ntasks = tasks.size();
         ArrayList<Future<T>> futures = new ArrayList<Future<T>>(ntasks);
         ExecutorCompletionService<T> ecs =
@@ -245,7 +273,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
 
         try {
             ExecutionException ee = null;
-            final long deadline = timed ? System.nanoTime() + nanos : 0L;
+            final long deadline = timed ? now() + realTimeout : 0L;
             Iterator<? extends Callable<T>> it = tasks.iterator();
 
             // Start one task for sure; the rest incrementally
@@ -263,11 +291,11 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
                     } else if (active == 0) {
                         break;
                     } else if (timed) {
-                        f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
+                        f = ecs.poll(realTimeout, timeUnit);
                         if (f == null) {
                             throw new TimeoutException();
                         }
-                        nanos = deadline - System.nanoTime();
+                        realTimeout = deadline - now();
                     } else {
                         f = ecs.take();
                     }
@@ -306,7 +334,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     public ScheduledFuture<?> schedule(@Nonnull Runnable command, long delay, TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, unit.toNanos(delay));
+        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(delay, unit));
         lazyExecute(futureTask);
         return futureTask;
     }
@@ -315,7 +343,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     public <V> ScheduledFuture<V> schedule(@Nonnull Callable<V> callable, long delay, TimeUnit unit) {
         Preconditions.checkNotNull(callable, "task is null");
 
-        ScheduledFutureTask<V> futureTask = new ScheduledFutureTask<>(callable, unit.toNanos(delay));
+        ScheduledFutureTask<V> futureTask = new ScheduledFutureTask<>(callable, timeUnit.convert(delay, unit));
         lazyExecute(futureTask);
         return futureTask;
     }
@@ -324,7 +352,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     public ScheduledFuture<?> scheduleAtFixedRate(@Nonnull Runnable command, long initialDelay, long period, TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, unit.toNanos(initialDelay), unit.toNanos(period));
+        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(period, unit));
         lazyExecute(futureTask);
         return futureTask;
     }
@@ -333,7 +361,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     public ScheduledFuture<?> scheduleWithFixedDelay(@Nonnull Runnable command, long initialDelay, long delay, TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, unit.toNanos(initialDelay), unit.toNanos(-delay));
+        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(-delay, unit));
         lazyExecute(futureTask);
         return futureTask;
     }
@@ -517,7 +545,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
         ScheduledFutureTask(Runnable r, V result, long delay, long period) {
             super(r, result);
             this.period = period;
-            this.triggerTime = System.nanoTime() + delay + period;
+            this.triggerTime = now() + delay + period;
         }
 
         ScheduledFutureTask(Callable<V> c) {
@@ -531,7 +559,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
         ScheduledFutureTask(Callable<V> c, long delay, long period) {
             super(c);
             this.period = period;
-            this.triggerTime = System.nanoTime() + delay + period;
+            this.triggerTime = now() + delay + period;
         }
 
         /**
@@ -539,7 +567,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
          */
         @Override
         public long getDelay(TimeUnit unit) {
-            return unit.convert(triggerTime - System.nanoTime(), NANOSECONDS);
+            return unit.convert(triggerTime - now(), timeUnit);
         }
 
         @Override
@@ -548,7 +576,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
             {
                 return 0;
             }
-            long diff = getDelay(NANOSECONDS) - other.getDelay(NANOSECONDS);
+            long diff = getDelay(timeUnit) - other.getDelay(timeUnit);
             return (diff < 0) ? -1 : (diff > 0) ? 1 : 0;
         }
 
@@ -583,7 +611,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
          */
         private long fixedDelay() {
             long delay = -period;
-            return System.nanoTime() +
+            return now() +
                     ((delay < (Long.MAX_VALUE >> 1)) ? delay : overflowFree(delay));
         }
 
@@ -593,7 +621,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
         private long overflowFree(long delay) {
             Delayed head = StScheduledExecutor.this.taskQueue.peek();
             if (head != null) {
-                long headDelay = head.getDelay(NANOSECONDS);
+                long headDelay = head.getDelay(timeUnit);
                 if (headDelay < 0 && (delay - headDelay < 0)) {
                     delay = Long.MAX_VALUE + headDelay;
                 }

@@ -16,7 +16,7 @@ public class StScheduledExecutorTest {
 
         try {
             ScheduledFuture<?> f1 = scheduledExecutor.scheduleAtFixedRate(() -> System.out.println("rate>> ".concat(TimeUtils.formatDateTime(new Date()))),
-                    0, 1, TimeUnit.SECONDS);
+                    2, 1, TimeUnit.SECONDS);
             ScheduledFuture<?> f2 = scheduledExecutor.scheduleWithFixedDelay(() -> System.out.println("delay>> ".concat(TimeUtils.formatDateTime(new Date()))),
                     0, 2, TimeUnit.SECONDS);
             ScheduledFuture<?> f3 = scheduledExecutor.schedule(() -> System.out.println("长任务"), 10, TimeUnit.MINUTES);
