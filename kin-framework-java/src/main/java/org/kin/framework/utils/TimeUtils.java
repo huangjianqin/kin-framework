@@ -56,6 +56,15 @@ public class TimeUtils {
     //-------------------------------------------------------format or parse------------------------------------------------------
 
     /**
+     * 格式化当前时间
+     *
+     * @return 时间字符串(年月日)
+     */
+    public static String formatDate() {
+        return formatDate(new Date());
+    }
+
+    /**
      * 格式化时间
      *
      * @param date 时间
@@ -63,6 +72,15 @@ public class TimeUtils {
      */
     public static String formatDate(Date date) {
         return getDateFormat().format(date);
+    }
+
+    /**
+     * 格式化当前时间
+     *
+     * @return 时间字符串(年月日时分秒)
+     */
+    public static String formatDateTime() {
+        return formatDateTime(new Date());
     }
 
     /**
