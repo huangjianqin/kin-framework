@@ -29,7 +29,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
     /** 调度线程 */
     protected final ScheduledExecutorService scheduledExecutors;
     /** 存储事件与其对应的事件处理器的映射 */
-    protected final Map<Class<?>, ProxyInvoker> event2Handler;
+    protected final Map<Class<?>, ProxyInvoker<?>> event2Handler;
     /** 是否使用字节码增强技术 */
     private final boolean isEnhance;
     /** 字节码增强代理类包名 */
@@ -39,6 +39,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
         this(parallelism, false);
     }
 
+    @SuppressWarnings("unchecked")
     public EventDispatcher(int parallelism, boolean isEnhance) {
         executor = new PartitionTaskExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler-");
         event2Handler = new ConcurrentHashMap<>();
@@ -53,7 +54,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
 
     //------------------------------------------------------------------------------------------------------------------
 
-    private ProxyInvoker getHandler(Object obj, Method method) {
+    private ProxyInvoker<?> getHandler(Object obj, Method method) {
         if (isEnhance) {
             return ProxyEnhanceUtils.enhanceMethod(new ProxyMethodDefinition(obj, method, proxyEnhancePackageName));
         } else {
@@ -69,7 +70,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
 
         //event2Dispatcher需同步,防止多写的情况
         synchronized (event2Handler) {
-            ProxyInvoker registered = event2Handler.get(eventClass);
+            ProxyInvoker<?> registered = event2Handler.get(eventClass);
             if (registered == null) {
                 event2Handler.put(eventClass, getHandler(proxy, method));
             } else if (!(registered instanceof MultiEventHandler)) {
@@ -85,7 +86,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
 
     protected void dispatch(EventContext eventContext) {
         Class<?> type = eventContext.getEvent().getClass();
-        ProxyInvoker handler = event2Handler.get(type);
+        ProxyInvoker<?> handler = event2Handler.get(type);
         if (handler != null) {
             executor.execute(eventContext.getPartitionId(), () -> {
                 try {
@@ -129,6 +130,25 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
         executor.shutdown();
         scheduledExecutors.shutdown();
         event2Handler.clear();
+
+        for (ProxyInvoker<?> proxyInvoker : event2Handler.values()) {
+            if (proxyInvoker instanceof MultiEventHandler) {
+                for (ProxyInvoker<?> handler : ((MultiEventHandler) proxyInvoker).handlers) {
+                    detachProxyClass(handler);
+                }
+            } else {
+                detachProxyClass(proxyInvoker);
+            }
+        }
+    }
+
+    /**
+     * 移除无效javassist代理类
+     */
+    private void detachProxyClass(ProxyInvoker<?> proxyInvoker) {
+        if (!(proxyInvoker instanceof ProxyEventHandler) && !(proxyInvoker instanceof MultiEventHandler)) {
+            ProxyEnhanceUtils.detach(proxyInvoker.getClass().getName());
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -136,7 +156,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
     /**
      * 事件处理器的代理封装
      */
-    private class ProxyEventHandler implements ProxyInvoker {
+    private class ProxyEventHandler implements ProxyInvoker<Object> {
         private Object proxy;
         private Method method;
 
@@ -166,8 +186,8 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
     /**
      * 一事件对应多个事件处理器的场景
      */
-    private class MultiEventHandler implements ProxyInvoker {
-        private List<ProxyInvoker> handlers;
+    private class MultiEventHandler implements ProxyInvoker<Object> {
+        private List<ProxyInvoker<?>> handlers;
 
         MultiEventHandler() {
             this.handlers = new LinkedList<>();
@@ -185,7 +205,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
 
         @Override
         public Object invoke(Object... params) {
-            for (ProxyInvoker handler : handlers) {
+            for (ProxyInvoker<?> handler : handlers) {
                 try {
                     handler.invoke(params);
                 } catch (Exception e) {
@@ -196,7 +216,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
             return null;
         }
 
-        void addHandler(ProxyInvoker handler) {
+        void addHandler(ProxyInvoker<?> handler) {
             handlers.add(handler);
         }
     }
@@ -205,10 +225,10 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
      * 事件封装
      */
     protected class EventContext {
-        private int partitionId;
-        private Object event;
-        private Map<Class<?>, Object> paramsMap;
-        private EventCallback callback;
+        private final int partitionId;
+        private final Object event;
+        private final Map<Class<?>, Object> paramsMap;
+        private final EventCallback callback;
 
         public EventContext(int partitionId, Object event, Object[] params, EventCallback callback) {
             this.partitionId = partitionId;
