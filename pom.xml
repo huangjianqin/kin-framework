@@ -125,15 +125,17 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.5.5</version>
-                <executions>
-                    <!--                    <execution>-->
-                    <!--                        <id>make-assembly</id>-->
-                    <!--                        <goals>-->
-                    <!--                            &lt;!&ndash; 会把依赖直接写进jar包&ndash;&gt;-->
-                    <!--                            <goal>single</goal>-->
-                    <!--                        </goals>-->
-                    <!--                    </execution>-->
-                </executions>
+                <!--                <executions>-->
+                <!--                    <execution>-->
+                <!--                        <id>make-assembly</id>-->
+                <!--                        <goals>-->
+                <!--                            &lt;!&ndash; 会把依赖直接写进另外一个单独的jar包&ndash;&gt;-->
+                <!--                            <goal>single</goal>-->
+                <!--                            &lt;!&ndash; 跟原来的.jar合并 &ndash;&gt;-->
+                <!--                            <goal>assembly</goal>-->
+                <!--                        </goals>-->
+                <!--                    </execution>-->
+                <!--                </executions>-->
                 <configuration>
                     <archive>
                         <manifest>
