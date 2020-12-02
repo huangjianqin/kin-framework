@@ -685,6 +685,8 @@ public class ClassUtils {
             //处理范性类型擦除
             if (paramTypes[i] instanceof Class) {
                 argSJ.add(paramTypeStr + " " + METHOD_DECLARATION_ARG_NAME + i);
+            } else if (paramTypes[i] instanceof ParameterizedType) {
+                argSJ.add(((ParameterizedType) paramTypes[i]).getRawType().getTypeName() + " " + METHOD_DECLARATION_ARG_NAME + i);
             } else {
                 argSJ.add(Object.class.getName() + " " + METHOD_DECLARATION_ARG_NAME + i);
             }
