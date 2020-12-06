@@ -106,9 +106,20 @@ public class KinServiceLoader {
     }
 
     /**
+     * 判断是否支持SPI机制
+     */
+    private void checkSupport(Class<?> serviceClass) {
+        if (!serviceClass.isAnnotationPresent(SPI.class)) {
+            throw new IllegalArgumentException(serviceClass.getName().concat(" doesn't support spi, please ensure @SPI"));
+        }
+    }
+
+    /**
      * 获取某接口的{@link ServiceLoader}的迭代器
      */
-    public synchronized <S> Iterator<S> iterator(Class<S> serviceClass) {
+    @SuppressWarnings("unchecked")
+    private synchronized <S> Iterator<S> iterator(Class<S> serviceClass) {
+        checkSupport(serviceClass);
         //从接口名 或者 @SPI注解的提供的value 获取该接口实现类
         HashSet<String> filtered = new HashSet<>(service2Implement.get(serviceClass.getName()));
 
@@ -147,6 +158,7 @@ public class KinServiceLoader {
      * 获取合适的扩展service类
      */
     private <S> S getAdaptiveExtension(Class<S> serviceClass, Callable<S> serviceGetter) {
+        checkSupport(serviceClass);
         String defaultServiceName = "";
         SPI spi = serviceClass.getAnnotation(SPI.class);
         if (Objects.nonNull(spi)) {
@@ -180,6 +192,22 @@ public class KinServiceLoader {
         return null;
     }
 
+    /**
+     * 获取所有扩展service类
+     */
+    public synchronized <S> List<S> getExtensions(Class<S> serviceClass) {
+        checkSupport(serviceClass);
+
+        List<S> services = new ArrayList<>();
+        Iterator<S> serviceIterator = iterator(serviceClass);
+        while (serviceIterator.hasNext()) {
+            S implService = serviceIterator.next();
+            services.add(implService);
+        }
+
+        return services;
+    }
+
     //-------------------------------------------------------------------------------------------------------------------
     private class ServiceLoader<S> implements Iterable<S> {
         /** 接口类 */
@@ -197,7 +225,7 @@ public class KinServiceLoader {
         @Override
         public Iterator<S> iterator() {
             return new Iterator<S>() {
-                Iterator<Map.Entry<String, S>> knownProviders
+                final Iterator<Map.Entry<String, S>> knownProviders
                         = providers.entrySet().iterator();
 
                 @Override

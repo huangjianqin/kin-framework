@@ -735,4 +735,23 @@ public class ClassUtils {
         sb.append("}");
         return sb.toString();
     }
+
+    /**
+     * 父类为XXX
+     * 实现类为{prefixName}XXXX
+     * 获取{prefixName}, 全小写
+     *
+     * @param targetClass 实现类
+     * @param baseClass   父类
+     */
+    public static <T> String getPrefixName(Class<? extends T> targetClass, Class<T> baseClass) {
+        String baseName = baseClass.getSimpleName();
+        String targetName = targetClass.getSimpleName();
+
+        int index = targetName.indexOf(baseName);
+        if (index > 0) {
+            return targetName.substring(0, index).toLowerCase();
+        }
+        return null;
+    }
 }
