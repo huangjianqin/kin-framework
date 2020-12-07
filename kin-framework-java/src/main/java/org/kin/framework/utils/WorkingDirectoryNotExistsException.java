@@ -1,4 +1,4 @@
-package org.kin.framework.exception;
+package org.kin.framework.utils;
 
 /**
  * @author huangjianqin
