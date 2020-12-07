@@ -1,23 +1,25 @@
 package org.kin.framework.utils;
 
-import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.IOException;
+import java.util.*;
 
 /**
  * @author huangjianqin
  * @date 2019-12-28
  */
 public class JSON {
-    private static Logger logger = LoggerFactory.getLogger(JSON.class);
-
     public static final ObjectMapper PARSER = new ObjectMapper();
+
+    static {
+        PARSER.setTypeFactory(TypeFactory.defaultInstance());
+    }
 
     private JSON() {
     }
@@ -32,9 +34,8 @@ public class JSON {
         try {
             return PARSER.writeValueAsString(obj);
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+            throw new JsonSerializeException(e);
         }
-        return null;
     }
 
     /**
@@ -47,91 +48,118 @@ public class JSON {
         try {
             return PARSER.writeValueAsBytes(obj);
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+            throw new JsonSerializeException(e);
         }
-        return null;
     }
 
     /**
-     * 反序列化
+     * 解析json
      *
      * @param jsonStr json字符串
-     * @param clazz   反序列化类型
-     * @return 反序列化类实例
+     * @param clazz   类型
      */
     public static <T> T read(String jsonStr, Class<T> clazz) {
         try {
             return PARSER.readValue(jsonStr, clazz);
-        } catch (JsonParseException e) {
-            logger.error(e.getMessage(), e);
-        } catch (JsonMappingException e) {
-            logger.error(e.getMessage(), e);
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+        } catch (JsonProcessingException e) {
+            throw new JsonDeserializeException(e);
         }
-        return null;
     }
 
     /**
-     * 反序列化
+     * 解析json
      *
-     * @param jsonStr json字符串
-     * @param clazz   反序列化类型
-     * @return 反序列化类实例
+     * @param bytes json bytes
+     * @param clazz 反序列化类型
      */
     public static <T> T read(byte[] bytes, Class<T> clazz) {
         try {
             return PARSER.readValue(bytes, clazz);
-        } catch (JsonParseException e) {
-            logger.error(e.getMessage(), e);
-        } catch (JsonMappingException e) {
-            logger.error(e.getMessage(), e);
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+            throw new JsonDeserializeException(e);
         }
-        return null;
     }
 
     /**
-     * 反序列化含范型参数
+     * 解析含范型参数类型的json
      *
      * @param jsonStr          json字符串
      * @param parametrized     反序列化类
      * @param parameterClasses 范型参数类型
-     * @param <T>              反序列化类型参数
-     * @return 反序列化类实例
+     * @param <T>              类型参数
      */
     public static <T> T read(String jsonStr, Class<T> parametrized, Class<?>... parameterClasses) {
         try {
             JavaType javaType = PARSER.getTypeFactory().constructParametricType(parametrized, parameterClasses);
             return PARSER.readValue(jsonStr, javaType);
-        } catch (JsonParseException e) {
-            logger.error(e.getMessage(), e);
-        } catch (JsonMappingException e) {
-            logger.error(e.getMessage(), e);
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+            throw new JsonDeserializeException(e);
         }
-        return null;
     }
 
     /**
-     * 反序列化含范型参数
+     * 解析含范型参数类型的json
      *
      * @param jsonStr       json字符串
-     * @param typeReference 反序列化类型
-     * @return 反序列化类实例
+     * @param typeReference 类型
      */
     public static <T> T read(String jsonStr, TypeReference<T> typeReference) {
         try {
             return PARSER.readValue(jsonStr, typeReference);
-        } catch (JsonParseException e) {
-            logger.error(e.getMessage(), e);
-        } catch (JsonMappingException e) {
-            logger.error(e.getMessage(), e);
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+            throw new JsonDeserializeException(e);
         }
-        return null;
+    }
+
+    /**
+     * 解析list json
+     *
+     * @param jsonStr   json字符串
+     * @param itemClass 元素类型
+     */
+    public static <T> List<T> readList(String jsonStr, Class<T> itemClass) {
+        return readCollection(jsonStr, ArrayList.class, itemClass);
+    }
+
+    /**
+     * 解析set json
+     *
+     * @param jsonStr   json字符串
+     * @param itemClass 元素类型
+     */
+    public static <T> Set<T> readSet(String jsonStr, Class<T> itemClass) {
+        return readCollection(jsonStr, HashSet.class, itemClass);
+    }
+
+    /**
+     * 解析集合类json
+     *
+     * @param jsonStr         json字符串
+     * @param collectionClass 集合类型
+     * @param itemClass       元素类型
+     */
+    public static <C extends Collection<T>, T> C readCollection(String jsonStr, Class<C> collectionClass, Class<T> itemClass) {
+        JavaType collectionType = PARSER.getTypeFactory().constructCollectionLikeType(collectionClass, itemClass);
+        try {
+            return PARSER.readValue(jsonStr, collectionType);
+        } catch (JsonProcessingException e) {
+            throw new JsonDeserializeException(e);
+        }
+    }
+
+    /**
+     * 解析map json
+     *
+     * @param jsonStr    json字符串
+     * @param keyClass   key类型
+     * @param valueClass value类型
+     */
+    public static <K, V> C readMap(String jsonStr, Class<K> keyClass, Class<V> valueClass) {
+        JavaType mapType = PARSER.getTypeFactory().constructMapType(HashMap.class, keyClass, valueClass);
+        try {
+            return PARSER.readValue(jsonStr, mapType);
+        } catch (JsonProcessingException e) {
+            throw new JsonDeserializeException(e);
+        }
     }
 }
