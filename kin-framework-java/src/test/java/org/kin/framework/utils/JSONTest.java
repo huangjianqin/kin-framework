@@ -1,6 +1,7 @@
 package org.kin.framework.utils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,5 +19,9 @@ public class JSONTest {
         System.out.println(json);
         System.out.println(params);
         System.out.println(JSON.read(json, Map.class));
+
+        String strListJson = "[1,2,3,4,5]";
+        List<String> stringList = JSON.readList(strListJson, String.class);
+        System.out.println(stringList.get(0).getClass());
     }
 }
