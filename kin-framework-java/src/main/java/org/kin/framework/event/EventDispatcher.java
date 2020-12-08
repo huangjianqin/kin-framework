@@ -1,48 +1,35 @@
 package org.kin.framework.event;
 
 import com.google.common.base.Preconditions;
-import org.kin.framework.concurrent.SimpleThreadFactory;
-import org.kin.framework.concurrent.partition.EfficientHashPartitioner;
-import org.kin.framework.concurrent.partition.PartitionTaskExecutor;
 import org.kin.framework.proxy.ProxyEnhanceUtils;
 import org.kin.framework.proxy.ProxyInvoker;
 import org.kin.framework.proxy.ProxyMethodDefinition;
-import org.kin.framework.utils.SysUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 事件分发器
- * 支持多线程事件处理
+ * 在当前线程处理事件逻辑
  *
  * @author 健勤
  * @date 2017/8/8
  */
-public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher {
-    /** 事件处理线程(分区处理) */
-    protected final PartitionTaskExecutor<Integer> executor;
-    /** 调度线程 */
-    protected final ScheduledExecutorService scheduledExecutors;
+public class EventDispatcher implements Dispatcher, NullEventDispatcher {
     /** 存储事件与其对应的事件处理器的映射 */
-    protected final Map<Class<?>, ProxyInvoker<?>> event2Handler;
+    private final Map<Class<?>, ProxyInvoker<?>> event2Handler = new ConcurrentHashMap<>();
+
     /** 是否使用字节码增强技术 */
     private final boolean isEnhance;
     /** 字节码增强代理类包名 */
     private String proxyEnhancePackageName;
 
-    public EventDispatcher(int parallelism) {
-        this(parallelism, false);
+    public EventDispatcher() {
+        this(false);
     }
 
-    @SuppressWarnings("unchecked")
-    public EventDispatcher(int parallelism, boolean isEnhance) {
-        executor = new PartitionTaskExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler-");
-        event2Handler = new ConcurrentHashMap<>();
-
-        scheduledExecutors = new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum() / 2 + 1,
-                new SimpleThreadFactory("EventDispatcher$schedule-event-"));
+    public EventDispatcher(boolean isEnhance) {
         this.isEnhance = isEnhance;
         if (isEnhance) {
             proxyEnhancePackageName = getClass().getPackage().getName().concat(".proxy");
@@ -50,7 +37,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
     }
 
     //------------------------------------------------------------------------------------------------------------------
-
+    @SuppressWarnings("unchecked")
     private ProxyInvoker<?> getHandler(Object obj, Method method) {
         if (isEnhance) {
             return ProxyEnhanceUtils.enhanceMethod(new ProxyMethodDefinition(obj, method, proxyEnhancePackageName));
@@ -81,20 +68,21 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
         }
     }
 
-    protected void dispatch(EventContext eventContext) {
+    /**
+     * 分派事件
+     */
+    protected final void dispatch(EventContext eventContext) {
         Class<?> type = eventContext.getEvent().getClass();
         ProxyInvoker<?> handler = event2Handler.get(type);
         if (handler != null) {
-            executor.execute(eventContext.getPartitionId(), () -> {
-                try {
-                    Object result = handler.invoke(eventContext.getRealParams(handler.getMethod()));
-                    eventContext.callback.finish(result);
-                } catch (Exception e) {
-                    eventContext.callback.failure(e);
-                }
-            });
+            try {
+                Object result = handler.invoke(eventContext.getRealParams(handler.getMethod()));
+                eventContext.callback.finish(result);
+            } catch (Exception e) {
+                eventContext.callback.failure(e);
+            }
         } else {
-            throw new IllegalStateException("doesn't have event handler to handle event " + type);
+            throw new IllegalStateException("can not find event handler to handle event " + type);
         }
     }
 
@@ -105,27 +93,16 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
 
     @Override
     public void dispatch(Object event, EventCallback callback, Object... params) {
-        dispatch(new EventContext(event.hashCode(), event, params, callback));
-    }
-
-    @Override
-    public Future<?> scheduleDispatch(Object event, TimeUnit unit, long delay, Object... params) {
-        return scheduledExecutors.schedule(() -> dispatch(event, params), delay, unit);
-    }
-
-    @Override
-    public Future<?> scheduleDispatchAtFixRate(Object event, TimeUnit unit, long initialDelay, long period, Object... params) {
-        return scheduledExecutors.scheduleAtFixedRate(() -> dispatch(event, params), initialDelay, period, unit);
+        dispatch(new EventContext(event, params, callback));
     }
 
     @Override
     public void dispatch(Runnable runnable) {
-        executor.execute(runnable.hashCode(), runnable);
+        runnable.run();
     }
 
+    @Override
     public void shutdown() {
-        executor.shutdown();
-        scheduledExecutors.shutdown();
         event2Handler.clear();
 
         for (ProxyInvoker<?> proxyInvoker : event2Handler.values()) {
@@ -154,8 +131,8 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
      * 事件处理器的代理封装
      */
     private class ProxyEventHandler implements ProxyInvoker<Object> {
-        private Object proxy;
-        private Method method;
+        private final Object proxy;
+        private final Method method;
 
         public ProxyEventHandler(Object proxy, Method method) {
             this.proxy = proxy;
@@ -184,7 +161,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
      * 一事件对应多个事件处理器的场景
      */
     private class MultiEventHandler implements ProxyInvoker<Object> {
-        private List<ProxyInvoker<?>> handlers;
+        private final List<ProxyInvoker<?>> handlers;
 
         MultiEventHandler() {
             this.handlers = new LinkedList<>();

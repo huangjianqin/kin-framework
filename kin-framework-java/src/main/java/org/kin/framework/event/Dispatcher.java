@@ -33,4 +33,9 @@ public interface Dispatcher {
      * @param params   额外参数
      */
     void dispatch(Object event, EventCallback callback, Object... params);
+
+    /**
+     * shutdown
+     */
+    void shutdown();
 }

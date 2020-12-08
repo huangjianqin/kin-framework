@@ -2,7 +2,7 @@ package org.kin.framework.event.dispatcher;
 
 
 import org.kin.framework.event.EventCallback;
-import org.kin.framework.event.EventDispatcher;
+import org.kin.framework.event.ParallelEventDispatcher;
 import org.kin.framework.utils.SysUtils;
 
 /**
@@ -10,7 +10,7 @@ import org.kin.framework.utils.SysUtils;
  */
 public class TestDispatcher {
     public static void main(String[] args) throws InterruptedException {
-        EventDispatcher dispatcher = new EventDispatcher(SysUtils.getSuitableThreadNum(), true);
+        ParallelEventDispatcher dispatcher = new ParallelEventDispatcher(SysUtils.getSuitableThreadNum(), true);
 //        dispatcher.register(FirstEvent.class, new FirstEventHandler(), FirstEventHandler.class.getMethods()[0]);
         dispatcher.register(SecondEvent.class, new SecondEventHandler(), SecondEventHandler.class.getMethods()[0]);
         dispatcher.register(ThirdEvent.class, new ThirdEventHandler(), ThirdEventHandler.class.getMethods()[0]);

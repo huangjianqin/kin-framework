@@ -17,7 +17,7 @@ import java.util.Map;
  * @author huangjianqin
  * @date 2019/3/1
  */
-public class SpringEventDispatcher extends EventDispatcher implements ApplicationContextAware, ApplicationListener {
+public class SpringEventDispatcher extends ParallelEventDispatcher implements ApplicationContextAware, ApplicationListener {
     public SpringEventDispatcher(int parallelism) {
         super(parallelism);
     }
@@ -35,7 +35,7 @@ public class SpringEventDispatcher extends EventDispatcher implements Applicatio
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         Map<String, Object> beans = applicationContext.getBeansWithAnnotation(HandleEvent.class);
         for (Object bean : beans.values()) {
-            Class claxx = bean.getClass();
+            Class<?> claxx = bean.getClass();
             //如果注解在类声明的话, 默认全部public方法都需要检查是否满足注册事件的要求
             //否则, 只检查有@HandleEvent注解的方法
             boolean isClassWithAnno = claxx.isAnnotationPresent(HandleEvent.class);

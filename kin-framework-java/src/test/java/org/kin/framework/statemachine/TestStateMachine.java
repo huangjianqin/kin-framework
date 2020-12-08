@@ -5,7 +5,6 @@ import org.kin.framework.event.EventDispatcher;
 import org.kin.framework.event.EventHandler;
 import org.kin.framework.event.dispatcher.FirstEvent;
 import org.kin.framework.event.dispatcher.FirstEventType;
-import org.kin.framework.utils.SysUtils;
 
 import java.util.EnumSet;
 import java.util.Random;
@@ -51,7 +50,7 @@ class Impl implements EventHandler<FirstEvent> {
     private EventDispatcher dispatcher;
 
     public Impl() {
-        this.dispatcher = new EventDispatcher(SysUtils.getSuitableThreadNum());
+        this.dispatcher = new EventDispatcher();
         dispatcher.register(FirstEvent.class, new FirstEventHandler(), FirstEventHandler.class.getMethods()[0]);
     }
 

@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public class PinnedEventDispatcher extends EventDispatcher implements PinnedScheduledDispatcher {
+public class PinnedEventDispatcher extends ParallelEventDispatcher implements PinnedScheduledDispatcher {
 
     public PinnedEventDispatcher(int parallelism) {
         super(parallelism);
