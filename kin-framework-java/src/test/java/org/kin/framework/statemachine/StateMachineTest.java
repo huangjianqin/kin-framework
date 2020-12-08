@@ -12,7 +12,7 @@ import java.util.Random;
 /**
  * Created by 健勤 on 2017/8/11.
  */
-public class TestStateMachine {
+public class StateMachineTest {
     public static void main(String[] args) {
         Impl impl = new Impl();
         StateMachineFactory<Impl, NumberState, FirstEventType, FirstEvent> factory

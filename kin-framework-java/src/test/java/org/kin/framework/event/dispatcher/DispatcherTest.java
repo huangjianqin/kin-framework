@@ -8,7 +8,7 @@ import org.kin.framework.utils.SysUtils;
 /**
  * Created by 健勤 on 2017/8/10.
  */
-public class TestDispatcher {
+public class DispatcherTest {
     public static void main(String[] args) throws InterruptedException {
         ParallelEventDispatcher dispatcher = new ParallelEventDispatcher(SysUtils.getSuitableThreadNum(), true);
 //        dispatcher.register(FirstEvent.class, new FirstEventHandler(), FirstEventHandler.class.getMethods()[0]);
