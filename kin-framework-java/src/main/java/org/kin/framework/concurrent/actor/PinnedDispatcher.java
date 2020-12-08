@@ -2,8 +2,6 @@ package org.kin.framework.concurrent.actor;
 
 import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.utils.SysUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Objects;
@@ -18,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2020-04-26
  */
 public class PinnedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
-    private static final Logger log = LoggerFactory.getLogger(PinnedDispatcher.class);
     /** Receiver数据 */
     private Map<KEY, PinnedThreadSafeReceiver<MSG>> typeSafeReceivers = new ConcurrentHashMap<>();
 

@@ -56,12 +56,8 @@ public class FileMonitor extends Thread implements Closeable {
         this.executionContext = executionContext;
     }
 
-    private void init() {
-        try {
-            watchService = FileSystems.getDefault().newWatchService();
-        } catch (IOException e) {
-            log.error("", e);
-        }
+    private void init() throws IOException {
+        watchService = FileSystems.getDefault().newWatchService();
 
         monitorItems = new HashMap<>();
         locks = new Object[5];
@@ -76,18 +72,18 @@ public class FileMonitor extends Thread implements Closeable {
 
         //监听热更class存储目录
         Path classesPath = Paths.get(JavaAgentHotswap.getClasspath());
-        try {
-            classesPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
-        } catch (IOException e) {
-            log.error("", e);
-        }
+        classesPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
 
         monitorJVMClose();
     }
 
     @Override
     public synchronized void start() {
-        init();
+        try {
+            init();
+        } catch (IOException e) {
+            throw new FileMonitorException(e);
+        }
         super.start();
     }
 
@@ -138,7 +134,7 @@ public class FileMonitor extends Thread implements Closeable {
                 //重置状态，让key等待事件
                 key.reset();
             } catch (InterruptedException e) {
-                log.error("", e);
+
             }
 
             if (changedClasses.size() > 0) {
@@ -163,7 +159,7 @@ public class FileMonitor extends Thread implements Closeable {
             try {
                 watchService.close();
             } catch (IOException e) {
-                log.error("", e);
+                throw new FileMonitorException(e);
             }
             executionContext.shutdown();
             //help GC
@@ -193,7 +189,11 @@ public class FileMonitor extends Thread implements Closeable {
     public void monitorFile(Path path, AbstractFileReloadable fileReloadable) {
         checkStatus();
         if (!Files.isDirectory(path)) {
-            monitorFile0(path.getParent(), path.getFileName().toString(), fileReloadable);
+            try {
+                monitorFile0(path.getParent(), path.getFileName().toString(), fileReloadable);
+            } catch (IOException e) {
+                throw new FileMonitorException(e);
+            }
         } else {
             throw new IllegalStateException("monitor file dir error");
         }
@@ -202,12 +202,8 @@ public class FileMonitor extends Thread implements Closeable {
     /**
      * 监听文件变化
      */
-    private void monitorFile0(Path file, String itemName, AbstractFileReloadable fileReloadable) {
-        try {
-            file.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
-        } catch (IOException e) {
-            log.error("", e);
-        }
+    private void monitorFile0(Path file, String itemName, AbstractFileReloadable fileReloadable) throws IOException {
+        file.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
 
         int key = itemName.hashCode();
         synchronized (getLock(key)) {

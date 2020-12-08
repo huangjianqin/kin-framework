@@ -1,8 +1,5 @@
 package org.kin.framework.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.regex.Pattern;
@@ -12,7 +9,6 @@ import java.util.regex.Pattern;
  * @date 2018/2/26
  */
 public class SysUtils {
-    private static final Logger log = LoggerFactory.getLogger(SysUtils.class);
     public static final int CPU_NUM = Runtime.getRuntime().availableProcessors();
 
     private static final Pattern INTEGER_PATTERN = Pattern.compile("-?[0-9]+");
@@ -81,15 +77,11 @@ public class SysUtils {
             throw new IllegalArgumentException("key must not be blank");
         }
 
-        String value = null;
-        try {
-            if (System.getSecurityManager() == null) {
-                value = System.getProperty(key);
-            } else {
-                value = AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(key));
-            }
-        } catch (Exception e) {
-            log.error("Unable to retrieve a system property '" + key + "'; default values will be used.", e);
+        String value;
+        if (System.getSecurityManager() == null) {
+            value = System.getProperty(key);
+        } else {
+            value = AccessController.doPrivileged((PrivilegedAction<String>) () -> System.getProperty(key));
         }
 
         if (value == null) {
@@ -121,9 +113,6 @@ public class SysUtils {
             return false;
         }
 
-        log.error("Unable to parse the boolean system property '" + key + "':" + value + " - " +
-                "using the default value: " + def);
-
         return def;
     }
 
@@ -145,10 +134,6 @@ public class SysUtils {
             }
         }
 
-        log.error(
-                "Unable to parse the integer system property '" + key + "':" + value + " - " +
-                        "using the default value: " + def);
-
         return def;
     }
 
@@ -169,10 +154,6 @@ public class SysUtils {
                 // Ignore
             }
         }
-
-        log.error(
-                "Unable to parse the long integer system property '" + key + "':" + value + " - " +
-                        "using the default value: " + def);
 
         return def;
     }

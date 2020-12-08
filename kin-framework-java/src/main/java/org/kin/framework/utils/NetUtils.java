@@ -1,8 +1,5 @@
 package org.kin.framework.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.net.*;
 import java.util.Enumeration;
@@ -13,8 +10,6 @@ import java.util.regex.Pattern;
  * @date 2018/1/28
  */
 public class NetUtils {
-    private static final Logger log = LoggerFactory.getLogger(NetUtils.class);
-
     private static final String ANYHOST = "0.0.0.0";
     private static final String LOCALHOST = "127.0.0.1";
     private static final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}:\\d{1,5}$");
@@ -76,7 +71,6 @@ public class NetUtils {
                 return InetAddress.getByName(addr.substring(0, i) + '%' + address.getScopeId());
             } catch (UnknownHostException e) {
                 // ignore
-                log.debug("Unknown IPV6 address: ", e);
             }
         }
         return address;
@@ -97,7 +91,7 @@ public class NetUtils {
                 return localAddress;
             }
         } catch (Throwable e) {
-            log.error(e.getMessage(), e);
+            throw new NetworkException(e);
         }
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
@@ -120,15 +114,15 @@ public class NetUtils {
                                 return address;
                             }
                         } catch (Throwable e) {
-                            log.error(e.getMessage(), e);
+                            throw new NetworkException(e);
                         }
                     }
                 } catch (Throwable e) {
-                    log.error(e.getMessage(), e);
+                    throw new NetworkException(e);
                 }
             }
         } catch (Throwable e) {
-            log.error(e.getMessage(), e);
+            throw new NetworkException(e);
         }
         return localAddress;
     }
@@ -290,10 +284,8 @@ public class NetUtils {
 
             return true;
         } catch (IOException e) {
-            log.error("", e);
+            throw new NetworkException(e);
         }
-
-        return false;
     }
 
     /**

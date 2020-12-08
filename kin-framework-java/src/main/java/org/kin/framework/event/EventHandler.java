@@ -1,9 +1,10 @@
 package org.kin.framework.event;
 
 /**
+ * 事件处理器接口
+ *
  * @author 健勤
  * @date 2017/8/8
- * 事件处理器接口
  */
 @FunctionalInterface
 public interface EventHandler<T extends AbstractEvent> {

@@ -8,22 +8,19 @@ import org.kin.framework.proxy.ProxyEnhanceUtils;
 import org.kin.framework.proxy.ProxyInvoker;
 import org.kin.framework.proxy.ProxyMethodDefinition;
 import org.kin.framework.utils.SysUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * @author 健勤
- * @date 2017/8/8
  * 事件分发器
  * 支持多线程事件处理
+ *
+ * @author 健勤
+ * @date 2017/8/8
  */
 public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher {
-    private static Logger log = LoggerFactory.getLogger(EventDispatcher.class);
-
     /** 事件处理线程(分区处理) */
     protected final PartitionTaskExecutor<Integer> executor;
     /** 调度线程 */
@@ -48,7 +45,7 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
                 new SimpleThreadFactory("EventDispatcher$schedule-event-"));
         this.isEnhance = isEnhance;
         if (isEnhance) {
-            proxyEnhancePackageName = "org.kin.framework.event.handler.proxy";
+            proxyEnhancePackageName = getClass().getPackage().getName().concat(".proxy");
         }
     }
 
@@ -204,13 +201,9 @@ public class EventDispatcher implements ScheduledDispatcher, NullEventDispatcher
         }
 
         @Override
-        public Object invoke(Object... params) {
+        public Object invoke(Object... params) throws Exception {
             for (ProxyInvoker<?> handler : handlers) {
-                try {
-                    handler.invoke(params);
-                } catch (Exception e) {
-                    log.error("", e);
-                }
+                handler.invoke(params);
             }
 
             return null;

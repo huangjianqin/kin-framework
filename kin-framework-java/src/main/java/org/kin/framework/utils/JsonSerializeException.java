@@ -7,6 +7,8 @@ package org.kin.framework.utils;
  * @date 2020/12/8
  */
 public class JsonSerializeException extends RuntimeException {
+    private static final long serialVersionUID = -2196023913662176394L;
+
     public JsonSerializeException(String message) {
         super(message);
     }

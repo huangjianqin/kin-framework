@@ -1,9 +1,7 @@
 package org.kin.framework.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -14,8 +12,6 @@ import java.util.concurrent.TimeUnit;
  * @date 2018/2/2
  */
 public class TimeUtils {
-    private static Logger logger = LoggerFactory.getLogger(TimeUtils.class);
-
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -124,9 +120,8 @@ public class TimeUtils {
         try {
             Date date = dateFormat.parse(dateString);
             return date;
-        } catch (Exception e) {
-            logger.error("parse date error, dateString = {}, dateFormat={}; errorMsg = ", dateString, dateFormat, e.getMessage());
-            return null;
+        } catch (ParseException e) {
+            throw new IllegalArgumentException(String.format("parse date error, dateString = %s, dateFormat=%s; errorMsg = %s", dateString, dateFormat, e.getMessage()));
         }
     }
 

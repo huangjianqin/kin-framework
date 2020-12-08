@@ -1,9 +1,6 @@
 package org.kin.framework.service;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.annotation.Nonnull;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,7 +11,6 @@ import java.util.List;
  * 组合服务,也就是说该类或继承该类的子类会拥有许多服务
  */
 public class CompsiteService extends AbstractService {
-    private static Logger log = LoggerFactory.getLogger(CompsiteService.class);
     private List<Service> services = new LinkedList<>();
 
     public CompsiteService(String serviceName) {
@@ -27,7 +23,7 @@ public class CompsiteService extends AbstractService {
             if (service.getCurrentState() == State.NOTINITED) {
                 service.init();
             } else {
-                log.warn(service.toString() + " state is " + service.getCurrentState());
+                throw new IllegalStateException(service.toString() + " current state is " + service.getCurrentState());
             }
         }
 
@@ -40,7 +36,7 @@ public class CompsiteService extends AbstractService {
             if (service.getCurrentState() == State.INITED) {
                 service.start();
             } else {
-                log.warn(service.toString() + " state is " + service.getCurrentState());
+                throw new IllegalStateException(service.toString() + " current state is " + service.getCurrentState());
             }
         }
 
@@ -54,7 +50,7 @@ public class CompsiteService extends AbstractService {
             if (service.getCurrentState() == State.INITED || service.getCurrentState() == State.STARTED) {
                 service.stop();
             } else {
-                log.warn(service.toString() + " state is " + service.getCurrentState());
+                throw new IllegalStateException(service.toString() + " current state is " + service.getCurrentState());
             }
         }
         super.serviceStop();

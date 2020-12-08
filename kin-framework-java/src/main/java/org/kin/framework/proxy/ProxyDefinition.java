@@ -4,29 +4,28 @@ package org.kin.framework.proxy;
  * @author huangjianqin
  * @date 2020-01-16
  */
-public class ProxyDefinition {
+public class ProxyDefinition<T> {
     private static final MethodBodyConstructor DEFAULT_METHOD_BODY_CONSTRUCTOR =
             ProxyEnhanceUtils::generateProxyInvokeCode;
     //---------------------------------------------------------------------------------------------------------------------
 
-    private Object proxyObj;
+    private T proxyObj;
     private String packageName;
     private MethodBodyConstructor methodBodyConstructor = DEFAULT_METHOD_BODY_CONSTRUCTOR;
 
-    public ProxyDefinition(Object proxyObj, String packageName) {
+    public ProxyDefinition(T proxyObj, String packageName) {
         this.proxyObj = proxyObj;
         this.packageName = packageName;
     }
 
-    public ProxyDefinition(Object proxyObj, String packageName, MethodBodyConstructor methodBodyConstructor) {
+    public ProxyDefinition(T proxyObj, String packageName, MethodBodyConstructor methodBodyConstructor) {
         this.proxyObj = proxyObj;
         this.packageName = packageName;
         this.methodBodyConstructor = methodBodyConstructor;
     }
 
     //getter
-
-    public Object getProxyObj() {
+    public T getProxyObj() {
         return proxyObj;
     }
 

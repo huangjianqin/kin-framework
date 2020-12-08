@@ -1,8 +1,5 @@
 package org.kin.framework.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -13,8 +10,6 @@ import java.util.Properties;
  * @date 2019/7/6
  */
 public class PropertiesUtils {
-    private static final Logger log = LoggerFactory.getLogger(PropertiesUtils.class);
-
     public static Properties loadPropertie(String propertyFileName) {
         // disk path
         if (propertyFileName.startsWith("file:")) {
@@ -37,17 +32,16 @@ public class PropertiesUtils {
             prop.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             return prop;
         } catch (IOException e) {
-            log.error("", e);
+            throw new PropertyException(e);
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    log.error("", e);
+                    throw new PropertyException(e);
                 }
             }
         }
-        return null;
     }
 
 
@@ -67,17 +61,16 @@ public class PropertiesUtils {
             prop.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             return prop;
         } catch (IOException e) {
-            log.error("", e);
+            throw new PropertyException(e);
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    log.error("", e);
+                    throw new PropertyException(e);
                 }
             }
         }
-        return null;
     }
 
     public static boolean writeFileProperties(Properties properties, String filePathName) {
@@ -95,14 +88,13 @@ public class PropertiesUtils {
             properties.store(new OutputStreamWriter(out, StandardCharsets.UTF_8), null);
             return true;
         } catch (IOException e) {
-            log.error("", e);
-            return false;
+            throw new PropertyException(e);
         } finally {
             if (out != null) {
                 try {
                     out.close();
                 } catch (IOException e) {
-                    log.error("", e);
+                    throw new PropertyException(e);
                 }
             }
         }

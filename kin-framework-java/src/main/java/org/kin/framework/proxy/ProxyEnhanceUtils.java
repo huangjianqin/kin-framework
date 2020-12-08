@@ -4,8 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import javassist.*;
 import org.kin.framework.utils.ClassUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.kin.framework.utils.ProxyEnhanceErrorException;
 
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -18,7 +17,6 @@ import java.util.StringJoiner;
  * @date 2020-01-11
  */
 public class ProxyEnhanceUtils {
-    private static final Logger log = LoggerFactory.getLogger(ProxyEnhanceUtils.class);
     private static final ClassPool POOL = ClassPool.getDefault();
     private static Multimap<String, CtClass> CTCLASS_CACHE = HashMultimap.create();
 
@@ -112,52 +110,38 @@ public class ProxyEnhanceUtils {
             cacheCTClass(proxyCtClassName, proxyCtClass);
             return proxyCtClass;
         } catch (Exception e) {
-            log.error(proxyMethod.toString(), e);
+            throw new ProxyEnhanceErrorException(e);
         }
-
-        return null;
     }
 
     /**
      * 增强某个方法代理的调用
      */
-    public static ProxyInvoker enhanceMethod(ProxyMethodDefinition definition) {
+    @SuppressWarnings("unchecked")
+    public static <T> ProxyInvoker<T> enhanceMethod(ProxyMethodDefinition<T> definition) {
         Object proxyObj = definition.getProxyObj();
         Class<?> proxyObjClass = proxyObj.getClass();
         Method proxyMethod = definition.getMethod();
         String proxyCtClassName = definition.getClassName();
 
-        Class<?> realProxyClass = null;
+        Class<?> realProxyClass;
         try {
             realProxyClass = Class.forName(proxyCtClassName);
         } catch (ClassNotFoundException e) {
-
+            throw new ProxyEnhanceErrorException(e);
         }
 
-        if (Objects.isNull(realProxyClass)) {
-            CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
-            if (proxyCtClass == null) {
-                proxyCtClass = generateEnhanceMethodProxyClass(proxyObjClass, proxyMethod, proxyCtClassName);
-            }
-
-            if (proxyCtClass != null) {
-                try {
-                    realProxyClass = proxyCtClass.toClass();
-                } catch (Exception e) {
-                    log.error(proxyMethod.toString(), e);
-                }
-            }
+        CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
+        if (proxyCtClass == null) {
+            proxyCtClass = generateEnhanceMethodProxyClass(proxyObjClass, proxyMethod, proxyCtClassName);
         }
 
-        if (Objects.nonNull(realProxyClass)) {
-            try {
-                return (ProxyInvoker) realProxyClass.getConstructor(proxyObjClass, Method.class).newInstance(proxyObj, proxyMethod);
-            } catch (Exception e) {
-                log.error(proxyMethod.toString(), e);
-            }
+        try {
+            realProxyClass = proxyCtClass.toClass();
+            return (ProxyInvoker<T>) realProxyClass.getConstructor(proxyObjClass, Method.class).newInstance(proxyObj, proxyMethod);
+        } catch (Exception e) {
+            throw new ProxyEnhanceErrorException(e);
         }
-
-        return null;
     }
     //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -240,39 +224,34 @@ public class ProxyEnhanceUtils {
             cacheCTClass(className, proxyCtClass);
             return proxyCtClass;
         } catch (Exception e) {
-            log.error(proxyClass.toString(), e);
+            throw new ProxyEnhanceErrorException(e);
         }
-
-        return null;
     }
 
     /**
      * @param proxyObjClass 需要代理的类或该类的某一接口
      */
+    @SuppressWarnings("unchecked")
     private static <P> P enhanceClass0(
             Object proxyObj,
             Class<?> proxyObjClass,
             String packageName,
             String proxyCtClassName,
             MethodBodyConstructor methodBodyConstructor) {
-        Class<?> realProxyClass = null;
+        Class<?> realProxyClass;
         try {
             realProxyClass = Class.forName(proxyCtClassName);
         } catch (ClassNotFoundException e) {
-
+            throw new ProxyEnhanceErrorException(e);
         }
 
-        if (Objects.isNull(realProxyClass)) {
-            CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
-            if (proxyCtClass == null) {
-                proxyCtClass = generateEnhanceClassProxyClass(proxyObjClass, packageName, methodBodyConstructor);
-                if (Objects.nonNull(proxyCtClass)) {
-                    try {
-                        realProxyClass = proxyCtClass.toClass();
-                    } catch (Exception e) {
-                        log.error(proxyObjClass.toString(), e);
-                    }
-                }
+        CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
+        if (proxyCtClass == null) {
+            proxyCtClass = generateEnhanceClassProxyClass(proxyObjClass, packageName, methodBodyConstructor);
+            try {
+                realProxyClass = proxyCtClass.toClass();
+            } catch (Exception e) {
+                throw new ProxyEnhanceErrorException(e);
             }
         }
 
@@ -280,15 +259,15 @@ public class ProxyEnhanceUtils {
             try {
                 return (P) realProxyClass.getConstructor(proxyObjClass).newInstance(proxyObj);
             } catch (Exception e) {
-                log.error(proxyObjClass.toString(), e);
+                throw new ProxyEnhanceErrorException(e);
             }
         }
 
         return null;
     }
 
-    public static <P> P enhanceClass(ProxyDefinition definition) {
-        Object proxyObj = definition.getProxyObj();
+    public static <P> P enhanceClass(ProxyDefinition<P> definition) {
+        P proxyObj = definition.getProxyObj();
         Class<?> proxyObjClass = proxyObj.getClass();
         String packageName = definition.getPackageName();
         String proxyCtClassName = packageName.concat(".").concat(proxyObjClass.getSimpleName()).concat("$JavassistProxy");
@@ -296,8 +275,8 @@ public class ProxyEnhanceUtils {
         return enhanceClass0(proxyObj, proxyObjClass, packageName, proxyCtClassName, definition.getMethodBodyConstructor());
     }
 
-    public static <P> P enhanceClass(ProxyDefinition definition, Class<P> interfaceClass) {
-        Object proxyObj = definition.getProxyObj();
+    public static <P> P enhanceClass(ProxyDefinition<P> definition, Class<P> interfaceClass) {
+        P proxyObj = definition.getProxyObj();
         Class<?> proxyObjClass = proxyObj.getClass();
 
         if (!interfaceClass.isAssignableFrom(proxyObjClass)) {

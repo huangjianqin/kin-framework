@@ -1,7 +1,6 @@
 package org.kin.framework.hotswap.agent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.kin.framework.hotswap.HotSwapException;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -13,8 +12,6 @@ import java.util.Arrays;
  * @date 2019/3/1
  */
 public class ClassFileInfo {
-    private static final Logger log = LoggerFactory.getLogger(ClassFileInfo.class);
-
     private final String filePath;
     private final String className;
     private final byte[] bytes;
@@ -36,10 +33,8 @@ public class ClassFileInfo {
             BigInteger bi = new BigInteger(1, me.digest());
             return bi.toString(16).toUpperCase();
         } catch (NoSuchAlgorithmException e) {
-            log.error("", e);
+            throw new HotSwapException(e);
         }
-
-        return "";
     }
 
     //getter

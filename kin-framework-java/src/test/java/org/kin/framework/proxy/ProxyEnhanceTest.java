@@ -19,14 +19,14 @@ public class ProxyEnhanceTest {
 
         AddService addService = new AddService();
 
-        ProxyInvoker proxyInvoker = ProxyEnhanceUtils.enhanceMethod(new ProxyMethodDefinition(addService, AddService.class.getMethods()[0], "test"));
+        ProxyInvoker<AddService> proxyInvoker = ProxyEnhanceUtils.enhanceMethod(new ProxyMethodDefinition<>(addService, AddService.class.getMethods()[0], "test"));
         try {
             System.out.println(proxyInvoker.invoke(1, 1));
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        AddService addServiceProxy = ProxyEnhanceUtils.enhanceClass(new ProxyDefinition(addService, "test"));
+        AddService addServiceProxy = ProxyEnhanceUtils.enhanceClass(new ProxyDefinition<>(addService, "test"));
         System.out.println(addServiceProxy.add(1, 1));
         System.out.println(addService);
         System.out.println(addServiceProxy.equals(addService));

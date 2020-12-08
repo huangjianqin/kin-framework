@@ -5,8 +5,6 @@ import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.concurrent.actor.Dispatcher;
 import org.kin.framework.concurrent.actor.PinnedDispatcher;
 import org.kin.framework.concurrent.actor.Receiver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,8 +18,6 @@ import java.util.concurrent.TimeUnit;
  * 利用Message的某种属性将Message分区,从而达到同一类的Message按顺序在同一线程执行
  */
 public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, MSG> {
-    private static final Logger log = LoggerFactory.getLogger(PartitionDispatcher.class);
-
     protected Dispatcher<Integer, MSG> pinnedDispatcher;
     /** 分区数 */
     protected final int partitionNum;
