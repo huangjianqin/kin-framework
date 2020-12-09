@@ -9,8 +9,11 @@ import java.lang.reflect.Method;
  * @date 2020-01-11
  */
 public class ProxyMethodDefinition<T> {
+    /** 实现类 */
     private T proxyObj;
+    /** 代理方法 */
     private Method method;
+    /** 生成的代理类名 */
     private String className;
 
     public ProxyMethodDefinition(T proxyObj, Method method, String packageName) {

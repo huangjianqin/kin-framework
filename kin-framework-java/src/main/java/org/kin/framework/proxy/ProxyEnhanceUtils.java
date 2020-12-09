@@ -18,15 +18,21 @@ import java.util.StringJoiner;
  */
 public class ProxyEnhanceUtils {
     private static final ClassPool POOL = ClassPool.getDefault();
-    private static Multimap<String, CtClass> CTCLASS_CACHE = HashMultimap.create();
+    private static final Multimap<String, CtClass> CTCLASS_CACHE = HashMultimap.create();
 
+    /** 代理类中, 实现类默认字段名 */
     public static final String DEFAULT_PROXY_FIELD_NAME = "proxy";
+    /** 代理类中, 方法参数, $1, $2, $3==, $0=this */
+    public static final String METHOD_DECLARATION_PARAM_NAME = "$";
 
     private ProxyEnhanceUtils() {
     }
 
     /**
      * 为了ProxyInvoker的invoker方法生成代理方法调用代码
+     *
+     * @param fieldName   实现类在代理类中的字段名
+     * @param proxyMethod 代理方法
      */
     private static String generateProxyInvokerInvokeCode(String fieldName, Method proxyMethod) {
         StringBuilder invokeCode = new StringBuilder();
@@ -43,7 +49,7 @@ public class ProxyEnhanceUtils {
         StringJoiner paramBody = new StringJoiner(", ");
         for (int i = 0; i < paramTypes.length; i++) {
             //因为ProxyInvoker的invoker方法只有一个参数, Object[], 所以从param0取方法
-            paramBody.add(org.kin.framework.utils.ClassUtils.primitiveUnpackage(paramTypes[i], ClassUtils.METHOD_DECLARATION_ARG_NAME + "0[" + i + "]"));
+            paramBody.add(org.kin.framework.utils.ClassUtils.primitiveUnpackage(paramTypes[i], METHOD_DECLARATION_PARAM_NAME + "1[" + i + "]"));
         }
 
         oneLineCode.append(paramBody.toString());
@@ -55,56 +61,68 @@ public class ProxyEnhanceUtils {
         return invokeCode.toString();
     }
 
+    /**
+     * 生成代理某方法调用的代理类
+     *
+     * @param proxyObjClass    实现类
+     * @param proxyMethod      代理方法
+     * @param proxyCtClassName 代理类名
+     */
     private static CtClass generateEnhanceMethodProxyClass(Class<?> proxyObjClass, Method proxyMethod, String proxyCtClassName) {
         CtClass proxyCtClass = POOL.makeClass(proxyCtClassName);
         try {
             //实现接口
-            proxyCtClass.addInterface(POOL.getCtClass(ProxyInvoker.class.getName()));
+            proxyCtClass.addInterface(POOL.getCtClass(ProxyInvoker.class.getCanonicalName()));
 
             //添加成员域
             String prxoyFieldName = DEFAULT_PROXY_FIELD_NAME;
-            CtField proxyCtField = new CtField(POOL.get(proxyObjClass.getName()), prxoyFieldName, proxyCtClass);
+            CtField proxyCtField = new CtField(POOL.get(proxyObjClass.getCanonicalName()), prxoyFieldName, proxyCtClass);
             proxyCtField.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
             proxyCtClass.addField(proxyCtField);
 
             String methodFieldName = "method";
-            CtField methodCtField = new CtField(POOL.get(Method.class.getName()), methodFieldName, proxyCtClass);
+            CtField methodCtField = new CtField(POOL.get(Method.class.getCanonicalName()), methodFieldName, proxyCtClass);
             methodCtField.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
             proxyCtClass.addField(methodCtField);
 
             //处理构造方法
-            CtConstructor ctConstructor = new CtConstructor(new CtClass[]{POOL.get(proxyObjClass.getName()), POOL.get(Method.class.getName())}, proxyCtClass);
+            CtConstructor ctConstructor = new CtConstructor(new CtClass[]{POOL.get(proxyObjClass.getCanonicalName()), POOL.get(Method.class.getCanonicalName())}, proxyCtClass);
             ctConstructor.setBody("{$0.".concat(prxoyFieldName).concat(" = $1;").concat("$0.").concat(methodFieldName).concat(" = $2;}"));
             proxyCtClass.addConstructor(ctConstructor);
 
             //方法体
             //invoke
-            Method invokeMethod = ProxyInvoker.class.getMethod("invoke", Object[].class);
+            CtMethod invokeCtMethod = new CtMethod(POOL.get(Object.class.getCanonicalName()), "invoke",
+                    new CtClass[]{POOL.get(Object[].class.getCanonicalName())}, proxyCtClass);
+            invokeCtMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
+            invokeCtMethod.setExceptionTypes(new CtClass[]{POOL.get(Exception.class.getCanonicalName())});
             StringBuilder methodBody = new StringBuilder();
-            methodBody.append(ClassUtils.generateMethodDeclaration(invokeMethod).concat("{"));
+            methodBody.append("{");
             methodBody.append("Object result = null;");
             methodBody.append(generateProxyInvokerInvokeCode(prxoyFieldName, proxyMethod));
             methodBody.append("return result; }");
+            invokeCtMethod.setBody(methodBody.toString());
 
-            CtMethod invokeCtMethod = CtMethod.make(methodBody.toString(), proxyCtClass);
             proxyCtClass.addMethod(invokeCtMethod);
 
             //getProxyObj
-            Method getProxyObjMethod = ProxyInvoker.class.getMethod("getProxyObj");
+            CtMethod getProxyObjCtMethod = new CtMethod(POOL.get(proxyObjClass.getCanonicalName()), "getProxyObj", null, proxyCtClass);
+            getProxyObjCtMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
             methodBody = new StringBuilder();
-            methodBody.append(ClassUtils.generateMethodDeclaration(getProxyObjMethod).concat("{"));
+            methodBody.append("{");
             methodBody.append("return ".concat(prxoyFieldName).concat("; }"));
+            getProxyObjCtMethod.setBody(methodBody.toString());
 
-            CtMethod getProxyObjCtMethod = CtMethod.make(methodBody.toString(), proxyCtClass);
             proxyCtClass.addMethod(getProxyObjCtMethod);
 
             //getMethod
-            Method getMethodMethod = ProxyInvoker.class.getMethod("getMethod");
+            CtMethod getMethodCtMethod = new CtMethod(POOL.get(Method.class.getCanonicalName()), "getMethod", null, proxyCtClass);
+            getMethodCtMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
             methodBody = new StringBuilder();
-            methodBody.append(ClassUtils.generateMethodDeclaration(getMethodMethod).concat("{"));
+            methodBody.append("{");
             methodBody.append("return ".concat(methodFieldName).concat("; }"));
+            getMethodCtMethod.setBody(methodBody.toString());
 
-            CtMethod getMethodCtMethod = CtMethod.make(methodBody.toString(), proxyCtClass);
             proxyCtClass.addMethod(getMethodCtMethod);
 
             cacheCTClass(proxyCtClassName, proxyCtClass);
@@ -113,7 +131,7 @@ public class ProxyEnhanceUtils {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("proxy enhance encounter unknown error");
     }
 
     /**
@@ -126,26 +144,33 @@ public class ProxyEnhanceUtils {
         Method proxyMethod = definition.getMethod();
         String proxyCtClassName = definition.getClassName();
 
-        Class<?> realProxyClass;
+        Class<?> realProxyClass = null;
         try {
             realProxyClass = Class.forName(proxyCtClassName);
         } catch (ClassNotFoundException e) {
-            ExceptionUtils.throwExt(e);
+            //ignore
         }
 
-        CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
-        if (proxyCtClass == null) {
-            proxyCtClass = generateEnhanceMethodProxyClass(proxyObjClass, proxyMethod, proxyCtClassName);
+        if (Objects.isNull(realProxyClass)) {
+            CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
+            if (proxyCtClass == null) {
+                proxyCtClass = generateEnhanceMethodProxyClass(proxyObjClass, proxyMethod, proxyCtClassName);
+            }
+
+            try {
+                realProxyClass = proxyCtClass.toClass();
+            } catch (CannotCompileException e) {
+                ExceptionUtils.throwExt(e);
+            }
         }
 
         try {
-            realProxyClass = proxyCtClass.toClass();
             return (ProxyInvoker<T>) realProxyClass.getConstructor(proxyObjClass, Method.class).newInstance(proxyObj, proxyMethod);
         } catch (Exception e) {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("proxy enhance encounter unknown error");
     }
     //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -165,10 +190,11 @@ public class ProxyEnhanceUtils {
         Class<?>[] paramTypes = proxyMethod.getParameterTypes();
         StringJoiner paramBody = new StringJoiner(", ");
         for (int i = 0; i < paramTypes.length; i++) {
+            int paramNum = i + 1;
             if (paramTypes[i].isPrimitive()) {
-                paramBody.add(ClassUtils.METHOD_DECLARATION_ARG_NAME + i);
+                paramBody.add(METHOD_DECLARATION_PARAM_NAME + paramNum);
             } else {
-                paramBody.add(ClassUtils.primitivePackage(paramTypes[i], ClassUtils.METHOD_DECLARATION_ARG_NAME + i));
+                paramBody.add(ClassUtils.primitivePackage(paramTypes[i], METHOD_DECLARATION_PARAM_NAME + paramNum));
             }
         }
 
@@ -192,22 +218,23 @@ public class ProxyEnhanceUtils {
     private static CtClass generateEnhanceClassProxyClass(Class<?> proxyClass, String className, MethodBodyConstructor methodBodyConstructor) {
         CtClass proxyCtClass = POOL.makeClass(className);
         try {
+            String proxyClassCanonicalName = proxyClass.getCanonicalName();
             if (proxyClass.isInterface()) {
                 //实现接口
-                proxyCtClass.addInterface(POOL.getCtClass(proxyClass.getName()));
+                proxyCtClass.addInterface(POOL.getCtClass(proxyClassCanonicalName));
             } else {
                 //继承类
-                proxyCtClass.setSuperclass(POOL.getCtClass(proxyClass.getName()));
+                proxyCtClass.setSuperclass(POOL.getCtClass(proxyClassCanonicalName));
             }
 
             //添加成员域
             String prxoyFieldName = DEFAULT_PROXY_FIELD_NAME;
-            CtField proxyCtField = new CtField(POOL.get(proxyClass.getName()), prxoyFieldName, proxyCtClass);
+            CtField proxyCtField = new CtField(POOL.get(proxyClassCanonicalName), prxoyFieldName, proxyCtClass);
             proxyCtField.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
             proxyCtClass.addField(proxyCtField);
 
             //处理构造方法
-            CtConstructor ctConstructor = new CtConstructor(new CtClass[]{POOL.get(proxyClass.getName())}, proxyCtClass);
+            CtConstructor ctConstructor = new CtConstructor(new CtClass[]{POOL.get(proxyClassCanonicalName)}, proxyCtClass);
             ctConstructor.setBody("{$0.".concat(prxoyFieldName).concat(" = $1;}"));
             proxyCtClass.addConstructor(ctConstructor);
 
@@ -215,13 +242,23 @@ public class ProxyEnhanceUtils {
             //invoke
             for (Method method : proxyClass.getMethods()) {
                 if (Modifier.isFinal(method.getModifiers())) {
+                    //跳过final 方法
                     continue;
                 }
 
-                String methodCode = ClassUtils.generateMethodDeclaration(method).concat("{") +
+                //参数CtClass
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                CtClass[] parameterCtClass = new CtClass[parameterTypes.length];
+
+                for (int i = 0; i < parameterCtClass.length; i++) {
+                    parameterCtClass[i] = POOL.get(parameterTypes[i].getCanonicalName());
+                }
+
+                CtMethod ctMethod = new CtMethod(POOL.get(method.getReturnType().getCanonicalName()), method.getName(), parameterCtClass, proxyCtClass);
+                ctMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
+                ctMethod.setBody("{" +
                         methodBodyConstructor.construct(prxoyFieldName, method) +
-                        " }";
-                CtMethod ctMethod = CtMethod.make(methodCode, proxyCtClass);
+                        " }");
                 proxyCtClass.addMethod(ctMethod);
             }
 
@@ -231,11 +268,16 @@ public class ProxyEnhanceUtils {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("proxy enhance encounter unknown error");
     }
 
     /**
      * @param proxyObjClass 需要代理的类或该类的某一接口
+     * @param proxyObj  实现类
+     * @param proxyObjClass 代理类, 可以是一个类, 也可以是接口, 如果是接口的话, 仅仅代理其接口方法, 如果是类的话, 仅仅代理public方法
+     * @param packageName 包名
+     * @param proxyCtClassName 代理类类名
+     * @param methodBodyConstructor 代理方法代码自定义
      */
     @SuppressWarnings("unchecked")
     private static <P> P enhanceClass0(
@@ -248,18 +290,21 @@ public class ProxyEnhanceUtils {
         try {
             realProxyClass = Class.forName(proxyCtClassName);
         } catch (ClassNotFoundException e) {
-            ExceptionUtils.throwExt(e);
+            //ignore
         }
 
-        CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
-        if (proxyCtClass == null) {
-            proxyCtClass = generateEnhanceClassProxyClass(proxyObjClass, packageName, methodBodyConstructor);
+        if (Objects.isNull(realProxyClass)) {
+            CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
+            if (proxyCtClass == null) {
+                proxyCtClass = generateEnhanceClassProxyClass(proxyObjClass, packageName, methodBodyConstructor);
+            }
             try {
                 realProxyClass = proxyCtClass.toClass();
             } catch (Exception e) {
                 ExceptionUtils.throwExt(e);
             }
         }
+
 
         if (Objects.nonNull(realProxyClass)) {
             try {
@@ -269,9 +314,12 @@ public class ProxyEnhanceUtils {
             }
         }
 
-        return null;
+        throw new IllegalStateException("proxy enhance encounter unknown error");
     }
 
+    /**
+     * 生成代理class的代理类
+     */
     public static <P> P enhanceClass(ProxyDefinition<P> definition) {
         P proxyObj = definition.getProxyObj();
         Class<?> proxyObjClass = proxyObj.getClass();
@@ -281,12 +329,15 @@ public class ProxyEnhanceUtils {
         return enhanceClass0(proxyObj, proxyObjClass, packageName, proxyCtClassName, definition.getMethodBodyConstructor());
     }
 
+    /**
+     * 生成代理interfaceClass的代理类, 仅仅实现该interfaceClass的接口方法
+     */
     public static <P> P enhanceClass(ProxyDefinition<P> definition, Class<P> interfaceClass) {
         P proxyObj = definition.getProxyObj();
         Class<?> proxyObjClass = proxyObj.getClass();
 
         if (!interfaceClass.isAssignableFrom(proxyObjClass)) {
-            return null;
+            throw new IllegalArgumentException(proxyObjClass.getCanonicalName() + " is not implement " + interfaceClass.getCanonicalName());
         }
 
         String packageName = definition.getPackageName();
