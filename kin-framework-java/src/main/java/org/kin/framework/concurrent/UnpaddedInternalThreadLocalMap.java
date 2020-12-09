@@ -16,13 +16,6 @@
 
 package org.kin.framework.concurrent;
 
-import org.kin.framework.common.IntHolder;
-
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CharsetEncoder;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -31,29 +24,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  * unless you know what you are doing.
  */
 class UnpaddedInternalThreadLocalMap {
-
+    /** 支持回退至获取java原生支持的ThreadLocal */
     static final ThreadLocal<InternalThreadLocalMap> slowThreadLocalMap = new ThreadLocal<InternalThreadLocalMap>();
+    /** {@link FastThreadLocal}唯一index生成器 */
     static final AtomicInteger nextIndex = new AtomicInteger();
 
-    /** Used by {@link FastThreadLocal} */
+    /** Used by {@link FastThreadLocal}, FastThreadLocal value */
     Object[] indexedVariables;
 
-    // Core thread-locals
-    int futureListenerStackDepth;
-    int localChannelReaderStackDepth;
-    Map<Class<?>, Boolean> handlerSharableCache;
-    IntHolder counterHashCode;
-    ThreadLocalRandom random;
-    Map<Class<?>, TypeParameterMatcher> typeParameterMatcherGetCache;
-    Map<Class<?>, Map<String, TypeParameterMatcher>> typeParameterMatcherFindCache;
-
-    // String-related thread-locals
-    StringBuilder stringBuilder;
-    Map<Charset, CharsetEncoder> charsetEncoderCache;
-    Map<Charset, CharsetDecoder> charsetDecoderCache;
-
-    // ArrayList-related thread-locals
-    ArrayList<Object> arrayList;
+    /** thread local random */
+    FastThreadLocalRandom random;
 
     UnpaddedInternalThreadLocalMap(Object[] indexedVariables) {
         this.indexedVariables = indexedVariables;

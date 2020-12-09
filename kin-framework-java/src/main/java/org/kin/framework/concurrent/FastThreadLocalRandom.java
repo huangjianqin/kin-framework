@@ -54,8 +54,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * //author Doug Lea
  */
 @SuppressWarnings("all")
-final class ThreadLocalRandom extends Random {
-    private static final Logger log = LoggerFactory.getLogger(ThreadLocalRandom.class);
+final class FastThreadLocalRandom extends Random {
+    private static final Logger log = LoggerFactory.getLogger(FastThreadLocalRandom.class);
 
     private static final AtomicLong seedUniquifier = new AtomicLong();
 
@@ -121,18 +121,18 @@ final class ThreadLocalRandom extends Random {
     }
 
     public static void setInitialSeedUniquifier(long initialSeedUniquifier) {
-        ThreadLocalRandom.initialSeedUniquifier = initialSeedUniquifier;
+        FastThreadLocalRandom.initialSeedUniquifier = initialSeedUniquifier;
     }
 
     public static long getInitialSeedUniquifier() {
         // Use the value set via the setter.
-        long initialSeedUniquifier = ThreadLocalRandom.initialSeedUniquifier;
+        long initialSeedUniquifier = FastThreadLocalRandom.initialSeedUniquifier;
         if (initialSeedUniquifier != 0) {
             return initialSeedUniquifier;
         }
 
-        synchronized (ThreadLocalRandom.class) {
-            initialSeedUniquifier = ThreadLocalRandom.initialSeedUniquifier;
+        synchronized (FastThreadLocalRandom.class) {
+            initialSeedUniquifier = FastThreadLocalRandom.initialSeedUniquifier;
             if (initialSeedUniquifier != 0) {
                 return initialSeedUniquifier;
             }
@@ -175,7 +175,7 @@ final class ThreadLocalRandom extends Random {
             initialSeedUniquifier ^= 0x3255ecdc33bae119L; // just a meaningless random number
             initialSeedUniquifier ^= Long.reverse(System.nanoTime());
 
-            ThreadLocalRandom.initialSeedUniquifier = initialSeedUniquifier;
+            FastThreadLocalRandom.initialSeedUniquifier = initialSeedUniquifier;
 
             if (interrupted) {
                 // Restore the interrupt status because we don't know how to/don't need to handle it here.
@@ -252,7 +252,7 @@ final class ThreadLocalRandom extends Random {
     /**
      * Constructor called only by localRandom.initialValue.
      */
-    ThreadLocalRandom() {
+    FastThreadLocalRandom() {
         super(newSeed());
         initialized = true;
     }
@@ -262,7 +262,7 @@ final class ThreadLocalRandom extends Random {
      *
      * @return the current thread's {@code ThreadLocalRandom}
      */
-    public static ThreadLocalRandom current() {
+    public static FastThreadLocalRandom current() {
         return InternalThreadLocalMap.get().random();
     }
 

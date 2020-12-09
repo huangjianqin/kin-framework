@@ -21,6 +21,7 @@ import java.util.Set;
 
 /**
  * netty的ThreadLocal方案, 可以获得更高性能
+ * 移除掉一些跟netty绑定的字段, 并对index做出优化
  * <p>
  * A special variant of {@link ThreadLocal} that yields higher access performance when accessed from a
  * {@link FastThreadLocalThread}.
@@ -41,6 +42,7 @@ import java.util.Set;
  * @see ThreadLocal
  */
 public class FastThreadLocal<V> {
+    /** 该index对应的value是当前线程拥有的FastThreadLocal实例缓存 */
     private static final int variablesToRemoveIndex = InternalThreadLocalMap.nextVariableIndex();
 
     /**
@@ -92,12 +94,15 @@ public class FastThreadLocal<V> {
         InternalThreadLocalMap.destroy();
     }
 
+    /**
+     * 当前线程, 将新的FastThreadLocal添加至缓存
+     */
     @SuppressWarnings("unchecked")
     private static void addToVariablesToRemove(InternalThreadLocalMap threadLocalMap, FastThreadLocal<?> variable) {
         Object v = threadLocalMap.indexedVariable(variablesToRemoveIndex);
         Set<FastThreadLocal<?>> variablesToRemove;
         if (v == InternalThreadLocalMap.UNSET || v == null) {
-            variablesToRemove = Collections.newSetFromMap(new IdentityHashMap<FastThreadLocal<?>, Boolean>());
+            variablesToRemove = Collections.newSetFromMap(new IdentityHashMap<>());
             threadLocalMap.setIndexedVariable(variablesToRemoveIndex, variablesToRemove);
         } else {
             variablesToRemove = (Set<FastThreadLocal<?>>) v;
@@ -106,6 +111,9 @@ public class FastThreadLocal<V> {
         variablesToRemove.add(variable);
     }
 
+    /**
+     * 当前线程, 移除指定FastThreadLocal缓存
+     */
     private static void removeFromVariablesToRemove(
             InternalThreadLocalMap threadLocalMap, FastThreadLocal<?> variable) {
 
@@ -120,6 +128,7 @@ public class FastThreadLocal<V> {
         variablesToRemove.remove(variable);
     }
 
+    /** 全局唯一index */
     private final int index;
 
     public FastThreadLocal() {
