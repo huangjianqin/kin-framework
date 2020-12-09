@@ -36,9 +36,11 @@ public class Urls {
                 try {
                     return (new File(url)).toURI().toURL();
                 } catch (MalformedURLException var4) {
-                    throw new RuntimeException(var5);
+                    ExceptionUtils.throwExt(var4);
                 }
             }
         }
+
+        throw new IllegalStateException("encounter unknown error");
     }
 }

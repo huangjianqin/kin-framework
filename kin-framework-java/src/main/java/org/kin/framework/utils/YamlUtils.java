@@ -35,7 +35,7 @@ public class YamlUtils {
             }
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     public static Properties loadYaml2Properties(String configPath) {

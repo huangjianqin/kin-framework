@@ -43,7 +43,7 @@ public class PropertiesUtils {
             }
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
 
@@ -74,7 +74,7 @@ public class PropertiesUtils {
             }
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     public static boolean writeFileProperties(Properties properties, String filePathName) {

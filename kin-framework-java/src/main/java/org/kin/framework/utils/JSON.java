@@ -37,7 +37,7 @@ public class JSON {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -53,7 +53,7 @@ public class JSON {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -69,7 +69,7 @@ public class JSON {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -85,7 +85,7 @@ public class JSON {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -104,7 +104,7 @@ public class JSON {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -120,7 +120,7 @@ public class JSON {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -158,7 +158,7 @@ public class JSON {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -176,6 +176,6 @@ public class JSON {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 }

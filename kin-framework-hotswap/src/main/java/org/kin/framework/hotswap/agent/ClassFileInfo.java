@@ -36,7 +36,7 @@ public class ClassFileInfo {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     //getter

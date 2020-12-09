@@ -306,7 +306,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
                         return f.get();
                     } catch (ExecutionException eex) {
                         ee = eex;
-                    } catch (RuntimeException rex) {
+                    } catch (Exception rex) {
                         ee = new ExecutionException(rex);
                     }
                 }

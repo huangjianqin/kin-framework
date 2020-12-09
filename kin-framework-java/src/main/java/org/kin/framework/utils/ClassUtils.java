@@ -67,7 +67,7 @@ public class ClassUtils {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -89,7 +89,7 @@ public class ClassUtils {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     public static Class<?> getClass(String className) {
@@ -102,7 +102,7 @@ public class ClassUtils {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -242,7 +242,7 @@ public class ClassUtils {
                 }
             }
         } catch (IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
 
         return subClasses;
@@ -263,7 +263,7 @@ public class ClassUtils {
             }
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     public static void setFieldValue(Object target, String fieldName, Object newValue) {
@@ -302,7 +302,7 @@ public class ClassUtils {
             ExceptionUtils.throwExt(e);
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
@@ -322,7 +322,7 @@ public class ClassUtils {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
     }
 
@@ -515,11 +515,13 @@ public class ClassUtils {
             } else if (Double.class.equals(fieldType) || Double.TYPE.equals(fieldType)) {
                 return Double.valueOf(value);
             } else {
-                throw new RuntimeException("illeagal data type, type=" + fieldType);
+                throw new IllegalArgumentException("illeagal data type, type=" + fieldType);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**

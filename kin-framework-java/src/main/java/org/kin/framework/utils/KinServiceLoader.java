@@ -189,7 +189,7 @@ public class KinServiceLoader {
             }
         }
 
-        return null;
+        throw new IllegalStateException("encounter unknown error");
     }
 
     /**

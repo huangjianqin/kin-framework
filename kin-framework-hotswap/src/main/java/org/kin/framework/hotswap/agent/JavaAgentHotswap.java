@@ -92,7 +92,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
             filePath = URLDecoder.decode(url.getPath(), "utf-8");
         } catch (Exception e) {
             ExceptionUtils.throwExt(e);
-            return null;
+            throw new IllegalStateException("encounter unknown error");
         }
         // 可执行jar包运行的结果里包含".jar"
         if (filePath.endsWith(JAR_SUFFIX)) {
