@@ -78,7 +78,7 @@ public class ClassUtils {
             return null;
         }
         try {
-            List<Class> argClasses = new ArrayList<>();
+            List<Class<?>> argClasses = new ArrayList<>();
             for (Object arg : args) {
                 argClasses.add(arg.getClass());
             }
@@ -92,7 +92,7 @@ public class ClassUtils {
         return null;
     }
 
-    public static Class getClass(String className) {
+    public static Class<?> getClass(String className) {
         if (StringUtils.isBlank(className)) {
             return null;
         }
@@ -108,6 +108,7 @@ public class ClassUtils {
     /**
      * 获取某个类的所有子类, 但不包括该类
      */
+    @SuppressWarnings("unchecked")
     public static <T> Set<Class<? extends T>> getSubClass(String packageName, Class<T> parent, boolean isIncludeJar) {
         return scanClasspathAndFindMatch(packageName, parent,
                 (c, target) -> !c.equals(target) && c.isAssignableFrom(target), isIncludeJar);
@@ -116,6 +117,7 @@ public class ClassUtils {
     /**
      * 获取出现某注解的所有类, 包括抽象类和接口
      */
+    @SuppressWarnings("unchecked")
     public static <T> Set<Class<? extends T>> getAnnotationedClass(String packageName, Class<T> annotationClass, boolean isIncludeJar) {
         if (annotationClass.isAnnotation()) {
             return scanClasspathAndFindMatch(packageName, annotationClass,
@@ -158,6 +160,7 @@ public class ClassUtils {
         return subClasses;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> Set<Class<T>> scanClasspathAndFindMatch(ClassLoader contextClassLoader, String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar) {
         Set<Class<T>> subClasses = Sets.newLinkedHashSet();
 
@@ -245,6 +248,7 @@ public class ClassUtils {
         return subClasses;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T getFieldValue(Object target, String fieldName) {
         for (Field field : getAllFields(target.getClass())) {
             if (field.getName().equals(fieldName)) {
@@ -395,7 +399,7 @@ public class ClassUtils {
     /**
      * 获取默认值
      */
-    public static Object getDefaultValue(Class claxx) {
+    public static Object getDefaultValue(Class<?> claxx) {
         if (claxx.isPrimitive()) {
             if (String.class.equals(claxx)) {
                 return "";
@@ -435,6 +439,7 @@ public class ClassUtils {
     /**
      * string -> 基础类型
      */
+    @SuppressWarnings("unchecked")
     public static <T> T convertStr2PrimitiveObj(Class<T> claxx, String strValue) {
         if (StringUtils.isNotBlank(strValue)) {
             if (String.class.equals(claxx)) {
@@ -464,8 +469,8 @@ public class ClassUtils {
     /**
      * @return 该类实现的接口是否有指定注解标识
      */
-    public static boolean isInterfaceAnnotationPresent(Object o, Class annotation) {
-        Class claxx = o.getClass();
+    public static boolean isInterfaceAnnotationPresent(Object o, Class<?> annotation) {
+        Class<?> claxx = o.getClass();
         while (claxx != null) {
             for (Class interfaceClass : claxx.getInterfaces()) {
                 if (interfaceClass.isAnnotationPresent(annotation)) {
@@ -602,7 +607,7 @@ public class ClassUtils {
     /**
      * 基础类型封箱
      */
-    public static String primitivePackage(Class claxx, String code) {
+    public static String primitivePackage(Class<?> claxx, String code) {
         StringBuilder sb = new StringBuilder();
         // 需要手动装箱, 不然编译会报错
         if (claxx.isPrimitive()) {
@@ -632,7 +637,7 @@ public class ClassUtils {
     /**
      * 基础类型拆箱
      */
-    public static String primitiveUnpackage(Class claxx, String code) {
+    public static String primitiveUnpackage(Class<?> claxx, String code) {
         //需要手动拆箱, 不然编译会报错
         if (Integer.TYPE.equals(claxx)) {
             return "((" + Integer.class.getSimpleName() + ")" + code + ").intValue()";
@@ -663,8 +668,8 @@ public class ClassUtils {
         sb.append("$");
 
         StringJoiner paramsJoiner = new StringJoiner("$");
-        Class[] paramTypes = method.getParameterTypes();
-        for (Class paramType : paramTypes) {
+        Class<?>[] paramTypes = method.getParameterTypes();
+        for (Class<?> paramType : paramTypes) {
             paramsJoiner.add(paramType.getTypeName());
         }
         sb.append(paramsJoiner.toString());
@@ -706,8 +711,8 @@ public class ClassUtils {
         sb.append(")");
 
         StringJoiner throwsSJ = new StringJoiner(", ");
-        Class[] exceptionTypes = method.getExceptionTypes();
-        for (Class exceptionType : exceptionTypes) {
+        Class<?>[] exceptionTypes = method.getExceptionTypes();
+        for (Class<?> exceptionType : exceptionTypes) {
             throwsSJ.add(exceptionType.getName());
         }
         if (throwsSJ.length() > 0) {
