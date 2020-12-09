@@ -15,12 +15,7 @@
  */
 package org.kin.framework.concurrent;
 
-import org.kin.framework.common.IntHolder;
-
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CharsetEncoder;
-import java.util.*;
+import java.util.Arrays;
 
 /**
  * The internal data structure that stores the thread-local variables for Netty and all {@link FastThreadLocal}s.
@@ -28,9 +23,7 @@ import java.util.*;
  * unless you know what you are doing.
  */
 final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
-
-    private static final int DEFAULT_ARRAY_LIST_INITIAL_CAPACITY = 8;
-
+    /** 数组空占位 */
     public static final Object UNSET = new Object();
 
     public static InternalThreadLocalMap getIfSet() {
@@ -81,6 +74,9 @@ final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
         slowThreadLocalMap.remove();
     }
 
+    /**
+     * 生成{@link FastThreadLocal}唯一index
+     */
     public static int nextVariableIndex() {
         int index = nextIndex.getAndIncrement();
         if (index < 0) {
@@ -90,10 +86,7 @@ final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
         return index;
     }
 
-    public static int lastVariableIndex() {
-        return nextIndex.get() - 1;
-    }
-
+    //占位?? 为了满足jvm压缩class条件???
     // Cache line padding (must be public)
     // With CompressedOops enabled, an instance of this class should occupy at least 128 bytes.
     public long rp1, rp2, rp3, rp4, rp5, rp6, rp7, rp8, rp9;
@@ -102,46 +95,22 @@ final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
         super(newIndexedVariableTable());
     }
 
+    /**
+     * 初始化thread local value数组, 并使用同一实例填充, 以表示空
+     */
     private static Object[] newIndexedVariableTable() {
         Object[] array = new Object[32];
         Arrays.fill(array, UNSET);
         return array;
     }
 
+    /**
+     * @return thread local value数量
+     */
     public int size() {
         int count = 0;
 
-        if (futureListenerStackDepth != 0) {
-            count++;
-        }
-        if (localChannelReaderStackDepth != 0) {
-            count++;
-        }
-        if (handlerSharableCache != null) {
-            count++;
-        }
-        if (counterHashCode != null) {
-            count++;
-        }
         if (random != null) {
-            count++;
-        }
-        if (typeParameterMatcherGetCache != null) {
-            count++;
-        }
-        if (typeParameterMatcherFindCache != null) {
-            count++;
-        }
-        if (stringBuilder != null) {
-            count++;
-        }
-        if (charsetEncoderCache != null) {
-            count++;
-        }
-        if (charsetDecoderCache != null) {
-            count++;
-        }
-        if (arrayList != null) {
             count++;
         }
 
@@ -151,109 +120,26 @@ final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
             }
         }
 
+        // 减去index=0的value, 因为这个value是用来缓存所有FastThreadLocal实例
         // We should subtract 1 from the count because the first element in 'indexedVariables' is reserved
         // by 'FastThreadLocal' to keep the list of 'FastThreadLocal's to remove on 'FastThreadLocal.removeAll()'.
         return count - 1;
     }
 
-    public StringBuilder stringBuilder() {
-        StringBuilder builder = stringBuilder;
-        if (builder == null) {
-            stringBuilder = builder = new StringBuilder(512);
-        } else {
-            builder.setLength(0);
-        }
-        return builder;
-    }
-
-    public Map<Charset, CharsetEncoder> charsetEncoderCache() {
-        Map<Charset, CharsetEncoder> cache = charsetEncoderCache;
-        if (cache == null) {
-            charsetEncoderCache = cache = new IdentityHashMap<Charset, CharsetEncoder>();
-        }
-        return cache;
-    }
-
-    public Map<Charset, CharsetDecoder> charsetDecoderCache() {
-        Map<Charset, CharsetDecoder> cache = charsetDecoderCache;
-        if (cache == null) {
-            charsetDecoderCache = cache = new IdentityHashMap<Charset, CharsetDecoder>();
-        }
-        return cache;
-    }
-
-    public <E> ArrayList<E> arrayList() {
-        return arrayList(DEFAULT_ARRAY_LIST_INITIAL_CAPACITY);
-    }
-
-    public <E> ArrayList<E> arrayList(int minCapacity) {
-        ArrayList<E> list = (ArrayList<E>) arrayList;
-        if (list == null) {
-            list = (ArrayList<E>) new ArrayList<Object>(minCapacity);
-        } else {
-            list.clear();
-            list.ensureCapacity(minCapacity);
-        }
-        return list;
-    }
-
-    public int futureListenerStackDepth() {
-        return futureListenerStackDepth;
-    }
-
-    public void setFutureListenerStackDepth(int futureListenerStackDepth) {
-        this.futureListenerStackDepth = futureListenerStackDepth;
-    }
-
-    public ThreadLocalRandom random() {
-        ThreadLocalRandom r = random;
+    /**
+     * @return thread local random
+     */
+    public FastThreadLocalRandom random() {
+        FastThreadLocalRandom r = random;
         if (r == null) {
-            random = r = new ThreadLocalRandom();
+            random = r = new FastThreadLocalRandom();
         }
         return r;
     }
 
-    public Map<Class<?>, TypeParameterMatcher> typeParameterMatcherGetCache() {
-        Map<Class<?>, TypeParameterMatcher> cache = typeParameterMatcherGetCache;
-        if (cache == null) {
-            typeParameterMatcherGetCache = cache = new IdentityHashMap<Class<?>, TypeParameterMatcher>();
-        }
-        return cache;
-    }
-
-    public Map<Class<?>, Map<String, TypeParameterMatcher>> typeParameterMatcherFindCache() {
-        Map<Class<?>, Map<String, TypeParameterMatcher>> cache = typeParameterMatcherFindCache;
-        if (cache == null) {
-            typeParameterMatcherFindCache = cache = new IdentityHashMap<Class<?>, Map<String, TypeParameterMatcher>>();
-        }
-        return cache;
-    }
-
-    public IntHolder counterHashCode() {
-        return counterHashCode;
-    }
-
-    public void setCounterHashCode(IntHolder counterHashCode) {
-        this.counterHashCode = counterHashCode;
-    }
-
-    public Map<Class<?>, Boolean> handlerSharableCache() {
-        Map<Class<?>, Boolean> cache = handlerSharableCache;
-        if (cache == null) {
-            // Start with small capacity to keep memory overhead as low as possible.
-            handlerSharableCache = cache = new WeakHashMap<Class<?>, Boolean>(4);
-        }
-        return cache;
-    }
-
-    public int localChannelReaderStackDepth() {
-        return localChannelReaderStackDepth;
-    }
-
-    public void setLocalChannelReaderStackDepth(int localChannelReaderStackDepth) {
-        this.localChannelReaderStackDepth = localChannelReaderStackDepth;
-    }
-
+    /**
+     * @return 指定index的thread local value
+     */
     public Object indexedVariable(int index) {
         Object[] lookup = indexedVariables;
         return index < lookup.length ? lookup[index] : UNSET;
@@ -274,9 +160,13 @@ final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
         }
     }
 
+    /**
+     * thread local value数组扩容
+     */
     private void expandIndexedVariableTableAndSet(int index, Object value) {
         Object[] oldArray = indexedVariables;
         final int oldCapacity = oldArray.length;
+        //找到最接近的 2的n次方 数值
         int newCapacity = index;
         newCapacity |= newCapacity >>> 1;
         newCapacity |= newCapacity >>> 2;
@@ -291,6 +181,9 @@ final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
         indexedVariables = newArray;
     }
 
+    /**
+     * 移除thread local value
+     */
     public Object removeIndexedVariable(int index) {
         Object[] lookup = indexedVariables;
         if (index < lookup.length) {
@@ -302,6 +195,9 @@ final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
         }
     }
 
+    /**
+     * @return 指定index的thread local是否已设置value
+     */
     public boolean isIndexedVariableSet(int index) {
         Object[] lookup = indexedVariables;
         return index < lookup.length && lookup[index] != UNSET;
