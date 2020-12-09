@@ -32,16 +32,18 @@ public class PropertiesUtils {
             prop.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             return prop;
         } catch (IOException e) {
-            throw new PropertyException(e);
+            ExceptionUtils.throwExt(e);
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    throw new PropertyException(e);
+                    ExceptionUtils.throwExt(e);
                 }
             }
         }
+
+        return null;
     }
 
 
@@ -61,16 +63,18 @@ public class PropertiesUtils {
             prop.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             return prop;
         } catch (IOException e) {
-            throw new PropertyException(e);
+            ExceptionUtils.throwExt(e);
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    throw new PropertyException(e);
+                    ExceptionUtils.throwExt(e);
                 }
             }
         }
+
+        return null;
     }
 
     public static boolean writeFileProperties(Properties properties, String filePathName) {
@@ -88,15 +92,17 @@ public class PropertiesUtils {
             properties.store(new OutputStreamWriter(out, StandardCharsets.UTF_8), null);
             return true;
         } catch (IOException e) {
-            throw new PropertyException(e);
+            ExceptionUtils.throwExt(e);
         } finally {
             if (out != null) {
                 try {
                     out.close();
                 } catch (IOException e) {
-                    throw new PropertyException(e);
+                    ExceptionUtils.throwExt(e);
                 }
             }
         }
+
+        return false;
     }
 }

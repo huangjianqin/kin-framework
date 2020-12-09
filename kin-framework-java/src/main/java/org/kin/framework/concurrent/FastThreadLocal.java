@@ -15,6 +15,8 @@
  */
 package org.kin.framework.concurrent;
 
+import org.kin.framework.utils.ExceptionUtils;
+
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -161,7 +163,7 @@ public class FastThreadLocal<V> {
         try {
             v = initialValue();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
 
         threadLocalMap.setIndexedVariable(index, v);
@@ -233,7 +235,7 @@ public class FastThreadLocal<V> {
             try {
                 onRemoval((V) v);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                ExceptionUtils.throwExt(e);
             }
         }
     }

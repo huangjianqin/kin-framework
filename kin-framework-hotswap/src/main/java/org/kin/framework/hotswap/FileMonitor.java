@@ -4,6 +4,7 @@ import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.hotswap.agent.JavaAgentHotswap;
 import org.kin.framework.utils.ClassUtils;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,7 @@ public class FileMonitor extends Thread implements Closeable {
         try {
             init();
         } catch (IOException e) {
-            throw new FileMonitorException(e);
+            ExceptionUtils.throwExt(e);
         }
         super.start();
     }
@@ -159,7 +160,7 @@ public class FileMonitor extends Thread implements Closeable {
             try {
                 watchService.close();
             } catch (IOException e) {
-                throw new FileMonitorException(e);
+                ExceptionUtils.throwExt(e);
             }
             executionContext.shutdown();
             //help GC
@@ -192,7 +193,7 @@ public class FileMonitor extends Thread implements Closeable {
             try {
                 monitorFile0(path.getParent(), path.getFileName().toString(), fileReloadable);
             } catch (IOException e) {
-                throw new FileMonitorException(e);
+                ExceptionUtils.throwExt(e);
             }
         } else {
             throw new IllegalStateException("monitor file dir error");

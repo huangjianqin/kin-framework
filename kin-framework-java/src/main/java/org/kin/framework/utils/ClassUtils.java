@@ -49,10 +49,13 @@ public class ClassUtils {
         try {
             return claxx.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T instance(String classStr) {
         if (StringUtils.isBlank(classStr)) {
             return null;
@@ -61,8 +64,10 @@ public class ClassUtils {
             Class<T> claxx = (Class<T>) Class.forName(classStr);
             return instance(claxx);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -81,8 +86,10 @@ public class ClassUtils {
             return constructor.newInstance(args);
         } catch (InstantiationException | IllegalAccessException |
                 NoSuchMethodException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     public static Class getClass(String className) {
@@ -92,8 +99,10 @@ public class ClassUtils {
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -187,7 +196,7 @@ public class ClassUtils {
                                     try {
                                         return (Class<T>) contextClassLoader.loadClass(className);
                                     } catch (ClassNotFoundException e) {
-                                        throw new RuntimeException(e);
+                                        ExceptionUtils.throwExt(e);
                                     }
                                 }
                                 return null;
@@ -224,7 +233,7 @@ public class ClassUtils {
                                 subClasses.add(claxx);
                             }
                         } catch (ClassNotFoundException e) {
-                            throw new RuntimeException(e);
+                            ExceptionUtils.throwExt(e);
                         }
                     }
                 }
@@ -243,7 +252,7 @@ public class ClassUtils {
                 try {
                     return (T) field.get(target);
                 } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
+                    ExceptionUtils.throwExt(e);
                 } finally {
                     field.setAccessible(false);
                 }
@@ -260,7 +269,7 @@ public class ClassUtils {
                 try {
                     field.set(target, newValue);
                 } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
+                    ExceptionUtils.throwExt(e);
                 } finally {
                     field.setAccessible(false);
                 }
@@ -286,8 +295,10 @@ public class ClassUtils {
             }
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**

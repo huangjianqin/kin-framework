@@ -18,7 +18,7 @@ public class HotSwapMain {
                     System.out.println("new obj");
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+
             }
 
         }

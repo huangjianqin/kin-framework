@@ -61,7 +61,7 @@ public class CommandUtils {
         if (StringUtils.isNotBlank(workingDirectory)) {
             workingDirectoryFile = new File(workingDirectory);
             if (!workingDirectoryFile.exists()) {
-                throw new WorkingDirectoryNotExistsException(workingDirectory);
+                throw new IllegalArgumentException("directory '" + workingDirectory + "' not exists ");
             }
         }
         FileOutputStream fileOutputStream = null;

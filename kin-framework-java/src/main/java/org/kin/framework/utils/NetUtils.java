@@ -91,7 +91,7 @@ public class NetUtils {
                 return localAddress;
             }
         } catch (Throwable e) {
-            throw new NetworkException(e);
+            ExceptionUtils.throwExt(e);
         }
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
@@ -114,15 +114,15 @@ public class NetUtils {
                                 return address;
                             }
                         } catch (Throwable e) {
-                            throw new NetworkException(e);
+                            ExceptionUtils.throwExt(e);
                         }
                     }
                 } catch (Throwable e) {
-                    throw new NetworkException(e);
+                    ExceptionUtils.throwExt(e);
                 }
             }
         } catch (Throwable e) {
-            throw new NetworkException(e);
+            ExceptionUtils.throwExt(e);
         }
         return localAddress;
     }
@@ -284,8 +284,10 @@ public class NetUtils {
 
             return true;
         } catch (IOException e) {
-            throw new NetworkException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return false;
     }
 
     /**

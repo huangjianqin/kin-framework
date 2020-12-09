@@ -34,8 +34,10 @@ public class JSON {
         try {
             return PARSER.writeValueAsString(obj);
         } catch (IOException e) {
-            throw new JsonSerializeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -48,8 +50,10 @@ public class JSON {
         try {
             return PARSER.writeValueAsBytes(obj);
         } catch (IOException e) {
-            throw new JsonSerializeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -62,8 +66,10 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, clazz);
         } catch (JsonProcessingException e) {
-            throw new JsonDeserializeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -76,8 +82,10 @@ public class JSON {
         try {
             return PARSER.readValue(bytes, clazz);
         } catch (IOException e) {
-            throw new JsonDeserializeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -93,8 +101,10 @@ public class JSON {
             JavaType javaType = PARSER.getTypeFactory().constructParametricType(parametrized, parameterClasses);
             return PARSER.readValue(jsonStr, javaType);
         } catch (IOException e) {
-            throw new JsonDeserializeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -107,8 +117,10 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, typeReference);
         } catch (IOException e) {
-            throw new JsonDeserializeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -143,8 +155,10 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, collectionType);
         } catch (JsonProcessingException e) {
-            throw new JsonDeserializeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -159,7 +173,9 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, mapType);
         } catch (JsonProcessingException e) {
-            throw new JsonDeserializeException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 }

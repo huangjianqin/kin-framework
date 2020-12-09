@@ -1,6 +1,6 @@
 package org.kin.framework.hotswap.agent;
 
-import org.kin.framework.hotswap.HotSwapException;
+import org.kin.framework.utils.ExceptionUtils;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -33,8 +33,10 @@ public class ClassFileInfo {
             BigInteger bi = new BigInteger(1, me.digest());
             return bi.toString(16).toUpperCase();
         } catch (NoSuchAlgorithmException e) {
-            throw new HotSwapException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     //getter

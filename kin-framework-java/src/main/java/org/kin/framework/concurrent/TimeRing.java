@@ -3,8 +3,7 @@ package org.kin.framework.concurrent;
 import org.kin.framework.concurrent.keeper.Keeper;
 import org.kin.framework.concurrent.keeper.KeeperAction;
 import org.kin.framework.utils.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.kin.framework.utils.ExceptionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * 时间轮
  */
 public class TimeRing<D> implements KeeperAction {
-    private static final Logger log = LoggerFactory.getLogger(TimeRing.class);
     /** 时间轮每个slot对应的数据 */
     private Map<Integer, List<D>> ringData;
     /** 时间轮slot数量 */
@@ -107,7 +105,7 @@ public class TimeRing<D> implements KeeperAction {
                 ringSlotData.clear();
             }
         } catch (Exception e) {
-            log.error("时钟调度遇到异常 >>>> ", e);
+            ExceptionUtils.throwExt(e);
         }
     }
 

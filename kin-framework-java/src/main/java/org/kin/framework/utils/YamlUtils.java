@@ -14,6 +14,7 @@ import java.util.*;
  * @date 2019/7/6
  */
 public class YamlUtils {
+    @SuppressWarnings("unchecked")
     public static YamlConfig loadYaml(String configPath) {
         //从classpath寻找
         URL url = Thread.currentThread().getContextClassLoader().getResource(configPath);
@@ -22,7 +23,7 @@ public class YamlUtils {
             try {
                 return new YamlConfig((Map<String, Object>) Yaml.load(url.openStream()));
             } catch (IOException e) {
-                throw new YamlParseException(e);
+                ExceptionUtils.throwExt(e);
             }
         } else {
             //从file path寻找
@@ -30,9 +31,11 @@ public class YamlUtils {
                 //返回多层嵌套map
                 return new YamlConfig((Map<String, Object>) Yaml.load(new File(configPath)));
             } catch (FileNotFoundException e) {
-                throw new YamlParseException(e);
+                ExceptionUtils.throwExt(e);
             }
         }
+
+        return null;
     }
 
     public static Properties loadYaml2Properties(String configPath) {

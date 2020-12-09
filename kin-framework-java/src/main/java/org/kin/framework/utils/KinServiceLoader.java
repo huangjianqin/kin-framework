@@ -82,7 +82,7 @@ public class KinServiceLoader {
                 parse(url);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
     }
 
@@ -101,7 +101,7 @@ public class KinServiceLoader {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            ExceptionUtils.throwExt(e);
         }
     }
 
@@ -185,7 +185,7 @@ public class KinServiceLoader {
             try {
                 return serviceGetter.call();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                ExceptionUtils.throwExt(e);
             }
         }
 

@@ -4,7 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import javassist.*;
 import org.kin.framework.utils.ClassUtils;
-import org.kin.framework.utils.ProxyEnhanceErrorException;
+import org.kin.framework.utils.ExceptionUtils;
 
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -110,8 +110,10 @@ public class ProxyEnhanceUtils {
             cacheCTClass(proxyCtClassName, proxyCtClass);
             return proxyCtClass;
         } catch (Exception e) {
-            throw new ProxyEnhanceErrorException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -128,7 +130,7 @@ public class ProxyEnhanceUtils {
         try {
             realProxyClass = Class.forName(proxyCtClassName);
         } catch (ClassNotFoundException e) {
-            throw new ProxyEnhanceErrorException(e);
+            ExceptionUtils.throwExt(e);
         }
 
         CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
@@ -140,8 +142,10 @@ public class ProxyEnhanceUtils {
             realProxyClass = proxyCtClass.toClass();
             return (ProxyInvoker<T>) realProxyClass.getConstructor(proxyObjClass, Method.class).newInstance(proxyObj, proxyMethod);
         } catch (Exception e) {
-            throw new ProxyEnhanceErrorException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
     //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -224,8 +228,10 @@ public class ProxyEnhanceUtils {
             cacheCTClass(className, proxyCtClass);
             return proxyCtClass;
         } catch (Exception e) {
-            throw new ProxyEnhanceErrorException(e);
+            ExceptionUtils.throwExt(e);
         }
+
+        return null;
     }
 
     /**
@@ -238,11 +244,11 @@ public class ProxyEnhanceUtils {
             String packageName,
             String proxyCtClassName,
             MethodBodyConstructor methodBodyConstructor) {
-        Class<?> realProxyClass;
+        Class<?> realProxyClass = null;
         try {
             realProxyClass = Class.forName(proxyCtClassName);
         } catch (ClassNotFoundException e) {
-            throw new ProxyEnhanceErrorException(e);
+            ExceptionUtils.throwExt(e);
         }
 
         CtClass proxyCtClass = POOL.getOrNull(proxyCtClassName);
@@ -251,7 +257,7 @@ public class ProxyEnhanceUtils {
             try {
                 realProxyClass = proxyCtClass.toClass();
             } catch (Exception e) {
-                throw new ProxyEnhanceErrorException(e);
+                ExceptionUtils.throwExt(e);
             }
         }
 
@@ -259,7 +265,7 @@ public class ProxyEnhanceUtils {
             try {
                 return (P) realProxyClass.getConstructor(proxyObjClass).newInstance(proxyObj);
             } catch (Exception e) {
-                throw new ProxyEnhanceErrorException(e);
+                ExceptionUtils.throwExt(e);
             }
         }
 
