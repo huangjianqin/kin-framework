@@ -247,12 +247,7 @@ public class ProxyEnhanceUtils {
                 }
 
                 //参数CtClass
-                Class<?>[] parameterTypes = method.getParameterTypes();
-                CtClass[] parameterCtClass = new CtClass[parameterTypes.length];
-
-                for (int i = 0; i < parameterCtClass.length; i++) {
-                    parameterCtClass[i] = POOL.get(parameterTypes[i].getCanonicalName());
-                }
+                CtClass[] parameterCtClass = getParamCtClasses(method);
 
                 CtMethod ctMethod = new CtMethod(POOL.get(method.getReturnType().getCanonicalName()), method.getName(), parameterCtClass, proxyCtClass);
                 ctMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
@@ -347,6 +342,24 @@ public class ProxyEnhanceUtils {
     }
 
     //---------------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * 将方法参数类型转换成CtClass[]
+     */
+    public static CtClass[] getParamCtClasses(Method method) {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        CtClass[] parameterCtClass = new CtClass[parameterTypes.length];
+
+        for (int i = 0; i < parameterCtClass.length; i++) {
+            try {
+                parameterCtClass[i] = POOL.get(parameterTypes[i].getCanonicalName());
+            } catch (NotFoundException e) {
+                ExceptionUtils.throwExt(e);
+            }
+        }
+
+        return parameterCtClass;
+    }
 
     /**
      * 尝试释放${@link ClassPool}无用空间
