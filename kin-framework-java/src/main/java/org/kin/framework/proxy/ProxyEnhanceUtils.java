@@ -1,5 +1,6 @@
 package org.kin.framework.proxy;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import javassist.*;
@@ -359,6 +360,52 @@ public class ProxyEnhanceUtils {
         }
 
         return parameterCtClass;
+    }
+
+    /**
+     * 生成CtMethod
+     */
+    public static CtMethod convertCtMethod(ClassPool classPool, Method method, String methodBody, int modifier, CtClass declaring) {
+        Preconditions.checkArgument(modifier > 0, "method modifier must be greater than zero");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{").append(System.lineSeparator());
+        sb.append(methodBody);
+        sb.append("}").append(System.lineSeparator());
+
+        try {
+            CtMethod ctMethod = new CtMethod(classPool.get(method.getReturnType().getCanonicalName()), method.getName(), ProxyEnhanceUtils.getParamCtClasses(method), declaring);
+            ctMethod.setModifiers(modifier);
+            ctMethod.setBody(sb.toString());
+            return ctMethod;
+        } catch (NotFoundException | CannotCompileException e) {
+            ExceptionUtils.throwExt(e);
+        }
+
+        return null;
+    }
+
+    /**
+     * 生成CtMethod, 并添加至声明CtClass中
+     */
+    public static void makeCtMethod(ClassPool classPool, Method method, String methodBody, int modifier, CtClass declaring) {
+        CtMethod ctMethod = convertCtMethod(classPool, method, methodBody, modifier, declaring);
+        if (Objects.isNull(ctMethod)) {
+            //理论上不会到这里
+            throw new IllegalStateException("encounter unknown error");
+        }
+        try {
+            declaring.addMethod(ctMethod);
+        } catch (CannotCompileException e) {
+            ExceptionUtils.throwExt(e);
+        }
+    }
+
+    /**
+     * 生成public final CtMethod, 并添加至声明CtClass中
+     */
+    public static void makeCtPublicFinalMethod(ClassPool classPool, Method method, String methodBody, CtClass declaring) {
+        makeCtMethod(classPool, method, methodBody, Modifier.PUBLIC + Modifier.FINAL, declaring);
     }
 
     /**

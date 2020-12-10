@@ -110,7 +110,7 @@ public class KinServiceLoader {
      */
     private void checkSupport(Class<?> serviceClass) {
         if (!serviceClass.isAnnotationPresent(SPI.class)) {
-            throw new IllegalArgumentException(serviceClass.getName().concat(" doesn't support spi, please ensure @SPI"));
+            throw new IllegalArgumentException(serviceClass.getCanonicalName().concat(" doesn't support spi, please ensure @SPI"));
         }
     }
 
@@ -121,7 +121,7 @@ public class KinServiceLoader {
     private synchronized <S> Iterator<S> iterator(Class<S> serviceClass) {
         checkSupport(serviceClass);
         //从接口名 或者 @SPI注解的提供的value 获取该接口实现类
-        HashSet<String> filtered = new HashSet<>(service2Implement.get(serviceClass.getName()));
+        HashSet<String> filtered = new HashSet<>(service2Implement.get(serviceClass.getCanonicalName()));
 
         SPI spi = serviceClass.getAnnotation(SPI.class);
         if (Objects.nonNull(spi)) {
@@ -168,12 +168,12 @@ public class KinServiceLoader {
         Iterator<S> serviceIterator = iterator(serviceClass);
         while (serviceIterator.hasNext()) {
             S implService = serviceIterator.next();
-            String implServiceSimpleName = implService.getClass().getSimpleName();
+            String implServiceSimpleName = implService.getClass().getSimpleName().toLowerCase();
             if (StringUtils.isNotBlank(defaultServiceName) &&
                     //扩展service class name |
-                    (defaultServiceName.equals(implService.getClass().getName().toLowerCase()) ||
+                    (defaultServiceName.equals(implService.getClass().getCanonicalName().toLowerCase()) ||
                             //service simple class name |
-                            defaultServiceName.equals(implServiceSimpleName.toLowerCase()) ||
+                            defaultServiceName.equals(implServiceSimpleName) ||
                             //前缀 + service simple class name |
                             defaultServiceName.concat(serviceClass.getSimpleName()).toLowerCase().equals(implServiceSimpleName))) {
                 return implService;
@@ -189,7 +189,7 @@ public class KinServiceLoader {
             }
         }
 
-        throw new IllegalStateException("encounter unknown error");
+        throw new IllegalStateException("can not find Adaptive service for" + serviceClass.getCanonicalName());
     }
 
     /**
@@ -285,11 +285,11 @@ public class KinServiceLoader {
                 try {
                     c = Class.forName(cn, false, classLoader);
                 } catch (ClassNotFoundException x) {
-                    throw new ServiceConfigurationError(String.format("%s: Provider %s not found", service.getName(), cn));
+                    throw new ServiceConfigurationError(String.format("%s: Provider %s not found", service.getCanonicalName(), cn));
                 }
 
                 if (!service.isAssignableFrom(c)) {
-                    throw new ServiceConfigurationError(String.format("%s: Provider %s not a subtype", service.getName(), cn));
+                    throw new ServiceConfigurationError(String.format("%s: Provider %s not a subtype", service.getCanonicalName(), cn));
                 }
                 try {
                     S p = service.cast(c.newInstance());
@@ -297,7 +297,7 @@ public class KinServiceLoader {
                     index++;
                     return p;
                 } catch (Throwable x) {
-                    throw new ServiceConfigurationError(String.format("%s: Provider %s could not be instantiated", service.getName(), cn), x);
+                    throw new ServiceConfigurationError(String.format("%s: Provider %s could not be instantiated", service.getCanonicalName(), cn), x);
                 }
             }
 
