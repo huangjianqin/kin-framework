@@ -86,9 +86,10 @@ final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
         return index;
     }
 
-    //占位?? 为了满足jvm压缩class条件???
-    // Cache line padding (must be public)
-    // With CompressedOops enabled, an instance of this class should occupy at least 128 bytes.
+    //  保证FastThreadLocal的实体对象大小超过128byte，以避免伪共享发生
+    //  如果资源能够避免伪共享，则FastThreadLocal的实体对象能够部分缓存至L1缓存，通过提高缓存命中率加快查询速度(查询L1缓存的速度要远快于查询主存速度)
+    //  Cache line padding (must be public)
+    //  With CompressedOops enabled, an instance of this class should occupy at least 128 bytes.
     public long rp1, rp2, rp3, rp4, rp5, rp6, rp7, rp8, rp9;
 
     private InternalThreadLocalMap() {

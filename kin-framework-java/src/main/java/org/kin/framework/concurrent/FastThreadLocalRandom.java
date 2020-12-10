@@ -30,6 +30,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 对比java ThreadLocalRandom
+ * 当bound比较小时, 性能会好一点, bound值越小越性能越好
+ * 但当bound大于Integer.MAX_VALUE时, 性能会大打折扣, bound值越大越差
+ *
  * A random number generator isolated to the current thread.  Like the
  * global {@link java.util.Random} generator used by the {@link
  * java.lang.Math} class, a {@code ThreadLocalRandom} is initialized
