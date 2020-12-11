@@ -19,7 +19,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
  * @author huangjianqin
  * @date 2020/11/23
  */
-public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs {
+public class SingleThreadScheduledExecutor implements ScheduledExecutorService, LoggerOprs {
     //状态枚举
     private static final byte ST_NOT_STARTED = 1;
     private static final byte ST_STARTED = 2;
@@ -28,8 +28,8 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     private static final byte ST_TERMINATED = 5;
 
     /** 原子更新状态值 */
-    private static final AtomicIntegerFieldUpdater<StScheduledExecutor> STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(StScheduledExecutor.class, "state");
+    private static final AtomicIntegerFieldUpdater<SingleThreadScheduledExecutor> STATE_UPDATER =
+            AtomicIntegerFieldUpdater.newUpdater(SingleThreadScheduledExecutor.class, "state");
     /** 执行线程 */
     private volatile Thread thread;
     /** 线程锁, 用于关闭时阻塞 */
@@ -55,18 +55,18 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
     }
 
     //------------------------------------------------------------------------------------------------------------------------
-    public StScheduledExecutor(ExecutorService parent) {
+    public SingleThreadScheduledExecutor(ExecutorService parent) {
         this(parent, false, RejectedExecutionHandler.EMPTY);
     }
 
-    public StScheduledExecutor(ExecutorService parent, boolean timeSensitive) {
+    public SingleThreadScheduledExecutor(ExecutorService parent, boolean timeSensitive) {
         this(parent, timeSensitive, RejectedExecutionHandler.EMPTY);
     }
 
     /**
      * @param timeSensitive 是否时间敏感(也就是随系统时间发生变化而变化)
      */
-    public StScheduledExecutor(ExecutorService parent, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
+    public SingleThreadScheduledExecutor(ExecutorService parent, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
         this.parent = parent;
         if (timeSensitive) {
             timeUnit = TimeUnit.MILLISECONDS;
@@ -619,7 +619,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
          * 防溢出
          */
         private long overflowFree(long delay) {
-            Delayed head = StScheduledExecutor.this.taskQueue.peek();
+            Delayed head = SingleThreadScheduledExecutor.this.taskQueue.peek();
             if (head != null) {
                 long headDelay = head.getDelay(timeUnit);
                 if (headDelay < 0 && (delay - headDelay < 0)) {
@@ -679,7 +679,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
                 for (; ; ) {
                     int oldState = state;
                     if (oldState >= ST_SHUTTING_DOWN || STATE_UPDATER.compareAndSet(
-                            StScheduledExecutor.this, oldState, ST_SHUTTING_DOWN)) {
+                            SingleThreadScheduledExecutor.this, oldState, ST_SHUTTING_DOWN)) {
                         break;
                     }
                 }
@@ -689,7 +689,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
                     for (; ; ) {
                         int oldState = state;
                         if (oldState >= ST_SHUTDOWN || STATE_UPDATER.compareAndSet(
-                                StScheduledExecutor.this, oldState, ST_SHUTDOWN)) {
+                                SingleThreadScheduledExecutor.this, oldState, ST_SHUTDOWN)) {
                             break;
                         }
                     }
@@ -697,7 +697,7 @@ public class StScheduledExecutor implements ScheduledExecutorService, LoggerOprs
 
                     //清理资源
                 } finally {
-                    STATE_UPDATER.set(StScheduledExecutor.this, ST_TERMINATED);
+                    STATE_UPDATER.set(SingleThreadScheduledExecutor.this, ST_TERMINATED);
                     threadLock.countDown();
                 }
             }
