@@ -157,4 +157,12 @@ public class SysUtils {
 
         return def;
     }
+
+    /**
+     * @return 当前运行环境是否是linux
+     */
+    public static boolean isLinux() {
+        String osName = getSysProperty("os.name");
+        return StringUtils.isNotBlank(osName) && osName.startsWith("Linux") && osName.startsWith("LINUX");
+    }
 }
