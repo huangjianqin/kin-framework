@@ -1,5 +1,6 @@
 package org.kin.framework.spring;
 
+import org.kin.framework.utils.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -64,9 +65,20 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
     }
 
     @Override
-    public PropertyValues postProcessPropertyValues(
-            @Nonnull PropertyValues pvs, @Nonnull PropertyDescriptor[] pds, @Nonnull Object bean, @Nonnull String beanName) throws BeanCreationException {
-        throw new UnsupportedOperationException("this is a method with @Deprecated");
+    public PropertyValues postProcessProperties(
+            @Nonnull PropertyValues pvs, @Nonnull Object bean, @Nonnull String beanName) throws BeanCreationException {
+        InjectionMetadata metadata = findInjectionMetadata(beanName, bean.getClass(), pvs);
+        if (Objects.nonNull(metadata)) {
+            try {
+                metadata.inject(bean, beanName, pvs);
+            } catch (BeanCreationException ex) {
+                throw ex;
+            } catch (Throwable ex) {
+                throw new BeanCreationException(beanName, "Injection of @" + getAnnotationTypes()[0].getSimpleName()
+                        + " dependencies is failed", ex);
+            }
+        }
+        return pvs;
     }
 
     /**
@@ -80,7 +92,10 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
         }
 
         Annotation annotation = annotatedElement.getAnnotation(annotationType);
-        return AnnotationUtils.getAnnotationAttributes(annotatedElement, annotation);
+        if (Objects.nonNull(annotation)) {
+            return AnnotationUtils.getAnnotationAttributes(annotatedElement, annotation);
+        }
+        return null;
     }
 
     /**
@@ -94,7 +109,9 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
         ReflectionUtils.doWithFields(beanClass, field -> {
             for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
                 AnnotationAttributes attributes = getAnnotationAttributes(field, annotationType);
-
+                if (Objects.isNull(attributes)) {
+                    return;
+                }
                 if (Modifier.isStatic(field.getModifiers())) {
                     if (log.isWarnEnabled()) {
                         log.warn("@" + annotationType.getName() + " is not supported on static fields: " + field);
@@ -124,6 +141,10 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
             for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
                 AnnotationAttributes attributes = getAnnotationAttributes(bridgedMethod, annotationType);
+                if (Objects.isNull(attributes)) {
+                    return;
+                }
+
                 if (method.equals(ClassUtils.getMostSpecificMethod(method, beanClass))) {
                     if (Modifier.isStatic(method.getModifiers())) {
                         if (log.isWarnEnabled()) {
@@ -150,13 +171,18 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
      * 构建被注解元数据, 包含被注解字段和方法的元数据
      */
     private AnnotatedInjectionMetadata buildAnnotatedMetadata(final Class<?> beanClass) {
-        return new AnnotatedInjectionMetadata(beanClass, findAnnotationedFieldMetadata(beanClass), findAnnotatedMethodMetadata(beanClass));
+        List<AnnotatedFieldElement> annotationedFieldMetadata = findAnnotationedFieldMetadata(beanClass);
+        List<AnnotatedMethodElement> annotatedMethodMetadata = findAnnotatedMethodMetadata(beanClass);
+        if (CollectionUtils.isNonEmpty(annotationedFieldMetadata) || CollectionUtils.isNonEmpty(annotatedMethodMetadata)) {
+            return new AnnotatedInjectionMetadata(beanClass, annotationedFieldMetadata, annotatedMethodMetadata);
+        }
+        return null;
     }
 
     /**
      * 构建被注解Field或者Method的注入元数据
      */
-    private InjectionMetadata findInjectionMetadata(String beanName, Class<?> clazz) {
+    private InjectionMetadata findInjectionMetadata(String beanName, Class<?> clazz, PropertyValues pvs) {
         // Fall back to class name as cache key, for backwards compatibility with custom callers.
         String cacheKey = (StringUtils.hasLength(beanName) ? beanName : clazz.getName());
         // Quick check on the concurrent map first, with minimal locking.
@@ -166,11 +192,13 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
                 metadata = this.injectionMetadataCache.get(cacheKey);
                 if (InjectionMetadata.needsRefresh(metadata, clazz)) {
                     if (metadata != null) {
-                        metadata.clear(null);
+                        metadata.clear(pvs);
                     }
                     try {
                         metadata = buildAnnotatedMetadata(clazz);
-                        this.injectionMetadataCache.put(cacheKey, metadata);
+                        if (Objects.nonNull(metadata)) {
+                            this.injectionMetadataCache.put(cacheKey, metadata);
+                        }
                     } catch (NoClassDefFoundError err) {
                         throw new IllegalStateException("Failed to introspect object class [" + clazz.getName() +
                                 "] for annotation metadata: could not find class that it depends on", err);
@@ -184,15 +212,17 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
     @Override
     public void postProcessMergedBeanDefinition(@Nonnull RootBeanDefinition beanDefinition, @Nonnull Class<?> beanType, @Nonnull String beanName) {
-        InjectionMetadata metadata = findInjectionMetadata(beanName, beanType);
-        metadata.checkConfigMembers(beanDefinition);
+        InjectionMetadata metadata = findInjectionMetadata(beanName, beanType, null);
+        if (Objects.nonNull(metadata)) {
+            metadata.checkConfigMembers(beanDefinition);
+        }
     }
 
     @Override
     public void destroy() throws Exception {
         for (Object object : injectedObjectsCache.values()) {
-            if (log.isInfoEnabled()) {
-                log.info(object + " was destroying!");
+            if (log.isDebugEnabled()) {
+                log.debug(object + " was destroying!");
             }
 
             if (object instanceof DisposableBean) {
@@ -203,8 +233,8 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
         injectionMetadataCache.clear();
         injectedObjectsCache.clear();
 
-        if (log.isInfoEnabled()) {
-            log.info(getClass() + " was destroying!");
+        if (log.isDebugEnabled()) {
+            log.debug(getClass() + " was destroying!");
         }
     }
 
@@ -353,7 +383,6 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
             Object injectedObject = getInjectedObject(attributes, bean, beanName, injectedType, this);
             ReflectionUtils.makeAccessible(field);
             field.set(bean, injectedObject);
-
         }
 
         private Class<?> resolveInjectedType(Object bean, Field field) {
