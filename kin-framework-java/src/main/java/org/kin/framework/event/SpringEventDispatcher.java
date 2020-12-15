@@ -3,7 +3,6 @@ package org.kin.framework.event;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.lang.NonNull;
@@ -13,11 +12,12 @@ import java.util.Map;
 
 /**
  * 获取注释有@HandleEvent的bean并注册事件及其处理器
+ * 请求手动注入, 配置XML, @Bean或者@Import
  *
  * @author huangjianqin
  * @date 2019/3/1
  */
-public class SpringEventDispatcher extends ParallelEventDispatcher implements ApplicationContextAware, ApplicationListener {
+public class SpringEventDispatcher extends ParallelEventDispatcher implements ApplicationContextAware, ApplicationListener<ContextClosedEvent> {
     public SpringEventDispatcher(int parallelism) {
         super(parallelism);
     }
@@ -62,10 +62,7 @@ public class SpringEventDispatcher extends ParallelEventDispatcher implements Ap
     }
 
     @Override
-    @NonNull
-    public void onApplicationEvent(ApplicationEvent applicationEvent) {
-        if (applicationEvent instanceof ContextClosedEvent) {
-            shutdown();
-        }
+    public void onApplicationEvent(@NonNull ContextClosedEvent closedEvent) {
+        shutdown();
     }
 }
