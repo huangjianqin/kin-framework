@@ -222,23 +222,23 @@ public class ProxyEnhanceUtils {
     private static CtClass generateEnhanceClassProxyClass(Class<?> proxyClass, String className, MethodBodyConstructor methodBodyConstructor) {
         CtClass proxyCtClass = POOL.makeClass(className);
         try {
-            String proxyClassCanonicalName = proxyClass.getCanonicalName();
+            String proxyClassName = proxyClass.getName();
             if (proxyClass.isInterface()) {
                 //实现接口
-                proxyCtClass.addInterface(POOL.getCtClass(proxyClassCanonicalName));
+                proxyCtClass.addInterface(POOL.getCtClass(proxyClassName));
             } else {
                 //继承类
-                proxyCtClass.setSuperclass(POOL.getCtClass(proxyClassCanonicalName));
+                proxyCtClass.setSuperclass(POOL.getCtClass(proxyClassName));
             }
 
             //添加成员域
             String prxoyFieldName = DEFAULT_PROXY_FIELD_NAME;
-            CtField proxyCtField = new CtField(POOL.get(proxyClassCanonicalName), prxoyFieldName, proxyCtClass);
+            CtField proxyCtField = new CtField(POOL.get(proxyClassName), prxoyFieldName, proxyCtClass);
             proxyCtField.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
             proxyCtClass.addField(proxyCtField);
 
             //处理构造方法
-            CtConstructor ctConstructor = new CtConstructor(new CtClass[]{POOL.get(proxyClassCanonicalName)}, proxyCtClass);
+            CtConstructor ctConstructor = new CtConstructor(new CtClass[]{POOL.get(proxyClassName)}, proxyCtClass);
             ctConstructor.setBody("{$0.".concat(prxoyFieldName).concat(" = $1;}"));
             proxyCtClass.addConstructor(ctConstructor);
 
