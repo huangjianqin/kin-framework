@@ -18,6 +18,9 @@ import java.util.StringJoiner;
  * @date 2020-01-11
  */
 public class ProxyEnhanceUtils {
+    /**
+     * POOL.get()方法必须使用的是Class.getName(), 不能是Class.getCanonicalName()
+     */
     private static final ClassPool POOL = ClassPool.getDefault();
     private static final Multimap<String, CtClass> CTCLASS_CACHE = HashMultimap.create();
 
@@ -73,30 +76,30 @@ public class ProxyEnhanceUtils {
         CtClass proxyCtClass = POOL.makeClass(proxyCtClassName);
         try {
             //实现接口
-            proxyCtClass.addInterface(POOL.getCtClass(ProxyInvoker.class.getCanonicalName()));
+            proxyCtClass.addInterface(POOL.getCtClass(ProxyInvoker.class.getName()));
 
             //添加成员域
             String prxoyFieldName = DEFAULT_PROXY_FIELD_NAME;
-            CtField proxyCtField = new CtField(POOL.get(proxyObjClass.getCanonicalName()), prxoyFieldName, proxyCtClass);
+            CtField proxyCtField = new CtField(POOL.get(proxyObjClass.getName()), prxoyFieldName, proxyCtClass);
             proxyCtField.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
             proxyCtClass.addField(proxyCtField);
 
             String methodFieldName = "method";
-            CtField methodCtField = new CtField(POOL.get(Method.class.getCanonicalName()), methodFieldName, proxyCtClass);
+            CtField methodCtField = new CtField(POOL.get(Method.class.getName()), methodFieldName, proxyCtClass);
             methodCtField.setModifiers(Modifier.PRIVATE | Modifier.FINAL);
             proxyCtClass.addField(methodCtField);
 
             //处理构造方法
-            CtConstructor ctConstructor = new CtConstructor(new CtClass[]{POOL.get(proxyObjClass.getCanonicalName()), POOL.get(Method.class.getCanonicalName())}, proxyCtClass);
+            CtConstructor ctConstructor = new CtConstructor(new CtClass[]{POOL.get(proxyObjClass.getName()), POOL.get(Method.class.getName())}, proxyCtClass);
             ctConstructor.setBody("{$0.".concat(prxoyFieldName).concat(" = $1;").concat("$0.").concat(methodFieldName).concat(" = $2;}"));
             proxyCtClass.addConstructor(ctConstructor);
 
             //方法体
             //invoke
-            CtMethod invokeCtMethod = new CtMethod(POOL.get(Object.class.getCanonicalName()), "invoke",
-                    new CtClass[]{POOL.get(Object[].class.getCanonicalName())}, proxyCtClass);
+            CtMethod invokeCtMethod = new CtMethod(POOL.get(Object.class.getName()), "invoke",
+                    new CtClass[]{POOL.get(Object[].class.getName())}, proxyCtClass);
             invokeCtMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
-            invokeCtMethod.setExceptionTypes(new CtClass[]{POOL.get(Exception.class.getCanonicalName())});
+            invokeCtMethod.setExceptionTypes(new CtClass[]{POOL.get(Exception.class.getName())});
             StringBuilder methodBody = new StringBuilder();
             methodBody.append("{");
             methodBody.append("Object result = null;");
@@ -107,7 +110,7 @@ public class ProxyEnhanceUtils {
             proxyCtClass.addMethod(invokeCtMethod);
 
             //getProxyObj
-            CtMethod getProxyObjCtMethod = new CtMethod(POOL.get(proxyObjClass.getCanonicalName()), "getProxyObj", null, proxyCtClass);
+            CtMethod getProxyObjCtMethod = new CtMethod(POOL.get(proxyObjClass.getName()), "getProxyObj", null, proxyCtClass);
             getProxyObjCtMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
             methodBody = new StringBuilder();
             methodBody.append("{");
@@ -117,7 +120,7 @@ public class ProxyEnhanceUtils {
             proxyCtClass.addMethod(getProxyObjCtMethod);
 
             //getMethod
-            CtMethod getMethodCtMethod = new CtMethod(POOL.get(Method.class.getCanonicalName()), "getMethod", null, proxyCtClass);
+            CtMethod getMethodCtMethod = new CtMethod(POOL.get(Method.class.getName()), "getMethod", null, proxyCtClass);
             getMethodCtMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
             methodBody = new StringBuilder();
             methodBody.append("{");
@@ -250,7 +253,7 @@ public class ProxyEnhanceUtils {
                 //参数CtClass
                 CtClass[] parameterCtClass = getParamCtClasses(method);
 
-                CtMethod ctMethod = new CtMethod(POOL.get(method.getReturnType().getCanonicalName()), method.getName(), parameterCtClass, proxyCtClass);
+                CtMethod ctMethod = new CtMethod(POOL.get(method.getReturnType().getName()), method.getName(), parameterCtClass, proxyCtClass);
                 ctMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
                 ctMethod.setBody("{" +
                         methodBodyConstructor.construct(prxoyFieldName, method) +
@@ -333,7 +336,7 @@ public class ProxyEnhanceUtils {
         Class<?> proxyObjClass = proxyObj.getClass();
 
         if (!interfaceClass.isAssignableFrom(proxyObjClass)) {
-            throw new IllegalArgumentException(proxyObjClass.getCanonicalName() + " is not implement " + interfaceClass.getCanonicalName());
+            throw new IllegalArgumentException(proxyObjClass.getCanonicalName() + " is not implement " + interfaceClass.getName());
         }
 
         String packageName = definition.getPackageName();
@@ -353,7 +356,7 @@ public class ProxyEnhanceUtils {
 
         for (int i = 0; i < parameterCtClass.length; i++) {
             try {
-                parameterCtClass[i] = POOL.get(parameterTypes[i].getCanonicalName());
+                parameterCtClass[i] = POOL.get(parameterTypes[i].getName());
             } catch (NotFoundException e) {
                 ExceptionUtils.throwExt(e);
             }
@@ -374,7 +377,7 @@ public class ProxyEnhanceUtils {
         sb.append("}").append(System.lineSeparator());
 
         try {
-            CtMethod ctMethod = new CtMethod(classPool.get(method.getReturnType().getCanonicalName()), method.getName(), ProxyEnhanceUtils.getParamCtClasses(method), declaring);
+            CtMethod ctMethod = new CtMethod(classPool.get(method.getReturnType().getName()), method.getName(), ProxyEnhanceUtils.getParamCtClasses(method), declaring);
             ctMethod.setModifiers(modifier);
             ctMethod.setBody(sb.toString());
             return ctMethod;
