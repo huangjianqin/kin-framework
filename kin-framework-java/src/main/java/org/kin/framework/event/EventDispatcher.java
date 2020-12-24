@@ -1,9 +1,10 @@
 package org.kin.framework.event;
 
 import com.google.common.base.Preconditions;
-import org.kin.framework.proxy.ProxyEnhanceUtils;
+import org.kin.framework.proxy.Javassists;
+import org.kin.framework.proxy.MethodDefinition;
 import org.kin.framework.proxy.ProxyInvoker;
-import org.kin.framework.proxy.ProxyMethodDefinition;
+import org.kin.framework.proxy.Proxys;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -19,11 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EventDispatcher implements Dispatcher, NullEventDispatcher {
     /** 存储事件与其对应的事件处理器的映射 */
     private final Map<Class<?>, ProxyInvoker<?>> event2Handler = new ConcurrentHashMap<>();
-
     /** 是否使用字节码增强技术 */
     private final boolean isEnhance;
-    /** 字节码增强代理类包名 */
-    private String proxyEnhancePackageName;
 
     public EventDispatcher() {
         this(false);
@@ -31,16 +29,13 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
 
     public EventDispatcher(boolean isEnhance) {
         this.isEnhance = isEnhance;
-        if (isEnhance) {
-            proxyEnhancePackageName = getClass().getPackage().getName().concat(".proxy");
-        }
     }
 
     //------------------------------------------------------------------------------------------------------------------
     @SuppressWarnings("unchecked")
     private ProxyInvoker<?> getHandler(Object obj, Method method) {
         if (isEnhance) {
-            return ProxyEnhanceUtils.enhanceMethod(new ProxyMethodDefinition(obj, method, proxyEnhancePackageName));
+            return Proxys.javassist().enhanceMethod(new MethodDefinition<>(obj, method));
         } else {
             return new ProxyEventHandler(obj, method);
         }
@@ -103,8 +98,6 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
 
     @Override
     public void shutdown() {
-        event2Handler.clear();
-
         for (ProxyInvoker<?> proxyInvoker : event2Handler.values()) {
             if (proxyInvoker instanceof MultiEventHandler) {
                 for (ProxyInvoker<?> handler : ((MultiEventHandler) proxyInvoker).handlers) {
@@ -114,6 +107,8 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
                 detachProxyClass(proxyInvoker);
             }
         }
+
+        event2Handler.clear();
     }
 
     /**
@@ -121,7 +116,7 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
      */
     private void detachProxyClass(ProxyInvoker<?> proxyInvoker) {
         if (!(proxyInvoker instanceof ProxyEventHandler) && !(proxyInvoker instanceof MultiEventHandler)) {
-            ProxyEnhanceUtils.detach(proxyInvoker.getClass().getName());
+            Javassists.detach(proxyInvoker.getClass().getName());
         }
     }
 

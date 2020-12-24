@@ -667,10 +667,12 @@ public class ClassUtils {
     public static String getUniqueName(Method method) {
         StringBuilder sb = new StringBuilder();
         sb.append(method.getName());
-        sb.append("$");
 
-        StringJoiner paramsJoiner = new StringJoiner("$");
         Class<?>[] paramTypes = method.getParameterTypes();
+        if (CollectionUtils.isNonEmpty(paramTypes)) {
+            sb.append("$");
+        }
+        StringJoiner paramsJoiner = new StringJoiner("$");
         for (Class<?> paramType : paramTypes) {
             paramsJoiner.add(paramType.getTypeName());
         }

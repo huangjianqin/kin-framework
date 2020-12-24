@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
  * @author huangjianqin
  * @date 2020-01-15
  */
-public class ProxyEnhanceTest {
+public class JavassistFactoryTest {
     public static void main(String[] args) {
         Class<?> claxx = ProxyInvoker.class;
         for (Method method : claxx.getMethods()) {
@@ -17,11 +17,13 @@ public class ProxyEnhanceTest {
             System.out.println("--------------");
         }
 
+        JavassistFactory javassistFactory = Proxys.javassist();
+
         AddService addService = new AddService();
 
         Method targetMethod = AddService.class.getMethods()[0];
         System.out.println(targetMethod);
-        ProxyInvoker<AddService> proxyInvoker = ProxyEnhanceUtils.enhanceMethod(new ProxyMethodDefinition<>(addService, targetMethod, "test"));
+        ProxyInvoker<AddService> proxyInvoker = javassistFactory.enhanceMethod(new MethodDefinition<>(addService, targetMethod));
         try {
             System.out.println(proxyInvoker.invoke(1, 1));
         } catch (Exception e) {
@@ -29,7 +31,7 @@ public class ProxyEnhanceTest {
         }
 
         System.out.println("--------------");
-        AddService addServiceProxy = ProxyEnhanceUtils.enhanceClass(new ProxyDefinition<>(addService, "test"));
+        AddService addServiceProxy = javassistFactory.enhanceClass(new ClassDefinition<>(addService));
         System.out.println(addServiceProxy.add(1, 1));
         System.out.println(addService);
         System.out.println(addServiceProxy.equals(addService));

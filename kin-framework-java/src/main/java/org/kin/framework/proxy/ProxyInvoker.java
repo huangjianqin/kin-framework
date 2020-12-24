@@ -3,19 +3,19 @@ package org.kin.framework.proxy;
 import java.lang.reflect.Method;
 
 /**
- * 利用javassist字节码技术增加方法的代理类接口
+ * 方法代理类接口
  *
  * @author huangjianqin
  * @date 2020-01-11
  */
 public interface ProxyInvoker<S> {
     /**
-     * @return 代理类
+     * @return 实现类
      */
     S getProxyObj();
 
     /**
-     * @return 代理方法
+     * @return 目标方法
      */
     Method getMethod();
 
@@ -23,7 +23,7 @@ public interface ProxyInvoker<S> {
      * 调用
      *
      * @param params 参数
-     * @return 代理方法返回结果
+     * @return 调用方法返回结果
      */
     Object invoke(Object... params) throws Exception;
 }
