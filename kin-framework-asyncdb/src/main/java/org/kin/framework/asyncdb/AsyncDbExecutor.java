@@ -6,8 +6,11 @@ import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.TimeUtils;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -31,6 +34,8 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
     private volatile boolean isStopped = false;
     /** executor执行db操作策略 */
     private AsyncDbStrategy asyncDbStrategy;
+    /** entity listeners */
+    private final CopyOnWriteArrayList<EntityListener> listeners = new CopyOnWriteArrayList<>();
 
     void init(int threadNum, AsyncDbStrategy asyncDbStrategy) {
         Preconditions.checkArgument(threadNum > 0, "thread num must greater than 0");
@@ -101,6 +106,28 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
         return false;
     }
 
+    /**
+     * 添加{@link EntityListener}
+     */
+    public void addListener(EntityListener listener) {
+        this.listeners.add(listener);
+    }
+
+    /**
+     * 批量添加{@link EntityListener}
+     */
+    public void addListeners(EntityListener... listeners) {
+        addListeners(Arrays.asList(listeners));
+    }
+
+    /**
+     * 批量添加{@link EntityListener}
+     */
+    public void addListeners(Collection<EntityListener> listeners) {
+        this.listeners.addAll(listeners);
+    }
+
+    //---------------------------------------------------------------------------------------------------------------------
     private class AsyncDBOperator implements Runnable, Closeable {
         private BlockingQueue<AsyncDbEntity> queue = new LinkedBlockingQueue<>();
         private volatile boolean isStopped = false;
@@ -146,7 +173,23 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
                         return;
                     }
 
-                    entity.tryDbOpr(asyncDbStrategy.getTryTimes());
+                    try {
+                        DbStatus targetStatus = entity.getStatus();
+                        try {
+                            entity.tryDbOpr(asyncDbStrategy.getRetryTimes());
+                        } catch (Exception e) {
+                            error("", e);
+                            for (EntityListener listener : listeners) {
+                                listener.onError(entity, DbOperation.getByTargetStauts(targetStatus), e);
+                            }
+                        }
+
+                        for (EntityListener listener : listeners) {
+                            listener.onSuccess(entity, DbOperation.getByTargetStauts(targetStatus));
+                        }
+                    } catch (Exception listenerExt) {
+                        error("", listenerExt);
+                    }
 
                     syncNum++;
                 }

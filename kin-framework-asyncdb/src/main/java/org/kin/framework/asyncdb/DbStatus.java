@@ -10,7 +10,7 @@ public enum DbStatus {
      */
     NORMAL {
         @Override
-        public boolean execute(AbstractDbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
+        public boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
             return true;
         }
     },
@@ -20,9 +20,8 @@ public enum DbStatus {
     INSERT {
         @SuppressWarnings("unchecked")
         @Override
-        public boolean execute(AbstractDbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            dbSynchronzier.insert(asyncDbEntity);
-            return true;
+        public boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
+            return dbSynchronzier.insert(asyncDbEntity);
         }
     },
     /**
@@ -31,11 +30,10 @@ public enum DbStatus {
     UPDATE {
         @SuppressWarnings("unchecked")
         @Override
-        public boolean execute(AbstractDbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
+        public boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
             //重置实体更新中标识
             asyncDbEntity.resetUpdating();
-            dbSynchronzier.update(asyncDbEntity);
-            return true;
+            return dbSynchronzier.update(asyncDbEntity);
         }
     },
     /**
@@ -44,9 +42,8 @@ public enum DbStatus {
     DELETED {
         @SuppressWarnings("unchecked")
         @Override
-        public boolean execute(AbstractDbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            dbSynchronzier.delete(asyncDbEntity);
-            return true;
+        public boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
+            return dbSynchronzier.delete(asyncDbEntity);
         }
     },
     ;
@@ -54,5 +51,5 @@ public enum DbStatus {
     /**
      * 执行db操作
      */
-    public abstract boolean execute(AbstractDbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity);
+    public abstract boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity);
 }

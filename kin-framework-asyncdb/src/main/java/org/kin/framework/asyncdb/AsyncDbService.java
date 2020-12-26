@@ -6,6 +6,8 @@ import org.kin.framework.utils.SysUtils;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,19 +20,38 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AsyncDbService implements Closeable, LoggerOprs {
     /** 单例 */
     private static AsyncDbService INSTANCE;
-    /** key -> {@link AsyncDbEntity} class, value -> 对应的{@link AbstractDbSynchronzier}实现 */
-    protected final Map<Class<?>, AbstractDbSynchronzier<?>> class2Persistent = new ConcurrentHashMap<>();
+
+    /** key -> {@link AsyncDbEntity} class, value -> 对应的{@link DbSynchronzier}实现 */
+    protected final Map<Class<?>, DbSynchronzier<?>> class2Persistent = new ConcurrentHashMap<>();
     /** db worker */
-    private AsyncDbExecutor asyncDbExecutor;
+    private final AsyncDbExecutor workers = new AsyncDbExecutor();
 
     //---------------------------------------------------------------------------------------------------
-
     public static AsyncDbService getInstance() {
         if (INSTANCE == null) {
             synchronized (AsyncDbService.class) {
                 if (INSTANCE == null) {
                     INSTANCE = new AsyncDbService();
-                    INSTANCE.init(SysUtils.CPU_NUM, new DefaultAsyncDbStrategy());
+                    INSTANCE.init(SysUtils.CPU_NUM, new AsyncDbStrategy() {
+                        @Override
+                        public int getOprNum() {
+                            return 10;
+                        }
+
+                        @Override
+                        public int getRetryTimes() {
+                            return 2;
+                        }
+
+                        @Override
+                        public int getDuration(int size) {
+                            //自适应
+                            if (size > 50) {
+                                return 200;
+                            }
+                            return 1000;
+                        }
+                    });
                 }
             }
         }
@@ -44,21 +65,20 @@ public class AsyncDbService implements Closeable, LoggerOprs {
     }
 
     public void init(int threadNum, AsyncDbStrategy asyncDbStrategy) {
-        asyncDbExecutor = new AsyncDbExecutor();
-        asyncDbExecutor.init(threadNum, asyncDbStrategy);
+        workers.init(threadNum, asyncDbStrategy);
     }
 
     /**
      * 手动注册持久化实现类
      */
-    public void register(Class<?> claxx, AbstractDbSynchronzier<?> dbSynchronzier) {
+    public void register(Class<?> claxx, DbSynchronzier<?> dbSynchronzier) {
         Type interfaceType = null;
         for (Type type : dbSynchronzier.getClass().getGenericInterfaces()) {
-            if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(AbstractDbSynchronzier.class)) {
+            if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(DbSynchronzier.class)) {
                 interfaceType = type;
                 break;
             }
-            if (type instanceof Class && type.equals(AbstractDbSynchronzier.class)) {
+            if (type instanceof Class && type.equals(DbSynchronzier.class)) {
                 interfaceType = type;
                 break;
             }
@@ -80,7 +100,10 @@ public class AsyncDbService implements Closeable, LoggerOprs {
         }
     }
 
-    protected AbstractDbSynchronzier<?> getAsyncPersistent(AsyncDbEntity asyncDbEntity) {
+    /**
+     * 获取db entity对应的{@link DbSynchronzier}
+     */
+    protected DbSynchronzier<?> getAsyncPersistent(AsyncDbEntity asyncDbEntity) {
         return class2Persistent.get(asyncDbEntity.getClass());
     }
 
@@ -89,7 +112,7 @@ public class AsyncDbService implements Closeable, LoggerOprs {
      */
     boolean dbOpr(AsyncDbEntity asyncDbEntity, DbOperation operation) {
         asyncDbEntity.serialize();
-        AbstractDbSynchronzier<?> dbSynchronzier = getAsyncPersistent(asyncDbEntity);
+        DbSynchronzier<?> dbSynchronzier = getAsyncPersistent(asyncDbEntity);
         try {
             if (dbSynchronzier != null) {
                 if (asyncDbEntity.getDbSynchronzier() == null) {
@@ -101,7 +124,7 @@ public class AsyncDbService implements Closeable, LoggerOprs {
                         return true;
                     }
 
-                    return asyncDbExecutor.submit(asyncDbEntity);
+                    return workers.submit(asyncDbEntity);
                 }
             }
         } catch (Exception e) {
@@ -114,9 +137,30 @@ public class AsyncDbService implements Closeable, LoggerOprs {
         return false;
     }
 
+    /**
+     * 添加{@link EntityListener}
+     */
+    public void addListener(EntityListener listener) {
+        this.workers.addListener(listener);
+    }
+
+    /**
+     * 批量添加{@link EntityListener}
+     */
+    public void addListeners(EntityListener... listeners) {
+        addListeners(Arrays.asList(listeners));
+    }
+
+    /**
+     * 批量添加{@link EntityListener}
+     */
+    public void addListeners(Collection<EntityListener> listeners) {
+        this.workers.addListeners(listeners);
+    }
+
     @Override
     public void close() {
         class2Persistent.clear();
-        asyncDbExecutor.close();
+        workers.close();
     }
 }

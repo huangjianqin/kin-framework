@@ -13,7 +13,7 @@ public abstract class AsyncDbEntity implements Serializable {
     /** 数据库状态 */
     private final AtomicReference<DbStatus> status = new AtomicReference<>(DbStatus.NORMAL);
     /** 数据库同步操作 */
-    private volatile AbstractDbSynchronzier<?> dbSynchronzier;
+    private volatile DbSynchronzier<?> dbSynchronzier;
     /** 实体进行过update标识, 主要用于减少update的次数 */
     private final AtomicBoolean updating = new AtomicBoolean();
     /** 是否支持删除操作 */
@@ -76,7 +76,7 @@ public abstract class AsyncDbEntity implements Serializable {
     /**
      * 切换db status, 并真正尝试执行db操作
      */
-    boolean tryDbOpr(int tryTimes) {
+    boolean tryDbOpr(int retryTimes) {
         DbStatus now;
         do {
             now = getStatus();
@@ -85,9 +85,8 @@ public abstract class AsyncDbEntity implements Serializable {
 
         int nowTry = 0;
         do {
-            if (nowTry++ >= tryTimes) {
+            if (nowTry++ > retryTimes) {
                 return false;
-
             }
         } while (!now.execute(dbSynchronzier, this));
 
@@ -112,11 +111,11 @@ public abstract class AsyncDbEntity implements Serializable {
     }
 
     //setter && getter
-    AbstractDbSynchronzier<?> getDbSynchronzier() {
+    DbSynchronzier<?> getDbSynchronzier() {
         return dbSynchronzier;
     }
 
-    void setDbSynchronzier(AbstractDbSynchronzier<?> dbSynchronzier) {
+    void setDbSynchronzier(DbSynchronzier<?> dbSynchronzier) {
         this.dbSynchronzier = dbSynchronzier;
     }
 

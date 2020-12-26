@@ -30,6 +30,9 @@ public enum DbOperation {
      */
     private final List<DbStatus> canTransfer;
 
+    /** db operation缓存 */
+    private static final DbOperation[] DB_OPERATIONS = values();
+
     DbOperation(DbStatus targetStauts, List<DbStatus> canTransfer) {
         this.targetStauts = targetStauts;
         this.canTransfer = canTransfer;
@@ -39,7 +42,23 @@ public enum DbOperation {
         return targetStauts;
     }
 
+    /**
+     * @return status是否可以切换到targetStauts
+     */
     boolean isCanTransfer(DbStatus status) {
         return canTransfer.contains(status);
+    }
+
+    /**
+     * 根据targetStauts获取db operation
+     */
+    public static DbOperation getByTargetStauts(DbStatus dbStatus) {
+        for (DbOperation dbOperation : DB_OPERATIONS) {
+            if (dbOperation.getTargetStauts().equals(dbStatus)) {
+                return dbOperation;
+            }
+        }
+
+        throw new IllegalArgumentException("找不到对应db operation");
     }
 }
