@@ -1,8 +1,5 @@
 package org.kin.framework.asyncdb;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -13,13 +10,22 @@ import java.util.concurrent.atomic.AtomicReference;
  * 支持多线程操作
  */
 public abstract class AsyncDbEntity implements Serializable {
-    private static final Logger log = LoggerFactory.getLogger(AsyncDbEntity.class);
     /** 数据库状态 */
     private final AtomicReference<DbStatus> status = new AtomicReference<>(DbStatus.NORMAL);
     /** 数据库同步操作 */
     private volatile AbstractDbSynchronzier<?> dbSynchronzier;
     /** 实体进行过update标识, 主要用于减少update的次数 */
     private final AtomicBoolean updating = new AtomicBoolean();
+    /** 是否支持删除操作 */
+    private final boolean canDelete;
+
+    public AsyncDbEntity() {
+        this(false);
+    }
+
+    public AsyncDbEntity(boolean canDelete) {
+        this.canDelete = canDelete;
+    }
 
     /**
      * entity insert
@@ -39,6 +45,9 @@ public abstract class AsyncDbEntity implements Serializable {
      * entity delete
      */
     public final void delete() {
+        if (!canDelete) {
+            return;
+        }
         AsyncDbService.getInstance().dbOpr(this, DbOperation.Delete);
     }
 

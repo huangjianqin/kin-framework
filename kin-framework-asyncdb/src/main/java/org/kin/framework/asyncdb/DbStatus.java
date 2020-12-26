@@ -1,8 +1,5 @@
 package org.kin.framework.asyncdb;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * @author huangjianqin
  * @date 2019/3/31
@@ -24,14 +21,8 @@ public enum DbStatus {
         @SuppressWarnings("unchecked")
         @Override
         public boolean execute(AbstractDbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            try {
-                dbSynchronzier.insert(asyncDbEntity);
-                return true;
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
-
-            return false;
+            dbSynchronzier.insert(asyncDbEntity);
+            return true;
         }
     },
     /**
@@ -41,16 +32,10 @@ public enum DbStatus {
         @SuppressWarnings("unchecked")
         @Override
         public boolean execute(AbstractDbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            try {
-                //重置实体更新中标识
-                asyncDbEntity.resetUpdating();
-                dbSynchronzier.update(asyncDbEntity);
-                return true;
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
-
-            return false;
+            //重置实体更新中标识
+            asyncDbEntity.resetUpdating();
+            dbSynchronzier.update(asyncDbEntity);
+            return true;
         }
     },
     /**
@@ -60,19 +45,11 @@ public enum DbStatus {
         @SuppressWarnings("unchecked")
         @Override
         public boolean execute(AbstractDbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            try {
-                dbSynchronzier.delete(asyncDbEntity);
-                return true;
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
-
-            return false;
+            dbSynchronzier.delete(asyncDbEntity);
+            return true;
         }
     },
     ;
-
-    private static final Logger log = LoggerFactory.getLogger(DbStatus.class);
 
     /**
      * 执行db操作

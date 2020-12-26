@@ -1,9 +1,8 @@
 package org.kin.framework.asyncdb;
 
 import org.kin.framework.Closeable;
+import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.SysUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -16,8 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2019/3/31
  */
-public class AsyncDbService implements Closeable {
-    protected static final Logger log = LoggerFactory.getLogger(AsyncDbService.class);
+public class AsyncDbService implements Closeable, LoggerOprs {
     /** 单例 */
     private static AsyncDbService INSTANCE;
     /** key -> {@link AsyncDbEntity} class, value -> 对应的{@link AbstractDbSynchronzier}实现 */
@@ -91,9 +89,8 @@ public class AsyncDbService implements Closeable {
      */
     boolean dbOpr(AsyncDbEntity asyncDbEntity, DbOperation operation) {
         asyncDbEntity.serialize();
+        AbstractDbSynchronzier<?> dbSynchronzier = getAsyncPersistent(asyncDbEntity);
         try {
-            AbstractDbSynchronzier<?> dbSynchronzier = getAsyncPersistent(asyncDbEntity);
-
             if (dbSynchronzier != null) {
                 if (asyncDbEntity.getDbSynchronzier() == null) {
                     asyncDbEntity.setDbSynchronzier(dbSynchronzier);
@@ -111,7 +108,7 @@ public class AsyncDbService implements Closeable {
             if (DbOperation.Update.equals(operation)) {
                 asyncDbEntity.resetUpdating();
             }
-            log.error(e.getMessage(), e);
+            error("", e);
         }
 
         return false;
