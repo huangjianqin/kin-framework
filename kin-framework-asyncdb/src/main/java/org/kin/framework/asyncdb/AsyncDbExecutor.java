@@ -16,28 +16,33 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2019/4/1
  */
-public class AsyncDBExecutor implements Closeable {
-    private static final Logger log = LoggerFactory.getLogger(AsyncDBExecutor.class);
-    private final AsyncDBEntity POISON = new AsyncDBEntity() {
+public class AsyncDbExecutor implements Closeable {
+    private static final Logger log = LoggerFactory.getLogger(AsyncDbExecutor.class);
+    /** 终止executor的db实体 */
+    private final AsyncDbEntity POISON = new AsyncDbEntity() {
     };
+    /** 等待db实体操作数量阈值, 超过这个阈值, 会打印日志 */
     private static final int WAITTING_OPR_NUM_THRESHOLD = 500;
+    /** 打印executor状态信息log间隔 */
     private static final int LOG_STATE_INTERVAL = 60;
-
-
+    /** 线程池 */
     private ExecutionContext executionContext;
-    private AsyncDBOperator[] asyncDBOperators;
+    /** executor数量 */
+    private AsyncDBOperator[] asyncDbOperators;
+    /** executor终止标识 */
     private volatile boolean isStopped = false;
-    private AsyncDBStrategy asyncDBStrategy;
+    /** executor执行db操作策略 */
+    private AsyncDbStrategy asyncDbStrategy;
 
-    void init(int threadNum, AsyncDBStrategy asyncDBStrategy) {
+    void init(int threadNum, AsyncDbStrategy asyncDbStrategy) {
         Preconditions.checkArgument(threadNum > 0, "thread num must greater than 0");
         executionContext = ExecutionContext.fix(threadNum, "asyncDB");
-        this.asyncDBStrategy = asyncDBStrategy;
-        asyncDBOperators = new AsyncDBOperator[threadNum];
+        this.asyncDbStrategy = asyncDbStrategy;
+        asyncDbOperators = new AsyncDBOperator[threadNum];
         for (int i = 0; i < threadNum; i++) {
-            AsyncDBOperator asyncDBOperator = new AsyncDBOperator();
-            executionContext.execute(asyncDBOperator);
-            asyncDBOperators[i] = asyncDBOperator;
+            AsyncDBOperator asyncDbOperator = new AsyncDBOperator();
+            executionContext.execute(asyncDbOperator);
+            asyncDbOperators[i] = asyncDbOperator;
         }
         executionContext.execute(() -> {
             while (!isStopped) {
@@ -50,8 +55,8 @@ public class AsyncDBExecutor implements Closeable {
 
                 int totalTaskOpredNum = 0;
                 int totalWaittingOprNum = 0;
-                for (AsyncDBOperator asyncDBOperator : asyncDBOperators) {
-                    SyncState syncState = asyncDBOperator.getSyncState();
+                for (AsyncDBOperator asyncDbOperator : asyncDbOperators) {
+                    SyncState syncState = asyncDbOperator.getSyncState();
                     log.info("{} -> taskOpredNum: {}, taittingOprNum: {}, taskOpredPeriodNum: {}",
                             syncState.getThreadName(), syncState.getSyncNum(), syncState.getWaittingOprNum(),
                             syncState.getSyncPeriodNum());
@@ -70,8 +75,8 @@ public class AsyncDBExecutor implements Closeable {
     @Override
     public void close() {
         isStopped = true;
-        for (AsyncDBOperator asyncDBOperator : asyncDBOperators) {
-            asyncDBOperator.close();
+        for (AsyncDBOperator asyncDbOperator : asyncDbOperators) {
+            asyncDbOperator.close();
         }
         executionContext.shutdown();
         try {
@@ -81,13 +86,13 @@ public class AsyncDBExecutor implements Closeable {
         }
     }
 
-    boolean submit(AsyncDBEntity asyncDBEntity) {
+    boolean submit(AsyncDbEntity asyncDbEntity) {
         if (!isStopped) {
-            int key = asyncDBEntity.hashCode();
-            int index = key % asyncDBOperators.length;
-            AsyncDBOperator asyncDBOperator = asyncDBOperators[index];
+            int key = asyncDbEntity.hashCode();
+            int index = key % asyncDbOperators.length;
+            AsyncDBOperator asyncDBOperator = asyncDbOperators[index];
 
-            asyncDBOperator.submit(asyncDBEntity);
+            asyncDBOperator.submit(asyncDbEntity);
             return true;
         }
 
@@ -95,15 +100,15 @@ public class AsyncDBExecutor implements Closeable {
     }
 
     private class AsyncDBOperator implements Runnable, Closeable {
-        private BlockingQueue<AsyncDBEntity> queue = new LinkedBlockingQueue<>();
+        private BlockingQueue<AsyncDbEntity> queue = new LinkedBlockingQueue<>();
         private volatile boolean isStopped = false;
         private long syncNum = 0;
         private String threadName = "";
         private long preSyncNum = 0;
 
-        boolean submit(AsyncDBEntity asyncDBEntity) {
+        boolean submit(AsyncDbEntity asyncDbEntity) {
             if (!isStopped) {
-                return queue.add(asyncDBEntity);
+                return queue.add(asyncDbEntity);
             }
 
             return false;
@@ -113,9 +118,9 @@ public class AsyncDBExecutor implements Closeable {
         public void run() {
             threadName = Thread.currentThread().getName();
             while (true) {
-                int oprNum = asyncDBStrategy.getOprNum();
+                int oprNum = asyncDbStrategy.getOprNum();
                 for (int i = 0; i < oprNum; i++) {
-                    AsyncDBEntity entity = null;
+                    AsyncDbEntity entity = null;
                     try {
                         entity = queue.take();
 
@@ -124,19 +129,19 @@ public class AsyncDBExecutor implements Closeable {
                             return;
                         }
 
-                        entity.tryBDOpr(asyncDBStrategy.getTryTimes());
+                        entity.tryDbOpr(asyncDbStrategy.getTryTimes());
 
                         syncNum++;
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
-                        if (Objects.nonNull(entity) && DBStatus.UPDATE.equals(entity.getStatus())) {
+                        if (Objects.nonNull(entity) && DbStatus.UPDATE.equals(entity.getStatus())) {
                             //update操作抛出异常, 重置updating状态
                             entity.resetUpdating();
                         }
                     }
                 }
 
-                int duration = asyncDBStrategy.getDuration(queue.size());
+                int duration = asyncDbStrategy.getDuration(queue.size());
                 if (!isStopped) {
                     try {
                         Thread.sleep(duration);

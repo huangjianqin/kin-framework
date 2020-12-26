@@ -4,7 +4,7 @@ package org.kin.framework.asyncdb;
  * @author huangjianqin
  * @date 2019/4/3
  */
-public class DefaultAsyncDBStrategy implements AsyncDBStrategy {
+public class DefaultAsyncDbStrategy implements AsyncDbStrategy {
     @Override
     public int getOprNum() {
         return 10;

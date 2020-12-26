@@ -4,7 +4,7 @@ package org.kin.framework.asyncdb;
  * @author huangjianqin
  * @date 2019/4/3
  */
-public interface AsyncDBStrategy {
+public interface AsyncDbStrategy {
     /**
      * @return 每次处理DB实体的数量
      */
