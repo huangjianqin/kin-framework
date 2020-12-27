@@ -9,9 +9,9 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
-public @interface PersistentClass {
+public @interface DbSynchronzierClass {
     /**
      * 持久化类 类型
      */
-    Class<? extends DBSynchronzier> type();
+    Class<? extends DbSynchronzier<?>> type();
 }

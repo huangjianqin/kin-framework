@@ -4,19 +4,19 @@ package org.kin.framework.asyncdb;
  * @author huangjianqin
  * @date 2019/4/3
  */
-public interface AsyncDBStrategy {
+public interface AsyncDbStrategy {
     /**
-     * @return 每次处理DB实体的数量
+     * @return 每个worker每轮处理DB实体的数量
      */
     int getOprNum();
 
     /**
-     * @return DB操作的尝试次数
+     * @return DB操作的重试次数
      */
-    int getTryTimes();
+    int getRetryTimes();
 
     /**
-     * @param size 队列大小
+     * @param size 当前等待队列大小
      * @return 处理的间隔, 毫秒
      */
     int getDuration(int size);
