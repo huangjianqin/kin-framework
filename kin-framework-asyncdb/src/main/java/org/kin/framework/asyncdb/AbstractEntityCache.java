@@ -22,10 +22,10 @@ public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> imple
     private final Cache<PK, E> cache;
     /** 实体类 */
     private final Class<E> entityClass;
+    /** 正在delete的db entity */
+    private final Map<PK, E> removing = new ConcurrentHashMap<>();
     /** 实体类对应的{@link DbSynchronzier} */
     private DbSynchronzier<PK, E> dbSynchronzier;
-    /** 正在delete的db entity */
-    private Map<PK, E> removing = new ConcurrentHashMap<>();
 
     @SuppressWarnings("unchecked")
     protected AbstractEntityCache(Cache<PK, E> cache) {
@@ -110,6 +110,7 @@ public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> imple
     protected abstract E initEntity(PK pk, Object... args);
 
     /**
+     * 想对缓存中的实体执行delete操作应该使用该方法, 而不是单独调用{@link AsyncDbEntity}.delete()
      * 移除缓存并执行delete
      */
     public void invalidAndDelete(PK pk) {
@@ -136,6 +137,26 @@ public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> imple
     }
 
     /**
+     * 仅仅将db entity从缓存中移除
+     */
+    public void invalid(PK pk) {
+        ReentrantLock lock = getLock(pk);
+        lock.lock();
+        try {
+            cache.invalidate(pk);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * 缓存清空
+     */
+    public void invalidAll(PK pk) {
+        cache.invalidateAll();
+    }
+
+    /**
      * 对于批量加载的, 保证只使用缓存的, 也就是缓存有就取缓存, 没有就放入缓存
      */
     public List<E> transform(List<E> entities) {
@@ -154,6 +175,16 @@ public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> imple
 
         return result;
     }
+
+    /**
+     * 加载表中所有entity到缓存中
+     */
+    public List<E> loadAll() {
+        List<E> allEntities = dbSynchronzier.getAll();
+        return transform(allEntities);
+    }
+
+    //----------------------------------------------------------------------------------------------------------------
 
     /**
      * 用于设置db entity对应的{@link DbSynchronzier}

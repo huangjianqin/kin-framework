@@ -1,5 +1,7 @@
 package org.kin.framework.asyncdb;
 
+import java.util.List;
+
 /**
  * 定义DB基本操作
  *
@@ -29,4 +31,9 @@ public interface DbSynchronzier<PK, E extends AsyncDbEntity<PK>> {
      * @return db entity
      */
     E get(PK pk);
+
+    /**
+     * 返回表中所有entity
+     */
+    List<E> getAll();
 }
