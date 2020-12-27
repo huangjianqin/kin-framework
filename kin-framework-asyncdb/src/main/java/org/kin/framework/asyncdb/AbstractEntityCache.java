@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author huangjianqin
  * @date 2020/12/27
  */
-public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> implements EntityListener {
+public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> implements EntityListener<E> {
     /** 缓存分段锁 */
     private final ReentrantLock[] locks;
     /** entity缓存 */
@@ -197,12 +197,12 @@ public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> imple
     }
 
     @Override
-    public void onSuccess(AsyncDbEntity<?> entity, DbOperation operation) {
+    public void onSuccess(E entity, DbOperation operation) {
         afterOperation(entity, operation, null);
     }
 
     @Override
-    public void onError(AsyncDbEntity<?> entity, DbOperation operation, Throwable ex) {
+    public void onError(E entity, DbOperation operation, Throwable ex) {
         afterOperation(entity, operation, ex);
         if (DbOperation.Insert.equals(operation)) {
             //insert遇到异常, 重新提交db操作

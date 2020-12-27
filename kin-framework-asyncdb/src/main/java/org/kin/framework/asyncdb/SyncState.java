@@ -4,7 +4,7 @@ package org.kin.framework.asyncdb;
  * @author huangjianqin
  * @date 2019/4/4
  */
-public class SyncState {
+class SyncState {
     /** 线程名 */
     private final String threadName;
     /** 当前处理的DB 实体数量 */

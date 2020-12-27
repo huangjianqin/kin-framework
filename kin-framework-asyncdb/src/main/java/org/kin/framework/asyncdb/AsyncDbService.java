@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2019/3/31
  */
-public class AsyncDbService implements Closeable, LoggerOprs {
+public final class AsyncDbService implements Closeable, LoggerOprs {
     /** 单例 */
     private static AsyncDbService INSTANCE;
 
@@ -141,21 +141,21 @@ public class AsyncDbService implements Closeable, LoggerOprs {
     /**
      * 添加{@link EntityListener}
      */
-    public void addListener(EntityListener listener) {
+    public void addListener(EntityListener<?> listener) {
         this.workers.addListener(listener);
     }
 
     /**
      * 批量添加{@link EntityListener}
      */
-    public void addListeners(EntityListener... listeners) {
+    public void addListeners(EntityListener<?>... listeners) {
         addListeners(Arrays.asList(listeners));
     }
 
     /**
      * 批量添加{@link EntityListener}
      */
-    public void addListeners(Collection<EntityListener> listeners) {
+    public void addListeners(Collection<EntityListener<?>> listeners) {
         this.workers.addListeners(listeners);
     }
 

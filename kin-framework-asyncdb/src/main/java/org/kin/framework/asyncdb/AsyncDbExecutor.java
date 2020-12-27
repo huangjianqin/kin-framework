@@ -1,16 +1,19 @@
 package org.kin.framework.asyncdb;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
 import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.log.LoggerOprs;
+import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.TimeUtils;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2019/4/1
  */
-public class AsyncDbExecutor implements Closeable, LoggerOprs {
+class AsyncDbExecutor implements Closeable, LoggerOprs {
     /** 终止executor的db实体 */
     private final AsyncDbEntity POISON = new AsyncDbEntity() {
         @Override
@@ -38,8 +41,8 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
     private volatile boolean isStopped = false;
     /** executor执行db操作策略 */
     private AsyncDbStrategy asyncDbStrategy;
-    /** entity listeners */
-    private final CopyOnWriteArrayList<EntityListener> listeners = new CopyOnWriteArrayList<>();
+    /** key -> entity class, value -> entity listeners */
+    private final Multimap<Class<? extends AsyncDbEntity<?>>, EntityListener<?>> listeners = LinkedHashMultimap.create();
 
     void init(int threadNum, AsyncDbStrategy asyncDbStrategy) {
         Preconditions.checkArgument(threadNum > 0, "thread num must greater than 0");
@@ -113,27 +116,31 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
     /**
      * 添加{@link EntityListener}
      */
-    public void addListener(EntityListener listener) {
-        this.listeners.add(listener);
+    @SuppressWarnings("unchecked")
+    public void addListener(EntityListener<?> listener) {
+        List<Class<?>> genericTypes = ClassUtils.getSuperInterfacesGenericActualTypes(listener.getClass());
+        this.listeners.put((Class<? extends AsyncDbEntity<?>>) genericTypes.get(0), listener);
     }
 
     /**
      * 批量添加{@link EntityListener}
      */
-    public void addListeners(EntityListener... listeners) {
+    public void addListeners(EntityListener<?>... listeners) {
         addListeners(Arrays.asList(listeners));
     }
 
     /**
      * 批量添加{@link EntityListener}
      */
-    public void addListeners(Collection<EntityListener> listeners) {
-        this.listeners.addAll(listeners);
+    public void addListeners(Collection<EntityListener<?>> listeners) {
+        for (EntityListener<?> listener : listeners) {
+            addListener(listener);
+        }
     }
 
     //---------------------------------------------------------------------------------------------------------------------
     private class AsyncDBOperator implements Runnable, Closeable {
-        private BlockingQueue<AsyncDbEntity> queue = new LinkedBlockingQueue<>();
+        private BlockingQueue<AsyncDbEntity<?>> queue = new LinkedBlockingQueue<>();
         private volatile boolean isStopped = false;
         private long syncNum = 0;
         private String threadName = "";
@@ -142,7 +149,7 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
         /**
          * 入队
          */
-        boolean submit(AsyncDbEntity asyncDbEntity) {
+        boolean submit(AsyncDbEntity<?> asyncDbEntity) {
             if (!isStopped) {
                 return queue.add(asyncDbEntity);
             }
@@ -156,7 +163,7 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
             while (true) {
                 int oprNum = asyncDbStrategy.getOprNum();
                 for (int i = 0; i < oprNum; i++) {
-                    AsyncDbEntity entity = null;
+                    AsyncDbEntity<?> entity = null;
                     try {
                         entity = queue.take();
                     } catch (InterruptedException e) {
@@ -178,12 +185,12 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
                             entity.tryDbOpr(asyncDbStrategy.getRetryTimes());
                         } catch (Exception e) {
                             error("", e);
-                            for (EntityListener listener : listeners) {
+                            for (EntityListener listener : listeners.get((Class<? extends AsyncDbEntity<?>>) entity.getClass())) {
                                 listener.onError(entity, DbOperation.getByTargetStauts(targetStatus), e);
                             }
                         }
 
-                        for (EntityListener listener : listeners) {
+                        for (EntityListener listener : listeners.get((Class<? extends AsyncDbEntity<?>>) entity.getClass())) {
                             listener.onSuccess(entity, DbOperation.getByTargetStauts(targetStatus));
                         }
                     } catch (Exception listenerExt) {

@@ -4,7 +4,7 @@ package org.kin.framework.asyncdb;
  * @author huangjianqin
  * @date 2019/3/31
  */
-public enum DbStatus {
+enum DbStatus {
     /**
      * 正常状态
      */

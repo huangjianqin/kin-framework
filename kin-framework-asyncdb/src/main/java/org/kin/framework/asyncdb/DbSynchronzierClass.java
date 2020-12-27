@@ -13,5 +13,5 @@ public @interface DbSynchronzierClass {
     /**
      * 持久化类 类型
      */
-    Class<? extends DbSynchronzier<?>> type();
+    Class<? extends DbSynchronzier<?, ?>> type();
 }

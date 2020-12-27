@@ -47,6 +47,8 @@ public class AsyncDbConfiguration implements ApplicationListener<ContextRefreshe
 
         for (AbstractEntityCache entityCache : context.getBeansOfType(AbstractEntityCache.class).values()) {
             entityCache.updateDbSynchronzier(asyncDbService.getDbSynchronzier(entityCache.getEntityClass()));
+            //注册监听器
+            asyncDbService.addListener(entityCache);
         }
     }
 }

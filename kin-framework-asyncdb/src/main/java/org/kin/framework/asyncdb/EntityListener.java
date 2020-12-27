@@ -6,14 +6,14 @@ package org.kin.framework.asyncdb;
  * @author huangjianqin
  * @date 2020/12/26
  */
-public interface EntityListener {
+public interface EntityListener<E extends AsyncDbEntity<?>> {
     /**
      * db操作成功
      *
      * @param entity    实体
      * @param operation db操作
      */
-    void onSuccess(AsyncDbEntity<?> entity, DbOperation operation);
+    void onSuccess(E entity, DbOperation operation);
 
     /**
      * db操作失败
@@ -22,5 +22,5 @@ public interface EntityListener {
      * @param operation db操作
      * @param ex        异常
      */
-    void onError(AsyncDbEntity<?> entity, DbOperation operation, Throwable ex);
+    void onError(E entity, DbOperation operation, Throwable ex);
 }
