@@ -22,7 +22,7 @@ public class AsyncDbService implements Closeable, LoggerOprs {
     private static AsyncDbService INSTANCE;
 
     /** key -> {@link AsyncDbEntity} class, value -> 对应的{@link DbSynchronzier}实现 */
-    protected final Map<Class<?>, DbSynchronzier<?>> class2Persistent = new ConcurrentHashMap<>();
+    protected final Map<Class<?>, DbSynchronzier<?, ? extends AsyncDbEntity<?>>> class2Synchronzier = new ConcurrentHashMap<>();
     /** db worker */
     private final AsyncDbExecutor workers = new AsyncDbExecutor();
 
@@ -71,7 +71,7 @@ public class AsyncDbService implements Closeable, LoggerOprs {
     /**
      * 手动注册持久化实现类
      */
-    public void register(Class<?> claxx, DbSynchronzier<?> dbSynchronzier) {
+    public void register(Class<?> claxx, DbSynchronzier dbSynchronzier) {
         Type interfaceType = null;
         for (Type type : dbSynchronzier.getClass().getGenericInterfaces()) {
             if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(DbSynchronzier.class)) {
@@ -95,7 +95,7 @@ public class AsyncDbService implements Closeable, LoggerOprs {
 
             if (entityClass.isAssignableFrom(claxx)) {
                 //校验通过
-                class2Persistent.put(claxx, dbSynchronzier);
+                class2Synchronzier.put(claxx, dbSynchronzier);
             }
         }
     }
@@ -103,16 +103,17 @@ public class AsyncDbService implements Closeable, LoggerOprs {
     /**
      * 获取db entity对应的{@link DbSynchronzier}
      */
-    protected DbSynchronzier<?> getAsyncPersistent(AsyncDbEntity asyncDbEntity) {
-        return class2Persistent.get(asyncDbEntity.getClass());
+    protected DbSynchronzier getDbSynchronzier(Class<? extends AsyncDbEntity> entityClass) {
+        return class2Synchronzier.get(entityClass);
     }
 
     /**
      * 执行db操作
      */
+    @SuppressWarnings("unchecked")
     boolean dbOpr(AsyncDbEntity asyncDbEntity, DbOperation operation) {
         asyncDbEntity.serialize();
-        DbSynchronzier<?> dbSynchronzier = getAsyncPersistent(asyncDbEntity);
+        DbSynchronzier dbSynchronzier = getDbSynchronzier(asyncDbEntity.getClass());
         try {
             if (dbSynchronzier != null) {
                 if (asyncDbEntity.getDbSynchronzier() == null) {
@@ -160,7 +161,7 @@ public class AsyncDbService implements Closeable, LoggerOprs {
 
     @Override
     public void close() {
-        class2Persistent.clear();
+        class2Synchronzier.clear();
         workers.close();
     }
 }

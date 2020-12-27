@@ -13,7 +13,7 @@ public interface EntityListener {
      * @param entity    实体
      * @param operation db操作
      */
-    void onSuccess(AsyncDbEntity entity, DbOperation operation);
+    void onSuccess(AsyncDbEntity<?> entity, DbOperation operation);
 
     /**
      * db操作失败
@@ -22,5 +22,5 @@ public interface EntityListener {
      * @param operation db操作
      * @param ex        异常
      */
-    void onError(AsyncDbEntity entity, DbOperation operation, Throwable ex);
+    void onError(AsyncDbEntity<?> entity, DbOperation operation, Throwable ex);
 }

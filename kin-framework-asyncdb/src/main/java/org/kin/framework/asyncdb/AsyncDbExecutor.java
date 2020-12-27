@@ -21,6 +21,10 @@ import java.util.concurrent.TimeUnit;
 public class AsyncDbExecutor implements Closeable, LoggerOprs {
     /** 终止executor的db实体 */
     private final AsyncDbEntity POISON = new AsyncDbEntity() {
+        @Override
+        public Object getPrimaryKey() {
+            return null;
+        }
     };
     /** 等待db实体操作数量阈值, 超过这个阈值, 会打印日志 */
     private static final int WAITTING_OPR_NUM_THRESHOLD = 500;
@@ -157,11 +161,6 @@ public class AsyncDbExecutor implements Closeable, LoggerOprs {
                         entity = queue.take();
                     } catch (InterruptedException e) {
                         //ignore
-                        //todo 放到监听器去实现
-//                        if (Objects.nonNull(entity) && DbStatus.UPDATE.equals(entity.getStatus())) {
-//                            //update操作抛出异常, 重置updating状态
-//                            entity.resetUpdating();
-//                        }
                     }
 
                     if (Objects.isNull(entity)) {

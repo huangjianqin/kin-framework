@@ -31,8 +31,6 @@ public enum DbStatus {
         @SuppressWarnings("unchecked")
         @Override
         public boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            //重置实体更新中标识
-            asyncDbEntity.resetUpdating();
             return dbSynchronzier.update(asyncDbEntity);
         }
     },

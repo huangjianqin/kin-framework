@@ -9,11 +9,11 @@ import java.util.concurrent.atomic.AtomicReference;
  * @date 2019/3/31
  * 支持多线程操作
  */
-public abstract class AsyncDbEntity implements Serializable {
+public abstract class AsyncDbEntity<PK> implements Serializable {
     /** 数据库状态 */
     private final AtomicReference<DbStatus> status = new AtomicReference<>(DbStatus.NORMAL);
     /** 数据库同步操作 */
-    private volatile DbSynchronzier<?> dbSynchronzier;
+    private volatile DbSynchronzier<PK, ?> dbSynchronzier;
     /** 实体进行过update标识, 主要用于减少update的次数 */
     private final AtomicBoolean updating = new AtomicBoolean();
     /** 是否支持删除操作 */
@@ -26,6 +26,11 @@ public abstract class AsyncDbEntity implements Serializable {
     public AsyncDbEntity(boolean canDelete) {
         this.canDelete = canDelete;
     }
+
+    /**
+     * @return 主键
+     */
+    public abstract PK getPrimaryKey();
 
     /**
      * entity insert
@@ -111,15 +116,23 @@ public abstract class AsyncDbEntity implements Serializable {
     }
 
     //setter && getter
-    DbSynchronzier<?> getDbSynchronzier() {
+    DbSynchronzier<PK, ?> getDbSynchronzier() {
         return dbSynchronzier;
     }
 
-    void setDbSynchronzier(DbSynchronzier<?> dbSynchronzier) {
+    void setDbSynchronzier(DbSynchronzier<PK, ?> dbSynchronzier) {
         this.dbSynchronzier = dbSynchronzier;
     }
 
     DbStatus getStatus() {
         return status.get();
+    }
+
+    public boolean isCanDelete() {
+        return canDelete;
+    }
+
+    public AtomicBoolean getUpdating() {
+        return updating;
     }
 }
