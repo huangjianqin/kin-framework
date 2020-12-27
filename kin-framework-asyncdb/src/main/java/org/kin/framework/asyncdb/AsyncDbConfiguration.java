@@ -18,7 +18,7 @@ import javax.annotation.Nonnull;
  * @date 2019/7/19
  */
 @Configuration
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class AsyncDbConfiguration implements ApplicationListener<ContextRefreshedEvent> {
     @Override
     public void onApplicationEvent(@Nonnull ContextRefreshedEvent event) {
