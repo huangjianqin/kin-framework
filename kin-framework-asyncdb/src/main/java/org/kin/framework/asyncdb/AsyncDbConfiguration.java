@@ -8,7 +8,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
 import javax.annotation.Nonnull;
@@ -19,7 +18,7 @@ import javax.annotation.Nonnull;
  * @author huangjianqin
  * @date 2019/7/19
  */
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order
 public class AsyncDbConfiguration implements ApplicationListener<ContextRefreshedEvent> {
     @Autowired
     private AsyncDbService asyncDbService;
@@ -46,7 +45,6 @@ public class AsyncDbConfiguration implements ApplicationListener<ContextRefreshe
         }
 
         for (AbstractEntityCache entityCache : context.getBeansOfType(AbstractEntityCache.class).values()) {
-            entityCache.updateDbSynchronzier(asyncDbService.getDbSynchronzier(entityCache.getEntityClass()));
             //注册监听器
             asyncDbService.addListener(entityCache);
         }

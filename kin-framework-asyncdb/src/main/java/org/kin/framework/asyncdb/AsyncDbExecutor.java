@@ -9,6 +9,7 @@ import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.TimeUtils;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -25,7 +26,7 @@ class AsyncDbExecutor implements Closeable, LoggerOprs {
     /** 终止executor的db实体 */
     private final AsyncDbEntity POISON = new AsyncDbEntity() {
         @Override
-        public Object getPrimaryKey() {
+        public Serializable getPrimaryKey() {
             return null;
         }
     };
@@ -118,7 +119,7 @@ class AsyncDbExecutor implements Closeable, LoggerOprs {
      */
     @SuppressWarnings("unchecked")
     public void addListener(EntityListener<?> listener) {
-        List<Class<?>> genericTypes = ClassUtils.getSuperInterfacesGenericActualTypes(listener.getClass());
+        List<Class<?>> genericTypes = ClassUtils.getSuperInterfacesGenericActualTypes(EntityListener.class, listener.getClass());
         this.listeners.put((Class<? extends AsyncDbEntity<?>>) genericTypes.get(0), listener);
     }
 

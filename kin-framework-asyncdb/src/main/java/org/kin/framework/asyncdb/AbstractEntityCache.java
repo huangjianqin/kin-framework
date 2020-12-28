@@ -2,7 +2,9 @@ package org.kin.framework.asyncdb;
 
 import com.google.common.cache.Cache;
 import org.kin.framework.utils.ClassUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author huangjianqin
  * @date 2020/12/27
  */
-public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> implements EntityListener<E> {
+public abstract class AbstractEntityCache<PK extends Serializable, E extends AsyncDbEntity<PK>, S extends DbSynchronzier<PK, E>> implements EntityListener<E> {
     /** 缓存分段锁 */
     private final ReentrantLock[] locks;
     /** entity缓存 */
@@ -25,7 +27,8 @@ public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> imple
     /** 正在delete的db entity */
     private final Map<PK, E> removing = new ConcurrentHashMap<>();
     /** 实体类对应的{@link DbSynchronzier} */
-    private DbSynchronzier<PK, E> dbSynchronzier;
+    @Autowired
+    private S dbSynchronzier;
 
     @SuppressWarnings("unchecked")
     protected AbstractEntityCache(Cache<PK, E> cache) {
@@ -185,17 +188,6 @@ public abstract class AbstractEntityCache<PK, E extends AsyncDbEntity<PK>> imple
     }
 
     //----------------------------------------------------------------------------------------------------------------
-
-    /**
-     * 用于设置db entity对应的{@link DbSynchronzier}
-     */
-    synchronized void updateDbSynchronzier(DbSynchronzier<PK, E> dbSynchronzier) {
-        if (Objects.nonNull(this.dbSynchronzier)) {
-            throw new IllegalStateException("entity cache's dbSynchronzier can only update once");
-        }
-        this.dbSynchronzier = dbSynchronzier;
-    }
-
     @Override
     public void onSuccess(E entity, DbOperation operation) {
         afterOperation(entity, operation, null);

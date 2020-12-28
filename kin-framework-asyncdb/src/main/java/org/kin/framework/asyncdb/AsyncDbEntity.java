@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @date 2019/3/31
  * 支持多线程操作
  */
-public abstract class AsyncDbEntity<PK> implements Serializable {
+public abstract class AsyncDbEntity<PK extends Serializable> implements Serializable {
     /** 数据库状态 */
     private final AtomicReference<DbStatus> status = new AtomicReference<>(DbStatus.NORMAL);
     /** 数据库同步操作 */

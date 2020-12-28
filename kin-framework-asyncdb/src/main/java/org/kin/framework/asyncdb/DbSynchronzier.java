@@ -1,5 +1,6 @@
 package org.kin.framework.asyncdb;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -8,7 +9,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2019/3/31
  */
-public interface DbSynchronzier<PK, E extends AsyncDbEntity<PK>> {
+public interface DbSynchronzier<PK extends Serializable, E extends AsyncDbEntity<PK>> {
     /**
      * 定义Insert操作
      */
