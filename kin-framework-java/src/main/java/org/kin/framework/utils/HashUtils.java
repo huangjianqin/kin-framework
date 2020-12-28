@@ -9,13 +9,23 @@ public class HashUtils {
 
     }
 
+    /**
+     * hash %
+     *
+     * @param key   目标实例
+     * @param limit %限制大小
+     */
     public static int hash(Object key, int limit) {
         return key == null ? 0 : ((key.hashCode() & Integer.MAX_VALUE) % limit);
     }
 
     /**
+     * hash %
      * HashMap的Hash方式
      * 更高效的hash方式
+     *
+     * @param key   目标实例
+     * @param limit %限制大小
      */
     public static int efficientHash(Object key, int limit) {
         int h;
