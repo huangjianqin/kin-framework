@@ -546,25 +546,41 @@ public class ClassUtils {
 
     /**
      * 实现的接口
-     * 获取类泛型具体实现类型
-     * 由于类型擦除, 获取不了本类的泛型类型参数具体类型, 但其保存的父类的泛型类型参数具体类型, 所以可以获取父类的泛型类型参数具体类型
+     * 获取指定接口的泛型具体实现类型
+     * 由于类型擦除, 获取不了本类的泛型类型参数具体类型, 但其保存的父接口的泛型类型参数具体类型, 所以可以获取父接口的泛型类型参数具体类型
+     *
+     * @param claxx          接口实现类
+     * @param interfaceClass 指定接口
      */
-    public static List<Class<?>> getSuperInterfacesGenericActualTypes(Class<?> claxx) {
-        List<Class<?>> result = new ArrayList<>();
+    public static List<Class<?>> getSuperInterfacesGenericActualTypes(Class<?> interfaceClass, Class<?> claxx) {
+        if (!interfaceClass.isAssignableFrom(claxx)) {
+            //非实现类
+            return Collections.emptyList();
+        }
 
         Type[] genericInterfaces = claxx.getGenericInterfaces();
         for (Type genericInterface : genericInterfaces) {
-            for (Type actualTypeArgument : ((ParameterizedType) genericInterface).getActualTypeArguments()) {
+            if (!(genericInterface instanceof ParameterizedType)) {
+                continue;
+            }
+            ParameterizedType parameterizedInterface = (ParameterizedType) genericInterface;
+            if (!parameterizedInterface.getRawType().equals(interfaceClass)) {
+                continue;
+            }
+            List<Class<?>> result = new ArrayList<>();
+            for (Type actualTypeArgument : parameterizedInterface.getActualTypeArguments()) {
                 if (actualTypeArgument instanceof ParameterizedType) {
                     result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
                 } else {
                     result.add((Class<?>) actualTypeArgument);
                 }
             }
+
+            return result;
         }
 
 
-        return result;
+        return Collections.emptyList();
     }
 
     /**
