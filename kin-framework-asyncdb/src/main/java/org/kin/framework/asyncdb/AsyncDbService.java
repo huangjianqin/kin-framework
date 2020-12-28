@@ -2,12 +2,13 @@ package org.kin.framework.asyncdb;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.log.LoggerOprs;
+import org.kin.framework.utils.ClassUtils;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.SysUtils;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,33 +72,21 @@ public final class AsyncDbService implements Closeable, LoggerOprs {
     /**
      * 手动注册持久化实现类
      */
+    @SuppressWarnings("unchecked")
     public void register(Class<?> claxx, DbSynchronzier dbSynchronzier) {
-        Type interfaceType = null;
-        for (Type type : dbSynchronzier.getClass().getGenericInterfaces()) {
-            if (type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(DbSynchronzier.class)) {
-                interfaceType = type;
-                break;
-            }
-            if (type instanceof Class && type.equals(DbSynchronzier.class)) {
-                interfaceType = type;
-                break;
-            }
+        //校验dbSynchronzier的泛型类是否于claxx一致
+        Class<? extends DbSynchronzier> implClass = dbSynchronzier.getClass();
+        List<Class<?>> genericTypes = ClassUtils.getSuperInterfacesGenericActualTypes(DbSynchronzier.class, implClass);
+        if (CollectionUtils.isEmpty(genericTypes)) {
+            throw new IllegalArgumentException(String.format("%s doesn't have generic param", implClass));
         }
 
-        if (interfaceType != null) {
-            Type entityType = ((ParameterizedType) interfaceType).getActualTypeArguments()[0];
-            Class<?> entityClass;
-            if (entityType instanceof ParameterizedType) {
-                entityClass = (Class<?>) ((ParameterizedType) entityType).getRawType();
-            } else {
-                entityClass = (Class<?>) entityType;
-            }
-
-            if (entityClass.isAssignableFrom(claxx)) {
-                //校验通过
-                class2Synchronzier.put(claxx, dbSynchronzier);
-            }
+        if (!genericTypes.get(0).isAssignableFrom(claxx)) {
+            throw new IllegalArgumentException(String.format("%s's generic param is not assignable from %s'", implClass, claxx));
         }
+
+        //校验通过过
+        class2Synchronzier.put(claxx, dbSynchronzier);
     }
 
     /**

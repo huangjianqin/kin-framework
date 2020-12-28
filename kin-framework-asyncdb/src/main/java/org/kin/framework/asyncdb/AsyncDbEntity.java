@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * 支持多线程操作
  */
 public abstract class AsyncDbEntity<PK extends Serializable> implements Serializable {
+    private static final long serialVersionUID = -3533132945914928362L;
     /** 数据库状态 */
     private final AtomicReference<DbStatus> status = new AtomicReference<>(DbStatus.NORMAL);
     /** 数据库同步操作 */

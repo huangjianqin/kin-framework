@@ -2,6 +2,7 @@ package org.kin.framework.asyncdb;
 
 import com.google.common.cache.Cache;
 import org.kin.framework.utils.ClassUtils;
+import org.kin.framework.utils.HashUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
@@ -46,7 +47,7 @@ public abstract class AbstractEntityCache<PK extends Serializable, E extends Asy
      * 获取分段锁
      */
     private ReentrantLock getLock(PK pk) {
-        return locks[pk.hashCode() % locks.length];
+        return locks[HashUtils.efficientHash(pk, locks.length)];
     }
 
     /**

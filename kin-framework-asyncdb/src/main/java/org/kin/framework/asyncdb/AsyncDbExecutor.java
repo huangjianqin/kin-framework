@@ -24,7 +24,9 @@ import java.util.concurrent.TimeUnit;
  */
 class AsyncDbExecutor implements Closeable, LoggerOprs {
     /** 终止executor的db实体 */
-    private final AsyncDbEntity POISON = new AsyncDbEntity() {
+    private static final AsyncDbEntity POISON = new AsyncDbEntity() {
+        private static final long serialVersionUID = -3526988465939102085L;
+
         @Override
         public Serializable getPrimaryKey() {
             return null;
@@ -158,6 +160,7 @@ class AsyncDbExecutor implements Closeable, LoggerOprs {
             return false;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void run() {
             threadName = Thread.currentThread().getName();
