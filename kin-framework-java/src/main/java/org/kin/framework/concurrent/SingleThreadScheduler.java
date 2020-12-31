@@ -12,14 +12,13 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
- * st = single thread
  * 拥有调度能力的单线程Executor
  * 调度完后, task执行仍然在该Executor
  *
  * @author huangjianqin
  * @date 2020/11/23
  */
-public class SingleThreadScheduledExecutor implements ScheduledExecutorService, LoggerOprs {
+public class SingleThreadScheduler implements ScheduledExecutorService, LoggerOprs {
     //状态枚举
     private static final byte ST_NOT_STARTED = 1;
     private static final byte ST_STARTED = 2;
@@ -28,8 +27,8 @@ public class SingleThreadScheduledExecutor implements ScheduledExecutorService, 
     private static final byte ST_TERMINATED = 5;
 
     /** 原子更新状态值 */
-    private static final AtomicIntegerFieldUpdater<SingleThreadScheduledExecutor> STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(SingleThreadScheduledExecutor.class, "state");
+    private static final AtomicIntegerFieldUpdater<SingleThreadScheduler> STATE_UPDATER =
+            AtomicIntegerFieldUpdater.newUpdater(SingleThreadScheduler.class, "state");
     /** 执行线程 */
     private volatile Thread thread;
     /** 线程锁, 用于关闭时阻塞 */
@@ -55,18 +54,18 @@ public class SingleThreadScheduledExecutor implements ScheduledExecutorService, 
     }
 
     //------------------------------------------------------------------------------------------------------------------------
-    public SingleThreadScheduledExecutor(ExecutorService parent) {
+    public SingleThreadScheduler(ExecutorService parent) {
         this(parent, false, RejectedExecutionHandler.EMPTY);
     }
 
-    public SingleThreadScheduledExecutor(ExecutorService parent, boolean timeSensitive) {
+    public SingleThreadScheduler(ExecutorService parent, boolean timeSensitive) {
         this(parent, timeSensitive, RejectedExecutionHandler.EMPTY);
     }
 
     /**
      * @param timeSensitive 是否时间敏感(也就是随系统时间发生变化而变化)
      */
-    public SingleThreadScheduledExecutor(ExecutorService parent, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
+    public SingleThreadScheduler(ExecutorService parent, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
         this.parent = parent;
         if (timeSensitive) {
             timeUnit = TimeUnit.MILLISECONDS;
@@ -619,7 +618,7 @@ public class SingleThreadScheduledExecutor implements ScheduledExecutorService, 
          * 防溢出
          */
         private long overflowFree(long delay) {
-            Delayed head = SingleThreadScheduledExecutor.this.taskQueue.peek();
+            Delayed head = SingleThreadScheduler.this.taskQueue.peek();
             if (head != null) {
                 long headDelay = head.getDelay(timeUnit);
                 if (headDelay < 0 && (delay - headDelay < 0)) {
@@ -679,7 +678,7 @@ public class SingleThreadScheduledExecutor implements ScheduledExecutorService, 
                 for (; ; ) {
                     int oldState = state;
                     if (oldState >= ST_SHUTTING_DOWN || STATE_UPDATER.compareAndSet(
-                            SingleThreadScheduledExecutor.this, oldState, ST_SHUTTING_DOWN)) {
+                            SingleThreadScheduler.this, oldState, ST_SHUTTING_DOWN)) {
                         break;
                     }
                 }
@@ -689,7 +688,7 @@ public class SingleThreadScheduledExecutor implements ScheduledExecutorService, 
                     for (; ; ) {
                         int oldState = state;
                         if (oldState >= ST_SHUTDOWN || STATE_UPDATER.compareAndSet(
-                                SingleThreadScheduledExecutor.this, oldState, ST_SHUTDOWN)) {
+                                SingleThreadScheduler.this, oldState, ST_SHUTDOWN)) {
                             break;
                         }
                     }
@@ -697,7 +696,7 @@ public class SingleThreadScheduledExecutor implements ScheduledExecutorService, 
 
                     //清理资源
                 } finally {
-                    STATE_UPDATER.set(SingleThreadScheduledExecutor.this, ST_TERMINATED);
+                    STATE_UPDATER.set(SingleThreadScheduler.this, ST_TERMINATED);
                     threadLock.countDown();
                 }
             }

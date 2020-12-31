@@ -9,10 +9,10 @@ import java.util.concurrent.*;
  * @author huangjianqin
  * @date 2020/11/23
  */
-public class SingleThreadScheduledExecutorTest {
+public class SingleThreadSchedulerTest {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutorService executorService = Executors.newFixedThreadPool(2);
-        SingleThreadScheduledExecutor scheduledExecutor = new SingleThreadScheduledExecutor(executorService);
+        SingleThreadScheduler scheduledExecutor = new SingleThreadScheduler(executorService);
 
         try {
             ScheduledFuture<?> f1 = scheduledExecutor.scheduleAtFixedRate(() -> System.out.println("rate>> ".concat(TimeUtils.formatDateTime(new Date()))),

@@ -13,20 +13,20 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
- * {@link SingleThreadScheduledExecutor}池
+ * {@link SingleThreadScheduler}池
  *
  * @author huangjianqin
  * @date 2020/11/23
  */
-public class SingleThreadScheduledExecutorPool implements ScheduledExecutorService {
+public class SingleThreadSchedulerPool implements ScheduledExecutorService {
     //状态枚举
     private static final byte ST_STARTED = 1;
     private static final byte ST_SHUTDOWN = 2;
     private static final byte ST_TERMINATED = 3;
 
     /** 原子更新状态值 */
-    private static final AtomicIntegerFieldUpdater<SingleThreadScheduledExecutorPool> STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(SingleThreadScheduledExecutorPool.class, "state");
+    private static final AtomicIntegerFieldUpdater<SingleThreadSchedulerPool> STATE_UPDATER =
+            AtomicIntegerFieldUpdater.newUpdater(SingleThreadSchedulerPool.class, "state");
 
     /** 状态值 */
     private volatile int state = ST_STARTED;
@@ -37,25 +37,25 @@ public class SingleThreadScheduledExecutorPool implements ScheduledExecutorServi
     private final int coreSize;
     /** 绑定的线程池 */
     private final ExecutionContext executionContext;
-    private final SingleThreadScheduledExecutor[] executors;
+    private final SingleThreadScheduler[] executors;
 
-    public SingleThreadScheduledExecutorPool(int coreSize) {
-        this(coreSize, StringUtils.firstLowerCase(SingleThreadScheduledExecutorPool.class.getSimpleName()));
+    public SingleThreadSchedulerPool(int coreSize) {
+        this(coreSize, StringUtils.firstLowerCase(SingleThreadSchedulerPool.class.getSimpleName()));
     }
 
-    public SingleThreadScheduledExecutorPool(int coreSize, String workerNamePrefix) {
+    public SingleThreadSchedulerPool(int coreSize, String workerNamePrefix) {
         this.coreSize = coreSize;
         this.executionContext = ExecutionContext.fix(coreSize, workerNamePrefix);
-        this.executors = new SingleThreadScheduledExecutor[coreSize];
+        this.executors = new SingleThreadScheduler[coreSize];
         for (int i = 0; i < coreSize; i++) {
-            executors[i] = new SingleThreadScheduledExecutor(executionContext);
+            executors[i] = new SingleThreadScheduler(executionContext);
         }
     }
 
     /**
      * 选择一个executor
      */
-    private SingleThreadScheduledExecutor selectExecutor(Object task) {
+    private SingleThreadScheduler selectExecutor(Object task) {
         return executors[HashUtils.efficientHash(task, coreSize)];
     }
 
@@ -81,7 +81,7 @@ public class SingleThreadScheduledExecutorPool implements ScheduledExecutorServi
 
     @Override
     public void shutdown() {
-        for (SingleThreadScheduledExecutor executor : executors) {
+        for (SingleThreadScheduler executor : executors) {
             executor.shutdown();
         }
         executionContext.shutdown();
@@ -89,7 +89,7 @@ public class SingleThreadScheduledExecutorPool implements ScheduledExecutorServi
         for (; ; ) {
             //等待所有Executor Shutdown
             boolean allShutdown = true;
-            for (SingleThreadScheduledExecutor executor : executors) {
+            for (SingleThreadScheduler executor : executors) {
                 if (!executor.isShutdown()) {
                     allShutdown = false;
                     break;
@@ -111,7 +111,7 @@ public class SingleThreadScheduledExecutorPool implements ScheduledExecutorServi
         for (; ; ) {
             //等待所有Executor Terminated
             boolean allTerminated = true;
-            for (SingleThreadScheduledExecutor executor : executors) {
+            for (SingleThreadScheduler executor : executors) {
                 if (!executor.isTerminated()) {
                     allTerminated = false;
                     break;
@@ -129,7 +129,7 @@ public class SingleThreadScheduledExecutorPool implements ScheduledExecutorServi
     @Override
     public List<Runnable> shutdownNow() {
         List<Runnable> tasks = new ArrayList<>();
-        for (SingleThreadScheduledExecutor executor : executors) {
+        for (SingleThreadScheduler executor : executors) {
             tasks.addAll(executor.shutdownNow());
         }
         return tasks;
