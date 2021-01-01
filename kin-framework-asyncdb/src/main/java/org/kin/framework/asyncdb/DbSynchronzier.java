@@ -13,17 +13,17 @@ public interface DbSynchronzier<PK extends Serializable, E extends AsyncDbEntity
     /**
      * 定义Insert操作
      */
-    boolean insert(E entity);
+    void insert(E entity);
 
     /**
      * 定义Update操作
      */
-    boolean update(E entity);
+    void update(E entity);
 
     /**
      * 定义Delete操作
      */
-    boolean delete(E entity);
+    void delete(E entity);
 
     /**
      * 根据主键获取db entity

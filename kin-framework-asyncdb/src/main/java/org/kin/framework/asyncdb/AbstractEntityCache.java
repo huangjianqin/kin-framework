@@ -24,7 +24,7 @@ public abstract class AbstractEntityCache<PK extends Serializable, E extends Asy
     /** entity缓存 */
     private final Cache<PK, E> cache;
     /** 实体类 */
-    private final Class<E> entityClass;
+    protected final Class<E> entityClass;
     /** 正在delete的db entity */
     private final Map<PK, E> removing = new ConcurrentHashMap<>();
     /** 实体类对应的{@link DbSynchronzier} */

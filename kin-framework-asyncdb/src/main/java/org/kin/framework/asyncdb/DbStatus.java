@@ -21,7 +21,8 @@ enum DbStatus {
         @SuppressWarnings("unchecked")
         @Override
         public boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            return dbSynchronzier.insert(asyncDbEntity);
+            dbSynchronzier.insert(asyncDbEntity);
+            return true;
         }
     },
     /**
@@ -31,7 +32,8 @@ enum DbStatus {
         @SuppressWarnings("unchecked")
         @Override
         public boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            return dbSynchronzier.update(asyncDbEntity);
+            dbSynchronzier.update(asyncDbEntity);
+            return true;
         }
     },
     /**
@@ -41,7 +43,8 @@ enum DbStatus {
         @SuppressWarnings("unchecked")
         @Override
         public boolean execute(DbSynchronzier dbSynchronzier, AsyncDbEntity asyncDbEntity) {
-            return dbSynchronzier.delete(asyncDbEntity);
+            dbSynchronzier.delete(asyncDbEntity);
+            return true;
         }
     },
     ;
