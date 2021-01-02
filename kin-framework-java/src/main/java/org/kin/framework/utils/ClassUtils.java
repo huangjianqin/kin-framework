@@ -2,6 +2,8 @@ package org.kin.framework.utils;
 
 import com.google.common.collect.Sets;
 import org.kin.framework.collection.Tuple;
+import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
+import sun.reflect.generics.reflectiveObjects.TypeVariableImpl;
 
 import java.io.IOException;
 import java.lang.reflect.*;
@@ -558,25 +560,60 @@ public class ClassUtils {
             return Collections.emptyList();
         }
 
-        Type[] genericInterfaces = claxx.getGenericInterfaces();
-        for (Type genericInterface : genericInterfaces) {
-            if (!(genericInterface instanceof ParameterizedType)) {
-                continue;
-            }
-            ParameterizedType parameterizedInterface = (ParameterizedType) genericInterface;
-            if (!parameterizedInterface.getRawType().equals(interfaceClass)) {
-                continue;
-            }
-            List<Class<?>> result = new ArrayList<>();
-            for (Type actualTypeArgument : parameterizedInterface.getActualTypeArguments()) {
-                if (actualTypeArgument instanceof ParameterizedType) {
-                    result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
-                } else {
-                    result.add((Class<?>) actualTypeArgument);
-                }
-            }
+        //临时缓存父类泛型参数名字以及类型的对应关系
+        Map<String, Class<?>> paramName2Type = new HashMap<>();
+        Type target = claxx;
+        while (!Object.class.equals(target)) {
+            Type[] genericInterfaces;
+            if (target instanceof Class) {
+                genericInterfaces = ((Class<?>) target).getGenericInterfaces();
+                target = ((Class<?>) target).getGenericSuperclass();
+            } else if (target instanceof ParameterizedType) {
+                // 只知道直接父类的泛型参数类型数据, 其父类或者实现接口的泛型类型是不知道的
+                // 所以这里需要提前获取直接父类的泛型参数名字及其类型的对应关系
+                ParameterizedTypeImpl parameterizedType = (ParameterizedTypeImpl) target;
+                genericInterfaces = parameterizedType.getRawType().getGenericInterfaces();
 
-            return result;
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                TypeVariable<? extends Class<?>>[] typeParameters = parameterizedType.getRawType().getTypeParameters();
+                for (int i = 0; i < typeParameters.length; i++) {
+                    if (actualTypeArguments[i] instanceof Class) {
+                        TypeVariable<? extends Class<?>> typeVariable = typeParameters[i];
+                        paramName2Type.put(typeVariable.getName(), (Class<?>) actualTypeArguments[i]);
+                    }
+                }
+                target = parameterizedType.getRawType().getGenericSuperclass();
+            } else {
+                throw new IllegalStateException("unhandle statment");
+            }
+            for (Type genericInterface : genericInterfaces) {
+                if (!(genericInterface instanceof ParameterizedType)) {
+                    continue;
+                }
+                ParameterizedType parameterizedInterface = (ParameterizedType) genericInterface;
+                if (!parameterizedInterface.getRawType().equals(interfaceClass)) {
+                    continue;
+                }
+                //找到对应的interfaceClass
+                List<Class<?>> result = new ArrayList<>();
+                for (Type actualTypeArgument : parameterizedInterface.getActualTypeArguments()) {
+                    if (actualTypeArgument instanceof ParameterizedType) {
+                        //泛型参数类型
+                        result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
+                    } else if (actualTypeArgument instanceof TypeVariableImpl) {
+                        //父类中, 根据泛型参数名字获取对应的类型
+                        TypeVariableImpl<?> typeVariable = (TypeVariableImpl<?>) actualTypeArgument;
+                        String paramName = typeVariable.getName();
+                        if (paramName2Type.containsKey(paramName)) {
+                            result.add(paramName2Type.get(paramName));
+                        }
+                    } else {
+                        result.add((Class<?>) actualTypeArgument);
+                    }
+                }
+
+                return result;
+            }
         }
 
 

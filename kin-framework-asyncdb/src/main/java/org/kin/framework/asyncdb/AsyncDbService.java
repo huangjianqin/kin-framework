@@ -81,7 +81,7 @@ public final class AsyncDbService implements Closeable, LoggerOprs {
             throw new IllegalArgumentException(String.format("%s doesn't have generic param", implClass));
         }
 
-        if (!genericTypes.get(0).isAssignableFrom(claxx)) {
+        if (!genericTypes.get(1).isAssignableFrom(claxx)) {
             throw new IllegalArgumentException(String.format("%s's generic param is not assignable from %s'", implClass, claxx));
         }
 
@@ -116,6 +116,9 @@ public final class AsyncDbService implements Closeable, LoggerOprs {
 
                     return workers.submit(asyncDbEntity);
                 }
+            } else {
+                throw new IllegalStateException(
+                        String.format("Entity '%s' does not have DbSynchronzier", asyncDbEntity.getClass().getName()));
             }
         } catch (Exception e) {
             if (DbOperation.Update.equals(operation)) {

@@ -77,12 +77,10 @@ public abstract class AbstractEntityCache<PK extends Serializable, E extends Asy
             }
 
             cache.put(pk, entity);
+            return entity;
         } finally {
             lock.unlock();
         }
-
-        //理论上不会走到这里
-        throw new IllegalStateException("encounter unknown error");
     }
 
     /**

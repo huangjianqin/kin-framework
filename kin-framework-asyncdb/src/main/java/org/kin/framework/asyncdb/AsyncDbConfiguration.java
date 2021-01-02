@@ -2,6 +2,7 @@ package org.kin.framework.asyncdb;
 
 import org.kin.framework.spring.ConditionOnMissingBean;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -36,7 +37,7 @@ public class AsyncDbConfiguration implements ApplicationListener<ContextRefreshe
         //自动从Spring容器获取持久化实现类
         ApplicationContext context = event.getApplicationContext();
 
-        Reflections reflections = new Reflections(new TypeAnnotationsScanner());
+        Reflections reflections = new Reflections("", new TypeAnnotationsScanner(), new SubTypesScanner());
         for (Class<?> targetClass : reflections.getTypesAnnotatedWith(DbSynchronzierClass.class)) {
             DbSynchronzierClass anno = targetClass.getAnnotation(DbSynchronzierClass.class);
             Class<? extends DbSynchronzier> synchronzierClass = anno.type();
