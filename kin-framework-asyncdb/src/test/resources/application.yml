@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: kin-framework-asyncdb
+
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/kin_demo?useUnicode=true&autoReconnect=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    druid:
+      initialSize: 0
+      minIdle: 0
+      maxActive: 20
+      # 配置获取连接等待超时的时间
+      maxWait: 10000
+      # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      timeBetweenEvictionRunsMillis: 60000
+      # 配置一个连接在池中最小生存的时间，单位是毫秒
+      minEvictableIdleTimeMillis: 300000
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+      filters: stat,wall
+      validation-query: SELECT 1
+    # 数据库有表就不执行
+    # 可以定义你的建库文件
+    #    schema: classpath:schema.sql
+    # 可以定义你的数据文件
+    #    data: classpath:data.sql
+    # 有了错误是否继续运行
+    #    continueOnError: false
+    # 每次都初始化
+  #    initialization-mode: always
+
+  #hibernate
+  jpa:
+    database: MYSQL
+    # Hibernate ddl auto (create, create-drop, update)
+    hibernate:
+      ddl-auto: update
+      # Naming strategy
+      # 会把驼峰写法用_拆分
+      # naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+      naming:
+        # 会把驼峰写法用_拆分
+        # physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        # 直接映射
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect  #不加这句则默认为myisam引擎
+    #打印sql语句
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5Dialect
+        #hibernate配置
+        current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext
