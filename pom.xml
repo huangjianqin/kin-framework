@@ -51,7 +51,7 @@
 
     <build>
         <plugins>
-            <!-- maven编译插件, 只编译java-->
+            <!-- maven java编译插件-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -69,83 +69,120 @@
             </plugin>
 
             <!-- maven处理依赖插件, -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>package</phase>
-                        <goals>
-                            <!-- 复制项目依赖到指定路径-->
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--            <plugin>-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-dependency-plugin</artifactId>-->
+            <!--                <version>3.0.0</version>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <id>copy-dependencies</id>-->
+            <!--                        <phase>package</phase>-->
+            <!--                        <goals>-->
+            <!--                            &lt;!&ndash; 复制项目依赖到指定路径&ndash;&gt;-->
+            <!--                            <goal>copy-dependencies</goal>-->
+            <!--                        </goals>-->
+            <!--                        <configuration>-->
+            <!--                            <outputDirectory>${project.build.directory}/lib</outputDirectory>-->
+            <!--                        </configuration>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--            </plugin>-->
 
             <!-- maven打包插件-->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
-                <executions>
-                    <!--                    <execution>-->
-                    <!--                        <id>jar</id>-->
-                    <!--                        <goals>-->
-                    <!--                            &lt;!&ndash; 打包同时触发打包测试类, 此处再多一个<goal>jar</goal>的话, 会触发两次打包, 而且包名与默认的一样, 会导致包名冲突报错&ndash;&gt;-->
-                    <!--                            <goal>test-jar</goal>-->
-                    <!--                        </goals>-->
-                    <!--                    </execution>-->
-                </executions>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <!-- 添加依赖路径-->
-                            <!--                            <addClasspath>true</addClasspath>-->
-                            <!-- 依赖路径前缀-->
-                            <!--                            <classpathPrefix>lib/</classpathPrefix>-->
-                            <!--<mainClass>spark.demo.run.Service</mainClass>-->
-                        </manifest>
-                        <manifestEntries>
-                            <!-- manifest内自定义的key value-->
-                            <Agent-Class>
-                                org.kin.framework.hotswap.agent.JavaDynamicAgent
-                            </Agent-Class>
-                            <Can-Redefine-Classes>true</Can-Redefine-Classes>
-                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
-                            <!--                            <Class-Path>lib/*</Class-Path>-->
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
+            <!--            <plugin>-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-jar-plugin</artifactId>-->
+            <!--                <version>3.0.2</version>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <id>jar</id>-->
+            <!--                        <goals>-->
+            <!--                            &lt;!&ndash; 打包同时触发打包测试类, 此处再多一个<goal>jar</goal>的话, 会触发两次打包, 而且包名与默认的一样, 会导致包名冲突报错&ndash;&gt;-->
+            <!--                            <goal>test-jar</goal>-->
+            <!--                        </goals>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--                <configuration>-->
+            <!--                    <archive>-->
+            <!--                        <manifest>-->
+            <!--                            &lt;!&ndash; 添加依赖路径&ndash;&gt;-->
+            <!--                            <addClasspath>true</addClasspath>-->
+            <!--                            &lt;!&ndash; 依赖路径前缀&ndash;&gt;-->
+            <!--                            <classpathPrefix>lib/</classpathPrefix>-->
+            <!--                            <mainClass></mainClass>-->
+            <!--                        </manifest>-->
+            <!--                        <manifestEntries>-->
+            <!--                            &lt;!&ndash; manifest内自定义的key value&ndash;&gt;-->
+            <!--                            <Agent-Class>-->
+            <!--                                org.kin.framework.hotswap.agent.JavaDynamicAgent-->
+            <!--                            </Agent-Class>-->
+            <!--                            <Can-Redefine-Classes>true</Can-Redefine-Classes>-->
+            <!--                            <Can-Retransform-Classes>true</Can-Retransform-Classes>-->
+            <!--                            <Class-Path>lib/*</Class-Path>-->
+            <!--                        </manifestEntries>-->
+            <!--                    </archive>-->
+            <!--                </configuration>-->
+            <!--            </plugin>-->
 
-            <!-- maven打包插件-->
+            <!-- maven单独打包-->
+            <!--            <plugin>-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-assembly-plugin</artifactId>-->
+            <!--                <version>2.5.5</version>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <id>make-assembly</id>-->
+            <!--                        <goals>-->
+            <!--                            &lt;!&ndash; 会把依赖直接写进另外一个单独的jar包&ndash;&gt;-->
+            <!--                            <goal>single</goal>-->
+            <!--                            &lt;!&ndash; 跟原来的.jar合并 &ndash;&gt;-->
+            <!--                            <goal>assembly</goal>-->
+            <!--                        </goals>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--                <configuration>-->
+            <!--                    <archive>-->
+            <!--                        <manifest>-->
+            <!--                            <addClasspath>true</addClasspath>-->
+            <!--                            <classpathPrefix>lib/</classpathPrefix>-->
+            <!--                            <mainClass></mainClass>-->
+            <!--                        </manifest>-->
+            <!--                        <manifestEntries>-->
+            <!--                            <Agent-Class>-->
+            <!--                                org.kin.framework.hotswap.agent.JavaDynamicAgent-->
+            <!--                            </Agent-Class>-->
+            <!--                            <Can-Redefine-Classes>true</Can-Redefine-Classes>-->
+            <!--                            <Can-Retransform-Classes>true</Can-Retransform-Classes>-->
+            <!--                            <Class-Path>lib/*</Class-Path>-->
+            <!--                        </manifestEntries>-->
+            <!--                    </archive>-->
+            <!--                    <descriptorRefs>-->
+            <!--                        &lt;!&ndash; 包名后缀&ndash;&gt;-->
+            <!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
+            <!--                    </descriptorRefs>-->
+            <!--                </configuration>-->
+            <!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.5.5</version>
-                <!--                <executions>-->
-                <!--                    <execution>-->
-                <!--                        <id>make-assembly</id>-->
-                <!--                        <goals>-->
-                <!--                            &lt;!&ndash; 会把依赖直接写进另外一个单独的jar包&ndash;&gt;-->
-                <!--                            <goal>single</goal>-->
-                <!--                            &lt;!&ndash; 跟原来的.jar合并 &ndash;&gt;-->
-                <!--                            <goal>assembly</goal>-->
-                <!--                        </goals>-->
-                <!--                    </execution>-->
-                <!--                </executions>-->
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <goals>
+                            <!-- 会把依赖直接写进另外一个单独的jar包-->
+                            <goal>single</goal>
+                            <!-- 跟原来的.jar合并 -->
+                            <goal>assembly</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
                     <archive>
                         <manifest>
-                            <!--                            <addClasspath>true</addClasspath>-->
-                            <!--                            <classpathPrefix>lib/</classpathPrefix>-->
-                            <!--<mainClass></mainClass>-->
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass></mainClass>
                         </manifest>
                         <manifestEntries>
                             <Agent-Class>
@@ -153,7 +190,7 @@
                             </Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
-                            <!--                            <Class-Path>lib/*</Class-Path>-->
+                            <Class-Path>lib/*</Class-Path>
                         </manifestEntries>
                     </archive>
                     <descriptorRefs>
