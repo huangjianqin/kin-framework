@@ -4,8 +4,8 @@
 app_user=www
 
 java="java"
-# todo 项目跟目录, 也可以写死在脚本中, 不用每次取参数
-base_dir=.
+# 项目根目录
+base_dir=$(dirname $0)/..
 # todo 项目main class
 main_class=org.Main
 # todo 下面指定lib和resources目录到classpath, resources目录主要用于存放一些配置文件, 主要解决spring boot项目打成jar包后, 一些在resources目录下的文件, 程序不可读, 这些文件可放在resources目录下
