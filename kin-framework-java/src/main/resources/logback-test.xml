@@ -38,45 +38,6 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="HOTSWAP" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Append>true</Append>
-        <encoder>
-            <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logDir}/%d{yyyy-MM-dd}/hotSwap.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <!--<maxHistory>30</maxHistory>-->
-        </rollingPolicy>
-    </appender>
-
-    <appender name="ASYNC_DB" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Append>true</Append>
-        <encoder>
-            <pattern>[%p] %d{yyyy-MM-dd HH:mm:ss SSS} [%t] | %C.%M\(%L\) : %msg%n%ex</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logDir}/%d{yyyy-MM-dd}/asyncDB.log.%d{yyyy-MM-dd}</fileNamePattern>
-            <!--<maxHistory>30</maxHistory>-->
-        </rollingPolicy>
-    </appender>
-
-    <!--                                       logger                                                       -->
-    <logger name="org.kin.framework.hotswap" level="INFO" additivity="false">
-        <appender-ref ref="HOTSWAP"/>
-        <appender-ref ref="ERROR"/>
-    </logger>
-
-    <logger name="org.kin.framework.asyncdb" level="INFO" additivity="false">
-        <appender-ref ref="ASYNC_DB"/>
-        <appender-ref ref="ERROR"/>
-    </logger>
-
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="STDOUT"/>
