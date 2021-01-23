@@ -11,11 +11,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 推荐使用继承实现
+ * 每个实例绑定一个线程处理消息, 支持阻塞(当然线程池需要足够大)
+ *
  * @author huangjianqin
  * @date 2019/7/9
- * <p>
- * 推荐使用继承实现
- * 每个实例绑定一个线程处理消息, 支持阻塞(线程池需要足够大)
  */
 public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<TS>> implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(PinnedThreadSafeHandler.class);
@@ -98,7 +98,7 @@ public class PinnedThreadSafeHandler<TS extends PinnedThreadSafeHandler<TS>> imp
             long cost = System.currentTimeMillis() - st;
 
             if (cost >= getWarnMsgCostTime()) {
-                log.warn("handle mail({}) cost {} ms", message, cost);
+                log.warn("handle message({}) cost {} ms", message, cost);
             }
 
             if (boxSize.decrementAndGet() <= 0) {
