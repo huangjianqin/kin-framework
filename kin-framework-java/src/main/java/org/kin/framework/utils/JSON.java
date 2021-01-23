@@ -182,7 +182,7 @@ public class JSON {
     /**
      * 将json形式的map数据转换成对象
      */
-    public static <C> C convert(Map<String, Object> jsonMapData, Class<? extends C> targetClass) {
-        return PARSER.convertValue(jsonMapData, targetClass);
+    public static <C> C convert(Object jsonObj, Class<? extends C> targetClass) {
+        return PARSER.convertValue(jsonObj, targetClass);
     }
 }
