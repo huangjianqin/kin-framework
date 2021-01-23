@@ -178,4 +178,11 @@ public class JSON {
 
         throw new IllegalStateException("encounter unknown error");
     }
+
+    /**
+     * 将json形式的map数据转换成对象
+     */
+    public static <C> C convert(Map<String, Object> jsonMapData, Class<? extends C> targetClass) {
+        return PARSER.convertValue(jsonMapData, targetClass);
+    }
 }
