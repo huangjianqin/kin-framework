@@ -1,9 +1,7 @@
 package org.kin.framework.utils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author huangjianqin
@@ -40,5 +38,17 @@ public class CollectionUtils {
             list.add(item);
         }
         return list;
+    }
+
+    /**
+     * 针对{@link ConcurrentHashMap}, 进行线程安全的putIfAbsent操作, 并返回map中的真实value
+     */
+    public static <K, V> V putIfAbsent(ConcurrentHashMap<K, V> concurrentHashMap, K key, V newValue) {
+        V oldValue = concurrentHashMap.putIfAbsent(key, newValue);
+        if (Objects.isNull(oldValue)) {
+            return newValue;
+        } else {
+            return oldValue;
+        }
     }
 }
