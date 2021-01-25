@@ -7,7 +7,7 @@ package org.kin.framework.event;
  * @date 2017/8/8
  */
 @FunctionalInterface
-public interface EventHandler<T extends AbstractEvent> {
+public interface EventHandler<T extends AbstractEvent<?>> {
     /**
      * 事件处理逻辑
      *

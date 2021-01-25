@@ -1,7 +1,7 @@
 package org.kin.framework.concurrent;
 
 /**
- * {@link SingleThreadScheduler} 拒绝执行task处理器
+ * {@link SingleThreadEventExecutor} 拒绝执行task处理器
  *
  * @author huangjianqin
  * @date 2020/11/23
@@ -17,5 +17,5 @@ public interface RejectedExecutionHandler {
      * @param task     具体任务
      * @param executor 哪个executor
      */
-    void rejected(Runnable task, SingleThreadScheduler executor);
+    void rejected(Runnable task, SingleThreadEventExecutor executor);
 }

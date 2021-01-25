@@ -1,8 +1,8 @@
 package org.kin.framework.event;
 
+import org.kin.framework.concurrent.EfficientHashPartitioner;
+import org.kin.framework.concurrent.PartitionTaskExecutor;
 import org.kin.framework.concurrent.SimpleThreadFactory;
-import org.kin.framework.concurrent.partition.EfficientHashPartitioner;
-import org.kin.framework.concurrent.partition.PartitionTaskExecutor;
 import org.kin.framework.utils.SysUtils;
 
 import java.util.concurrent.Future;
@@ -29,6 +29,7 @@ public class ParallelEventDispatcher extends EventDispatcher implements Schedule
 
     @SuppressWarnings("unchecked")
     public ParallelEventDispatcher(int parallelism, boolean isEnhance) {
+        super(isEnhance);
         executor = new PartitionTaskExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler-");
 
         scheduledExecutors = new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum() / 2 + 1,
@@ -37,24 +38,24 @@ public class ParallelEventDispatcher extends EventDispatcher implements Schedule
 
 
     @Override
-    public final void dispatch(Object event, Object... params) {
-        dispatch(event, EventCallback.EMPTY, params);
+    public final void dispatch(Object event) {
+        dispatch(event, EventCallback.EMPTY);
     }
 
     @Override
-    public final void dispatch(Object event, EventCallback callback, Object... params) {
+    public final void dispatch(Object event, EventCallback callback) {
         int partitionId = event.hashCode();
-        executor.execute(partitionId, () -> dispatch(new EventContext(partitionId, event, params, callback)));
+        executor.execute(partitionId, () -> dispatch(new EventContext(partitionId, event, callback)));
     }
 
     @Override
-    public final Future<?> scheduleDispatch(Object event, TimeUnit unit, long delay, Object... params) {
-        return scheduledExecutors.schedule(() -> dispatch(event, params), delay, unit);
+    public final Future<?> scheduleDispatch(Object event, TimeUnit unit, long delay) {
+        return scheduledExecutors.schedule(() -> dispatch(event), delay, unit);
     }
 
     @Override
-    public final Future<?> scheduleDispatchAtFixRate(Object event, TimeUnit unit, long initialDelay, long period, Object... params) {
-        return scheduledExecutors.scheduleAtFixedRate(() -> dispatch(event, params), initialDelay, period, unit);
+    public final Future<?> scheduleDispatchAtFixRate(Object event, TimeUnit unit, long initialDelay, long period) {
+        return scheduledExecutors.scheduleAtFixedRate(() -> dispatch(event), initialDelay, period, unit);
     }
 
     @Override
@@ -63,7 +64,7 @@ public class ParallelEventDispatcher extends EventDispatcher implements Schedule
     }
 
     @Override
-    public void shutdown() {
+    public final void shutdown() {
         executor.shutdown();
         scheduledExecutors.shutdown();
 

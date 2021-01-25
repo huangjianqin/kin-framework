@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 public class SingleThreadSchedulerTest {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutorService executorService = Executors.newFixedThreadPool(2);
-        SingleThreadScheduler scheduledExecutor = new SingleThreadScheduler(executorService);
+        SingleThreadEventExecutor scheduledExecutor = new SingleThreadEventExecutor(executorService);
 
         try {
             ScheduledFuture<?> f1 = scheduledExecutor.scheduleAtFixedRate(() -> System.out.println("rate>> ".concat(TimeUtils.formatDateTime(new Date()))),

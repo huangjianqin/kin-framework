@@ -29,8 +29,8 @@ public class Proxys {
     /**
      * @return jdk 工厂类
      */
-    public static JdkProxyFactory jdk() {
-        return JdkProxyFactory.INSTANCE;
+    public static ReflectionProxyFactory reflection() {
+        return ReflectionProxyFactory.INSTANCE;
     }
 
 }

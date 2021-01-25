@@ -1,13 +1,15 @@
 package org.kin.framework.event;
 
-import com.google.common.base.Preconditions;
 import org.kin.framework.proxy.Javassists;
 import org.kin.framework.proxy.MethodDefinition;
 import org.kin.framework.proxy.ProxyInvoker;
 import org.kin.framework.proxy.Proxys;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,10 +36,11 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
     //------------------------------------------------------------------------------------------------------------------
     @SuppressWarnings("unchecked")
     private ProxyInvoker<?> getHandler(Object obj, Method method) {
+        MethodDefinition<Object> methodDefinition = new MethodDefinition<>(obj, method);
         if (isEnhance) {
-            return Proxys.javassist().enhanceMethod(new MethodDefinition<>(obj, method));
+            return Proxys.javassist().enhanceMethod(methodDefinition);
         } else {
-            return new ProxyEventHandler(obj, method);
+            return Proxys.reflection().enhanceMethod(methodDefinition);
         }
     }
 
@@ -71,7 +74,7 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
         ProxyInvoker<?> handler = event2Handler.get(type);
         if (handler != null) {
             try {
-                Object result = handler.invoke(eventContext.getRealParams(handler.getMethod()));
+                Object result = handler.invoke(eventContext.getEvent());
                 eventContext.callback.finish(result);
             } catch (Exception e) {
                 eventContext.callback.failure(e);
@@ -82,13 +85,13 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
     }
 
     @Override
-    public void dispatch(Object event, Object... params) {
-        dispatch(event, EventCallback.EMPTY, params);
+    public void dispatch(Object event) {
+        dispatch(event, EventCallback.EMPTY);
     }
 
     @Override
-    public void dispatch(Object event, EventCallback callback, Object... params) {
-        dispatch(new EventContext(event, params, callback));
+    public void dispatch(Object event, EventCallback callback) {
+        dispatch(new EventContext(event, callback));
     }
 
     @Override
@@ -115,7 +118,7 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
      * 移除无效javassist代理类
      */
     private void detachProxyClass(ProxyInvoker<?> proxyInvoker) {
-        if (!(proxyInvoker instanceof ProxyEventHandler) && !(proxyInvoker instanceof MultiEventHandler)) {
+        if (isEnhance && !(proxyInvoker instanceof MultiEventHandler)) {
             Javassists.detach(proxyInvoker.getClass().getName());
         }
     }
@@ -123,39 +126,10 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * 事件处理器的代理封装
-     */
-    private class ProxyEventHandler implements ProxyInvoker<Object> {
-        private final Object proxy;
-        private final Method method;
-
-        public ProxyEventHandler(Object proxy, Method method) {
-            this.proxy = proxy;
-            this.method = method;
-        }
-
-
-        @Override
-        public Object getProxyObj() {
-            return proxy;
-        }
-
-        @Override
-        public Method getMethod() {
-            return method;
-        }
-
-        @Override
-        public Object invoke(Object... params) throws Exception {
-            return method.invoke(proxy, params);
-        }
-    }
-
-
-    /**
      * 一事件对应多个事件处理器的场景
      */
-    private class MultiEventHandler implements ProxyInvoker<Object> {
+    private static class MultiEventHandler implements ProxyInvoker<Object> {
+        /** 事件处理器列表 */
         private final List<ProxyInvoker<?>> handlers;
 
         MultiEventHandler() {
@@ -189,47 +163,29 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
     /**
      * 事件封装
      */
-    protected class EventContext {
+    static class EventContext {
+        /** 分区id */
         private final int partitionId;
+        /** 事件 */
         private final Object event;
-        private final Map<Class<?>, Object> paramsMap;
+        /** 事件处理回调 */
         private final EventCallback callback;
 
-        public EventContext(int partitionId, Object event, Object[] params, EventCallback callback) {
+        public EventContext(int partitionId, Object event, EventCallback callback) {
             this.partitionId = partitionId;
             this.event = event;
-            this.paramsMap = new HashMap<>();
-            for (Object param : params) {
-                Class<?> paramClass = param.getClass();
-                Preconditions.checkArgument(!paramsMap.containsKey(paramClass), new IllegalStateException("same param type"));
-                paramsMap.put(paramClass, param);
-            }
-            Preconditions.checkArgument(!paramsMap.containsKey(event.getClass()), new IllegalStateException("same param type"));
-            paramsMap.put(event.getClass(), event);
             if (Objects.isNull(callback)) {
                 callback = EventCallback.EMPTY;
             }
             this.callback = callback;
         }
 
-        public EventContext(Object event, Object[] params, EventCallback callback) {
-            this(event.hashCode(), event, params, callback);
+        public EventContext(Object event, EventCallback callback) {
+            this(event.hashCode(), event, callback);
         }
 
-        public EventContext(Object event, Object[] params) {
-            this(event.hashCode(), event, params, EventCallback.EMPTY);
-        }
-
-        /**
-         * 根据具体处理方法的参数声明内容来生成对应参数数组
-         */
-        public Object[] getRealParams(Method method) {
-            Object[] params = new Object[method.getParameterCount()];
-            for (int i = 0; i < method.getParameterTypes().length; i++) {
-                Class<?> parameterType = method.getParameterTypes()[i];
-                params[i] = paramsMap.get(parameterType);
-            }
-            return params;
+        public EventContext(Object event) {
+            this(event.hashCode(), event, EventCallback.EMPTY);
         }
 
         //getter
