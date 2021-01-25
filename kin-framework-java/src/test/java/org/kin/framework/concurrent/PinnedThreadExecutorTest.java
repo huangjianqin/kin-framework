@@ -7,11 +7,11 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2019/7/9
  */
-public class TestPinnedThreadSafeHandler {
+public class PinnedThreadExecutorTest {
     public static void main(String[] args) {
         CountDownLatch latch = new CountDownLatch(1);
-        PinnedThreadExecutor<?> threadSafeHandler = new PinnedThreadExecutor(ExecutionContext.cache("worker"));
-        threadSafeHandler.handle((actor) -> {
+        PinnedThreadExecutor<?> executor = new PinnedThreadExecutor(ExecutionContext.cache("worker"));
+        executor.handle((actor) -> {
             System.out.println(1);
             try {
                 TimeUnit.SECONDS.sleep(2);

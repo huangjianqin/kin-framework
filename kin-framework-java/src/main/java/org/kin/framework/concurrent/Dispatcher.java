@@ -86,8 +86,6 @@ public interface Dispatcher<KEY, MSG> extends Closeable {
 
     /**
      * 获取底层执行dispatch逻辑的executors
-     *
-     * @return
      */
     ExecutionContext executionContext();
 }

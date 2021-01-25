@@ -50,7 +50,7 @@ class InBox<MSG> implements Closeable {
      * 处理消息
      */
     @SuppressWarnings("unchecked")
-    public void process(EventBasedDispatcher<?, MSG> eventBasedDispatcher) {
+    public void process() {
         InBoxMessage message;
         synchronized (this) {
             if (!enableConcurrent && activeThreads > 0) {

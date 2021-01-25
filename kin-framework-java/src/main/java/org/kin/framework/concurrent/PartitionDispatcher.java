@@ -47,12 +47,10 @@ public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, M
     @Override
     public final void register(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
         int realKey = getRealKey(key);
-        if (registeredKeies.size() != partitionNum) {
-            //保证每个分区仅仅注册一次
-            synchronized (registeredKeies) {
-                if (registeredKeies.size() != partitionNum && registeredKeies.add(realKey)) {
-                    pinnedDispatcher.register(realKey, receiver(), false);
-                }
+        //保证每个分区仅仅注册一次
+        synchronized (registeredKeies) {
+            if (registeredKeies.size() != partitionNum && registeredKeies.add(realKey)) {
+                pinnedDispatcher.register(realKey, receiver(), false);
             }
         }
     }
@@ -60,8 +58,10 @@ public abstract class PartitionDispatcher<KEY, MSG> implements Dispatcher<KEY, M
     @Override
     public final void unregister(KEY key) {
         int realKey = getRealKey(key);
-        if (registeredKeies.contains(realKey)) {
-            pinnedDispatcher.unregister(realKey);
+        synchronized (registeredKeies) {
+            if (registeredKeies.contains(realKey)) {
+                pinnedDispatcher.unregister(realKey);
+            }
         }
     }
 

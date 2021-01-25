@@ -11,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * 底层消息处理实现是基于事件处理
+ * 消息有序处理, 但不保证在同一线程下执行, 不要使用ThreadLocal
  * 尽量不要blocking
  *
  * @author huangjianqin
@@ -25,12 +26,12 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     /** 并发数 */
     private final int parallelism;
     /** Receiver数据 */
-    private Map<KEY, ReceiverData<MSG>> receiverDatas = new ConcurrentHashMap<>();
+    private final Map<KEY, ReceiverData<MSG>> receiverDatas = new ConcurrentHashMap<>();
     /** 等待数据处理的receivers */
     //TODO 考虑增加标志位, 在线程安全模式下, 如果Receiver消息正在被处理, 则不需要入队, 减少队列长度, 但这样子就会存在'比较忙'的Receiver长期占用, 其他Receiver消息得不到处理的问题
-    private LinkedBlockingQueue<ReceiverData<MSG>> pendingDatas = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<ReceiverData<MSG>> pendingDatas = new LinkedBlockingQueue<>();
     /** 是否已启动message loop */
-    private boolean isMessageLoopRun;
+    private volatile boolean isMessageLoopRun;
 
     public EventBasedDispatcher(int parallelism) {
         super(ExecutionContext.forkjoin(
@@ -40,7 +41,15 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     }
 
     @Override
-    protected void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
+    public void register(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        if (Objects.isNull(key) || Objects.isNull(receiver)) {
+            throw new IllegalArgumentException("arg 'key' or 'receiver' is null");
+        }
+
         if (Objects.nonNull(receiverDatas.putIfAbsent(key, new ReceiverData<>(receiver, enableConcurrent)))) {
             throw new IllegalArgumentException(String.format("%s has registried", key));
         }
@@ -50,15 +59,27 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
 
         //lazy init
         if (!isMessageLoopRun) {
-            for (int i = 0; i < parallelism; i++) {
-                executionContext.execute(new MessageLoop());
+            synchronized (this) {
+                if (!isMessageLoopRun) {
+                    for (int i = 0; i < parallelism; i++) {
+                        executionContext.execute(new MessageLoop());
+                    }
+                    isMessageLoopRun = true;
+                }
             }
-            isMessageLoopRun = true;
         }
     }
 
     @Override
-    protected void doUnRegister(KEY key) {
+    public void unregister(KEY key) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        if (Objects.isNull(key)) {
+            throw new IllegalArgumentException("arg 'key' is null");
+        }
+
         ReceiverData<MSG> data = receiverDatas.remove(key);
         if (Objects.nonNull(data)) {
             data.inBox.close();
@@ -67,7 +88,24 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     }
 
     @Override
-    protected void doPostMessage(KEY key, MSG message) {
+    public boolean isRegistered(KEY key) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        return receiverDatas.containsKey(key);
+    }
+
+    @Override
+    public void postMessage(KEY key, MSG message) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        if (Objects.isNull(key) || Objects.isNull(message)) {
+            throw new IllegalArgumentException("arg 'key' or 'message' is null");
+        }
+
         ReceiverData<MSG> data = receiverDatas.get(key);
         if (Objects.nonNull(data)) {
             data.inBox.post(new InBox.OnMessageSignal<>(message));
@@ -76,9 +114,16 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     }
 
     @Override
-    protected void doPost2All(MSG message) {
+    public void post2All(MSG message) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        if (Objects.isNull(message)) {
+            throw new IllegalArgumentException("arg 'message' is null");
+        }
         for (KEY key : receiverDatas.keySet()) {
-            doPostMessage(key, message);
+            postMessage(key, message);
         }
     }
 
@@ -86,13 +131,13 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
     protected void doClose() {
         receiverDatas.keySet().forEach(this::unregister);
         pendingDatas.offer(POISON_PILL);
+
+        //help gc
+        receiverDatas.clear();
+        pendingDatas.clear();
     }
 
-    @Override
-    public boolean isRegistered(KEY key) {
-        return receiverDatas.containsKey(key);
-    }
-
+    //------------------------------------------------------------------------------------------------------------------------
     private class MessageLoop implements Runnable {
         @Override
         public void run() {
@@ -103,7 +148,7 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
                         pendingDatas.offer(POISON_PILL);
                         return;
                     }
-                    data.inBox.process(EventBasedDispatcher.this);
+                    data.inBox.process();
                 }
             } catch (InterruptedException e) {
                 //do nothing

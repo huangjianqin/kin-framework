@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class PinnedThreadDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     /** Receiver数据 */
-    private Map<KEY, PinnedThreadSafeReceiver<MSG>> typeSafeReceivers = new ConcurrentHashMap<>();
+    private Map<KEY, PinnedThreadReceiver<MSG>> receivers = new ConcurrentHashMap<>();
 
     public PinnedThreadDispatcher(int parallelism) {
         this(parallelism, "pinnedDispatcher");
@@ -29,73 +29,127 @@ public final class PinnedThreadDispatcher<KEY, MSG> extends AbstractDispatcher<K
     }
 
     @Override
-    protected void doClose() {
-        typeSafeReceivers.keySet().forEach(this::unregister);
-    }
+    public void register(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
 
-    @Override
-    protected void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
+        if (Objects.isNull(key) || Objects.isNull(receiver)) {
+            throw new IllegalArgumentException("arg 'key' or 'receiver' is null");
+        }
+
         if (enableConcurrent) {
             throw new IllegalArgumentException("pinnedDispatcher doesn't support concurrent");
         }
 
-        if (Objects.nonNull(typeSafeReceivers.putIfAbsent(key, new PinnedThreadSafeReceiver<>(receiver)))) {
-            throw new IllegalArgumentException(String.format("%s has registried", key));
-        }
+        //保证receiver 先进行start, 后stop
+        synchronized (this) {
+            if (Objects.nonNull(receivers.putIfAbsent(key, new PinnedThreadReceiver<>(receiver)))) {
+                throw new IllegalArgumentException(String.format("%s has registried", key));
+            }
 
-        typeSafeReceivers.get(key).onStart();
-    }
-
-    @Override
-    protected void doUnRegister(KEY key) {
-        PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = typeSafeReceivers.remove(key);
-        if (Objects.nonNull(pinnedThreadSafeReceiver)) {
-            pinnedThreadSafeReceiver.onStart();
+            receivers.get(key).onStart();
         }
     }
 
     @Override
-    protected void doPostMessage(KEY key, MSG message) {
-        PinnedThreadSafeReceiver<MSG> pinnedThreadSafeReceiver = typeSafeReceivers.get(key);
-        if (Objects.nonNull(pinnedThreadSafeReceiver)) {
-            pinnedThreadSafeReceiver.receive(message);
+    public void unregister(KEY key) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
         }
-    }
 
-    @Override
-    protected void doPost2All(MSG message) {
-        for (KEY key : typeSafeReceivers.keySet()) {
-            doPostMessage(key, message);
+        if (Objects.isNull(key)) {
+            throw new IllegalArgumentException("arg 'key' is null");
+        }
+
+        //保证receiver 先进行start, 后stop
+        synchronized (this) {
+            PinnedThreadReceiver<MSG> pinnedThreadReceiver = receivers.remove(key);
+            if (Objects.nonNull(pinnedThreadReceiver)) {
+                pinnedThreadReceiver.onStop();
+            }
         }
     }
 
     @Override
     public boolean isRegistered(KEY key) {
-        return typeSafeReceivers.containsKey(key);
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        if (Objects.isNull(key)) {
+            throw new IllegalArgumentException("arg 'key' is null");
+        }
+        return receivers.containsKey(key);
     }
 
-    private class PinnedThreadSafeReceiver<M> extends Receiver<M> {
-        private PinnedThreadExecutor threadSafeHandler;
+    @Override
+    public void postMessage(KEY key, MSG message) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        if (Objects.isNull(key) || Objects.isNull(message)) {
+            throw new IllegalArgumentException("arg 'key' or 'message' is null");
+        }
+
+        PinnedThreadReceiver<MSG> pinnedThreadReceiver = receivers.get(key);
+        if (Objects.nonNull(pinnedThreadReceiver)) {
+            pinnedThreadReceiver.receive(message);
+        }
+    }
+
+    @Override
+    public void post2All(MSG message) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        if (Objects.isNull(message)) {
+            throw new IllegalArgumentException("arg 'message' is null");
+        }
+        for (KEY key : receivers.keySet()) {
+            postMessage(key, message);
+        }
+    }
+
+    @Override
+    protected void doClose() {
+        receivers.keySet().forEach(this::unregister);
+
+        //help gc
+        receivers.clear();
+    }
+
+    //-----------------------------------------------------------------------------------------------------
+
+    /**
+     * 线程安全receiver
+     */
+    private class PinnedThreadReceiver<M> extends Receiver<M> {
+        /** executor */
+        private PinnedThreadExecutor executor;
+        /** Receiver实例 */
         private Receiver<M> proxy;
 
-        private PinnedThreadSafeReceiver(Receiver<M> receiver) {
-            this.threadSafeHandler = new PinnedThreadExecutor(PinnedThreadDispatcher.super.executionContext);
+        private PinnedThreadReceiver(Receiver<M> receiver) {
+            this.executor = new PinnedThreadExecutor(PinnedThreadDispatcher.super.executionContext);
             this.proxy = receiver;
         }
 
         @Override
         public void receive(M mail) {
-            threadSafeHandler.handle(pal -> proxy.receive(mail));
+            executor.handle(pal -> proxy.receive(mail));
         }
 
         @Override
         protected void onStart() {
-            threadSafeHandler.handle(pal -> proxy.onStart());
+            executor.handle(pal -> proxy.onStart());
         }
 
         @Override
         protected void onStop() {
-            threadSafeHandler.handle(pal -> proxy.onStop());
+            executor.handle(pal -> proxy.onStop());
         }
     }
 }

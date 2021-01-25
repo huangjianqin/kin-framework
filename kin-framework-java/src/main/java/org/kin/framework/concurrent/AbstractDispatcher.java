@@ -1,8 +1,6 @@
 package org.kin.framework.concurrent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -10,8 +8,6 @@ import java.util.concurrent.TimeUnit;
  * @date 2020-04-26
  */
 public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MSG> {
-    private static final Logger log = LoggerFactory.getLogger(AbstractDispatcher.class);
-
     /** 底层线程池 */
     protected ExecutionContext executionContext;
     /** Dispatcher是否stopped */
@@ -26,89 +22,55 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
      */
     protected abstract void doClose();
 
-    /**
-     * 注册receiver
-     *
-     * @param enableConcurrent 是否允许并发
-     */
-    protected abstract void doRegister(KEY key, Receiver<MSG> receiver, boolean enableConcurrent);
-
-    /**
-     * 取消注册receiver
-     */
-    protected abstract void doUnRegister(KEY key);
-
-    /**
-     * 分派消息
-     */
-    protected abstract void doPostMessage(KEY key, MSG message);
-
-    /**
-     * 给所有receiver分派消息
-     */
-    protected abstract void doPost2All(MSG message);
-
     @Override
-    public final void register(KEY key, Receiver<MSG> receiver, boolean enableConcurrent) {
-        synchronized (this) {
-            if (stopped) {
-                throw new IllegalStateException("dispatcher has been stopped");
-            }
-
-            doRegister(key, receiver, enableConcurrent);
+    public final void schedule(KEY key, MSG message, long delay, TimeUnit unit) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
         }
-    }
 
-    private void sync(Runnable func) {
-        synchronized (this) {
-            if (stopped) {
-                return;
-            }
+        if (Objects.isNull(key) || Objects.isNull(message)) {
+            throw new IllegalArgumentException("arg 'key' or 'message' is null");
+        }
 
-            func.run();
+        if (executionContext.withSchedule()) {
+            executionContext.schedule(() -> postMessage(key, message), delay, unit);
+        } else {
+            throw new UnsupportedOperationException("underline ExecutionContext doesn't support scheduled");
         }
     }
 
     @Override
-    public final void unregister(KEY key) {
-        sync(() -> doUnRegister(key));
+    public final void scheduleAtFixedRate(KEY key, MSG message, long initialDelay, long period, TimeUnit unit) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+
+        if (Objects.isNull(key) || Objects.isNull(message)) {
+            throw new IllegalArgumentException("arg 'key' or 'message' is null");
+        }
+
+        if (executionContext.withSchedule()) {
+            executionContext.scheduleAtFixedRate(() -> postMessage(key, message), initialDelay, period, unit);
+        } else {
+            throw new UnsupportedOperationException("underline ExecutionContext doesn't support scheduled");
+        }
     }
 
     @Override
-    public final void postMessage(KEY key, MSG message) {
-        sync(() -> doPostMessage(key, message));
-    }
+    public final void scheduleWithFixedDelay(KEY key, MSG message, long initialDelay, long delay, TimeUnit unit) {
+        if (isStopped()) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
 
-    @Override
-    public void post2All(MSG message) {
-        sync(() -> doPost2All(message));
-    }
+        if (Objects.isNull(key) || Objects.isNull(message)) {
+            throw new IllegalArgumentException("arg 'key' or 'message' is null");
+        }
 
-    @Override
-    public void schedule(KEY key, MSG message, long delay, TimeUnit unit) {
-        sync(() -> {
-            if (executionContext.withSchedule()) {
-                executionContext.schedule(() -> postMessage(key, message), delay, unit);
-            }
-        });
-    }
-
-    @Override
-    public void scheduleAtFixedRate(KEY key, MSG message, long initialDelay, long period, TimeUnit unit) {
-        sync(() -> {
-            if (executionContext.withSchedule()) {
-                executionContext.scheduleAtFixedRate(() -> postMessage(key, message), initialDelay, period, unit);
-            }
-        });
-    }
-
-    @Override
-    public void scheduleWithFixedDelay(KEY key, MSG message, long initialDelay, long delay, TimeUnit unit) {
-        sync(() -> {
-            if (executionContext.withSchedule()) {
-                executionContext.scheduleWithFixedDelay(() -> postMessage(key, message), initialDelay, delay, unit);
-            }
-        });
+        if (executionContext.withSchedule()) {
+            executionContext.scheduleWithFixedDelay(() -> postMessage(key, message), initialDelay, delay, unit);
+        } else {
+            throw new UnsupportedOperationException("underline ExecutionContext doesn't support scheduled");
+        }
     }
 
     @Override
@@ -118,17 +80,18 @@ public abstract class AbstractDispatcher<KEY, MSG> implements Dispatcher<KEY, MS
 
     @Override
     public final void close() {
-        sync(() -> {
-            stopped = true;
-
-            doClose();
-
-            executionContext.shutdown();
-        });
+        if (stopped) {
+            throw new IllegalStateException("dispatcher is closed");
+        }
+        stopped = true;
+        doClose();
+        executionContext.shutdown();
+        //help gc
+        executionContext = null;
     }
 
     @Override
-    public final ExecutionContext executionContext() {
+    public ExecutionContext executionContext() {
         return executionContext;
     }
 
