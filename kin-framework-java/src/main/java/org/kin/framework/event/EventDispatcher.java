@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 事件分发器
  * 在当前线程处理事件逻辑
+ * 不保证动态事件注册线程安全
  *
  * @author 健勤
  * @date 2017/8/8
@@ -45,24 +46,21 @@ public class EventDispatcher implements Dispatcher, NullEventDispatcher {
     }
 
     @Override
-    public void register(Class<?> eventClass, Object proxy, Method method) {
+    public final void register(Class<?> eventClass, Object proxy, Method method) {
         if (!AbstractEvent.class.isAssignableFrom(eventClass) && !eventClass.isAnnotationPresent(Event.class)) {
             throw new IllegalArgumentException("event class must extends AbstractEvent or annotated @Event");
         }
 
-        //event2Dispatcher需同步,防止多写的情况
-        synchronized (event2Handler) {
-            ProxyInvoker<?> registered = event2Handler.get(eventClass);
-            if (registered == null) {
-                event2Handler.put(eventClass, getHandler(proxy, method));
-            } else if (!(registered instanceof MultiEventHandler)) {
-                MultiEventHandler multiHandler = new MultiEventHandler();
-                multiHandler.addHandler(registered);
-                multiHandler.addHandler(getHandler(proxy, method));
-                event2Handler.put(eventClass, multiHandler);
-            } else {
-                ((MultiEventHandler) registered).addHandler(getHandler(proxy, method));
-            }
+        ProxyInvoker<?> registered = event2Handler.get(eventClass);
+        if (registered == null) {
+            event2Handler.put(eventClass, getHandler(proxy, method));
+        } else if (!(registered instanceof MultiEventHandler)) {
+            MultiEventHandler multiHandler = new MultiEventHandler();
+            multiHandler.addHandler(registered);
+            multiHandler.addHandler(getHandler(proxy, method));
+            event2Handler.put(eventClass, multiHandler);
+        } else {
+            ((MultiEventHandler) registered).addHandler(getHandler(proxy, method));
         }
     }
 

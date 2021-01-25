@@ -5,8 +5,8 @@ import org.kin.framework.Closeable;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 分派器
  * 根据指定KEY, 分派消息
+ *
  * @author huangjianqin
  * @date 2020-04-26
  */
