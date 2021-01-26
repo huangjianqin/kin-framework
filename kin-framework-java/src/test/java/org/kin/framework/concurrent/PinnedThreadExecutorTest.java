@@ -10,8 +10,9 @@ import java.util.concurrent.TimeUnit;
 public class PinnedThreadExecutorTest {
     public static void main(String[] args) {
         CountDownLatch latch = new CountDownLatch(1);
-        PinnedThreadExecutor<?> executor = new PinnedThreadExecutor(ExecutionContext.cache("worker"));
-        executor.handle((actor) -> {
+        final ExecutionContext executionContext = ExecutionContext.cache("worker");
+        PinnedThreadExecutor<?> executor = new PinnedThreadExecutor<>(executionContext);
+        executor.receive((actor) -> {
             System.out.println(1);
             try {
                 TimeUnit.SECONDS.sleep(2);
@@ -26,5 +27,7 @@ public class PinnedThreadExecutorTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        executor.stop();
+        executionContext.shutdown();
     }
 }

@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Queue;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,18 +29,18 @@ public class PinnedThreadExecutor<TS extends PinnedThreadExecutor<TS>> implement
     private final AtomicInteger boxSize = new AtomicInteger();
     /** 当前占用线程 */
     private volatile Thread currentThread;
-    /** PinnedThreadSafeHandler是否已关闭 */
-    private volatile boolean isStopped = false;
+    /** 是否已关闭 */
+    private volatile boolean stopped = false;
 
     public PinnedThreadExecutor(ExecutionContext executionContext) {
         this.executionContext = executionContext;
     }
 
     /**
-     * 处理消息
+     * 接收消息
      */
-    public void handle(Message<TS> message) {
-        if (!isStopped) {
+    public final void receive(Message<TS> message) {
+        if (!isStopped()) {
             inBox.add(message);
             tryRun();
         }
@@ -49,34 +49,44 @@ public class PinnedThreadExecutor<TS extends PinnedThreadExecutor<TS>> implement
     /**
      * 调度处理消息
      */
-    public Future<?> schedule(Message<TS> message, long delay, TimeUnit unit) {
-        if (!isStopped) {
-            return executionContext.schedule(() -> handle(message), delay, unit);
+    public final ScheduledFuture<?> schedule(Message<TS> message, long delay, TimeUnit unit) {
+        if (!isStopped()) {
+            return executionContext.schedule(() -> receive(message), delay, unit);
         }
-        return null;
+        throw new IllegalStateException("executor is stopped");
     }
 
     /**
-     * 固定事件间隔处理消息
+     * 固定速率处理消息
      */
-    public Future<?> scheduleAtFixedRate(Message<TS> message, long initialDelay, long period, TimeUnit unit) {
-        if (!isStopped) {
-            return executionContext.scheduleAtFixedRate(() -> handle(message), initialDelay, period, unit);
+    public final ScheduledFuture<?> scheduleAtFixedRate(Message<TS> message, long initialDelay, long period, TimeUnit unit) {
+        if (!isStopped()) {
+            return executionContext.scheduleAtFixedRate(() -> receive(message), initialDelay, period, unit);
         }
-        return null;
+        throw new IllegalStateException("executor is stopped");
     }
 
-    public void stop() {
-        if (!isStopped) {
-            isStopped = true;
+    /**
+     * 固定延迟处理消息
+     */
+    public final ScheduledFuture<?> scheduleWithFixedDelay(Message<TS> message, long initialDelay, long period, TimeUnit unit) {
+        if (!isStopped()) {
+            return executionContext.scheduleWithFixedDelay(() -> receive(message), initialDelay, period, unit);
+        }
+        throw new IllegalStateException("executor is stopped");
+    }
+
+    public final void stop() {
+        if (!isStopped()) {
+            stopped = true;
         }
     }
 
     /**
      * @return 是否在同一线程loop
      */
-    public boolean isInLoop() {
-        if (Objects.nonNull(this.currentThread)) {
+    public final boolean isInLoop() {
+        if (isStopped() && Objects.nonNull(this.currentThread)) {
             return this.currentThread == Thread.currentThread();
         }
 
@@ -85,12 +95,13 @@ public class PinnedThreadExecutor<TS extends PinnedThreadExecutor<TS>> implement
 
     /**
      * 消息处理实现逻辑
+     * 不建议外部直接调用
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void run() {
+    public final void run() {
         this.currentThread = Thread.currentThread();
-        while (!isStopped && !this.currentThread.isInterrupted()) {
+        while (!isStopped() && !this.currentThread.isInterrupted()) {
             Message<TS> message = inBox.poll();
             if (message == null) {
                 break;
@@ -119,7 +130,7 @@ public class PinnedThreadExecutor<TS extends PinnedThreadExecutor<TS>> implement
      * 尝试绑定线程, 并执行消息处理
      */
     private void tryRun() {
-        if (!isStopped && boxSize.incrementAndGet() == 1) {
+        if (!isStopped() && boxSize.incrementAndGet() == 1) {
             executionContext.execute(this);
         }
     }
@@ -129,5 +140,11 @@ public class PinnedThreadExecutor<TS extends PinnedThreadExecutor<TS>> implement
      */
     protected int getWarnMsgCostTime() {
         return 200;
+    }
+
+    //getter
+
+    public boolean isStopped() {
+        return stopped;
     }
 }

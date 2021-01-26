@@ -18,7 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @date 2020-04-15
  * <p>
  */
-public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
+public final class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     private static final Logger log = LoggerFactory.getLogger(EventBasedDispatcher.class);
     /** 毒药, 终止message loop */
     private final ReceiverData<MSG> POISON_PILL = new ReceiverData<>(null, false);
@@ -72,10 +72,6 @@ public class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG>
 
     @Override
     public void unregister(KEY key) {
-        if (isStopped()) {
-            throw new IllegalStateException("dispatcher is closed");
-        }
-
         if (Objects.isNull(key)) {
             throw new IllegalArgumentException("arg 'key' is null");
         }

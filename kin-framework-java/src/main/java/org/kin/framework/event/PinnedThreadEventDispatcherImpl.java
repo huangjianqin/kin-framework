@@ -10,13 +10,13 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public class PinnedThreadDispatcherImpl extends ParallelEventDispatcher implements ScheduledPinnedThreadDispatcher {
+public class PinnedThreadEventDispatcherImpl extends ParallelEventDispatcher implements ScheduledPinnedThreadEventDispatcher {
 
-    public PinnedThreadDispatcherImpl(int parallelism) {
+    public PinnedThreadEventDispatcherImpl(int parallelism) {
         super(parallelism);
     }
 
-    public PinnedThreadDispatcherImpl(int parallelism, boolean isEnhance) {
+    public PinnedThreadEventDispatcherImpl(int parallelism, boolean isEnhance) {
         super(parallelism, isEnhance);
     }
 

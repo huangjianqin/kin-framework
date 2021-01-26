@@ -3,21 +3,20 @@ package org.kin.framework.concurrent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.*;
 
 /**
  * @author huangjianqin
  * @date 2020-05-18
  */
-public class PartitionTaskExecutorTest {
-    public static void main(String[] args) throws InterruptedException {
+public class PartitionExecutorTest {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutionContext executionContext = ExecutionContext.fix(10, "dispatcher-test");
 
         Partitioner<Integer> partitioner = (key, numPartition) -> key % numPartition;
 
         int partition = 5;
-        PartitionTaskExecutor<Integer> executor = new PartitionTaskExecutor<>(partition, partitioner);
+        DefaultPartitionExecutor<Integer> executor = new DefaultPartitionExecutor<>(partition, partitioner);
         int num = 1000;
         Map<Integer, Set<Integer>> counter = new HashMap<>();
         for (int i = 0; i < partition; i++) {
@@ -33,12 +32,14 @@ public class PartitionTaskExecutorTest {
                 latch.countDown();
             }));
         }
-//        while (true) {
-//            counter.forEach((key, value) -> System.out.println(value.size()));
-//            Thread.sleep(2000);
-//            System.out.println("----------------------------");
-//        }
+
         latch.await();
+
+        //schedule
+        Callable<Integer> callable = () -> ThreadLocalRandom.current().nextInt(num);
+        Future<Integer> future = executor.schedule(1, callable, 3, TimeUnit.SECONDS);
+        System.out.println(future.get());
+
         executionContext.shutdown();
         executor.shutdown();
 

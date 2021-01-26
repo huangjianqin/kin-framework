@@ -139,17 +139,17 @@ public final class PinnedThreadDispatcher<KEY, MSG> extends AbstractDispatcher<K
 
         @Override
         public void receive(M mail) {
-            executor.handle(pal -> proxy.receive(mail));
+            executor.receive(pal -> proxy.receive(mail));
         }
 
         @Override
         protected void onStart() {
-            executor.handle(pal -> proxy.onStart());
+            executor.receive(pal -> proxy.onStart());
         }
 
         @Override
         protected void onStop() {
-            executor.handle(pal -> proxy.onStop());
+            executor.receive(pal -> proxy.onStop());
         }
     }
 }

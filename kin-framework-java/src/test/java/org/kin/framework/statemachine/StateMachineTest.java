@@ -1,7 +1,7 @@
 package org.kin.framework.statemachine;
 
 
-import org.kin.framework.event.EventDispatcher;
+import org.kin.framework.event.BasicEventDispatcher;
 import org.kin.framework.event.EventHandler;
 import org.kin.framework.event.dispatcher.FirstEvent;
 import org.kin.framework.event.dispatcher.FirstEventType;
@@ -47,10 +47,10 @@ class NumberTransition implements SingleArcTransition<Impl, FirstEvent> {
 }
 
 class Impl implements EventHandler<FirstEvent> {
-    private EventDispatcher dispatcher;
+    private BasicEventDispatcher dispatcher;
 
     public Impl() {
-        this.dispatcher = new EventDispatcher();
+        this.dispatcher = new BasicEventDispatcher();
         dispatcher.register(FirstEvent.class, new FirstEventHandler(), FirstEventHandler.class.getMethods()[0]);
     }
 

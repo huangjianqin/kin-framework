@@ -122,7 +122,7 @@ class InBox<MSG> implements Closeable {
      * @date 2020-04-17
      */
     final static class OnMessageSignal<M> extends InBoxMessage {
-        private M message;
+        private final M message;
 
         OnMessageSignal(M message) {
             this.message = message;

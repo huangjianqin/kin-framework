@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public interface ScheduledPinnedThreadDispatcher extends PinnedThreadDispatcher {
+public interface ScheduledPinnedThreadEventDispatcher extends PinnedThreadEventDispatcher {
     /**
      * 延迟调度事件分发
      * 该事件处理会在同一线程处理(根据 @param partitionId 区分)

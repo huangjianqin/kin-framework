@@ -1,7 +1,7 @@
 package org.kin.framework.event;
 
+import org.kin.framework.concurrent.DefaultPartitionExecutor;
 import org.kin.framework.concurrent.EfficientHashPartitioner;
-import org.kin.framework.concurrent.PartitionTaskExecutor;
 import org.kin.framework.concurrent.SimpleThreadFactory;
 import org.kin.framework.utils.SysUtils;
 
@@ -17,9 +17,9 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020/12/9
  */
-public class ParallelEventDispatcher extends EventDispatcher implements ScheduledDispatcher {
+public class ParallelEventDispatcher extends BasicEventDispatcher implements ScheduledDispatcher {
     /** 事件处理线程(分区处理) */
-    protected final PartitionTaskExecutor<Integer> executor;
+    protected final DefaultPartitionExecutor<Integer> executor;
     /** 调度线程 */
     protected final ScheduledExecutorService scheduledExecutors;
 
@@ -30,7 +30,7 @@ public class ParallelEventDispatcher extends EventDispatcher implements Schedule
     @SuppressWarnings("unchecked")
     public ParallelEventDispatcher(int parallelism, boolean isEnhance) {
         super(isEnhance);
-        executor = new PartitionTaskExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler-");
+        executor = new DefaultPartitionExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler-");
 
         scheduledExecutors = new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum() / 2 + 1,
                 new SimpleThreadFactory("EventDispatcher$schedule-event-"));

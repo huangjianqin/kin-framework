@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public interface PinnedThreadDispatcher {
+public interface PinnedThreadEventDispatcher {
     /**
      * 注册事件处理器
      *
