@@ -7,8 +7,8 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
  * @date 2020-06-14
  */
 public class OneLock extends AbstractQueuedSynchronizer {
-    private final int DONE = 1;
-    private final int PENDING = 0;
+    private static final int DONE = 1;
+    private static final int PENDING = 0;
 
     @Override
     protected boolean tryAcquire(int acquires) {
