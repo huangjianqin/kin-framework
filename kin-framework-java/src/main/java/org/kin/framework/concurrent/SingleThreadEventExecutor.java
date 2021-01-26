@@ -40,7 +40,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 任务队列 */
     private final BlockingQueue<ScheduledFutureTask<?>> taskQueue = new DelayQueue<>();
     /** 所属线程池 */
-    private final ExecutorService parent;
+    private final Executor parent;
     /** 绑定线程是否已interrupted */
     private volatile boolean interrupted;
     /**
@@ -54,18 +54,18 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     //------------------------------------------------------------------------------------------------------------------------
-    public SingleThreadEventExecutor(ExecutorService parent) {
+    public SingleThreadEventExecutor(Executor parent) {
         this(parent, false, RejectedExecutionHandler.EMPTY);
     }
 
-    public SingleThreadEventExecutor(ExecutorService parent, boolean timeSensitive) {
+    public SingleThreadEventExecutor(Executor parent, boolean timeSensitive) {
         this(parent, timeSensitive, RejectedExecutionHandler.EMPTY);
     }
 
     /**
      * @param timeSensitive 是否时间敏感(也就是随系统时间发生变化而变化)
      */
-    public SingleThreadEventExecutor(ExecutorService parent, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
+    public SingleThreadEventExecutor(Executor parent, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
         this.parent = parent;
         if (timeSensitive) {
             timeUnit = TimeUnit.MILLISECONDS;
@@ -639,7 +639,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     /**
-     * 线程逻辑
+     * 线程run方法逻辑
      */
     private class InternalLoop implements Runnable {
         @Override
