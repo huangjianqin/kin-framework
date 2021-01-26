@@ -12,7 +12,7 @@ import java.util.concurrent.*;
  * @date 2020-05-18
  */
 @SuppressWarnings("unchecked")
-public final class DefaultPartitionExecutor<KEY> implements ScheduledPratitionExecutor<KEY> {
+public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionExecutor<KEY> {
     /** 分区数 */
     private final int partitionNum;
     /** 线程池 */

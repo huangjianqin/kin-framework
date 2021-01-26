@@ -8,7 +8,7 @@ import java.util.concurrent.Future;
  * @author huangjianqin
  * @date 2021/1/26
  */
-public interface PratitionExecutor<KEY> {
+public interface PartitionExecutor<KEY> {
     /**
      * 在{@link ExecutorService} execute(Runnable)基础上, 扩展根据分区key指定分区executor执行command
      */

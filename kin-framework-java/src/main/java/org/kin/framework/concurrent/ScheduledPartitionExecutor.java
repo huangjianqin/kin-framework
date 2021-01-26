@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2021/1/26
  */
-public interface ScheduledPratitionExecutor<KEY> extends PratitionExecutor<KEY> {
+public interface ScheduledPartitionExecutor<KEY> extends PartitionExecutor<KEY> {
     /**
      * 在{@link java.util.concurrent.ScheduledExecutorService} schedule(Runnable, long, TimeUnit)基础上,
      * 扩展根据分区key指定分区executor执行schedule command
