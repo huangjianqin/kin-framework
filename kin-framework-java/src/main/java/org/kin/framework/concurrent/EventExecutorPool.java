@@ -51,6 +51,18 @@ public abstract class EventExecutorPool {
         this(coreSize, chooser, ExecutionContext.fix(coreSize, threadFactory));
     }
 
+    public EventExecutorPool(int coreSize, String workerNamePrefix) {
+        this(coreSize, new GenericEventExecutorChooser(), ExecutionContext.fix(coreSize, workerNamePrefix));
+    }
+
+    public EventExecutorPool(int coreSize, ThreadFactory threadFactory) {
+        this(coreSize, new GenericEventExecutorChooser(), ExecutionContext.fix(coreSize, threadFactory));
+    }
+
+    public EventExecutorPool(int coreSize, ExecutorService executor) {
+        this(coreSize, new GenericEventExecutorChooser(), executor);
+    }
+
     public EventExecutorPool(int coreSize, EventExecutorChooser chooser, ExecutorService executor) {
         this.chooser = chooser;
         this.executor = executor;
