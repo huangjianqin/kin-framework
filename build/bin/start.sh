@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# todo 指定app name
+app_name=demo
+
 # todo 指定运行脚本user
 app_user=www
 
@@ -32,3 +35,7 @@ if [ "${current_user}" = "root" ]; then
 else
   `$cmd`
 fi
+
+current_path=$(dirname $0)
+echo $! >"${current_path}"/app.pid
+echo "${app_name} started"
