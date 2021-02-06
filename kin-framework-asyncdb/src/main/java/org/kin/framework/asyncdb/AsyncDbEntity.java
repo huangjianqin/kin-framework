@@ -37,14 +37,14 @@ public abstract class AsyncDbEntity<PK extends Serializable> implements Serializ
      * entity insert
      */
     public final void insert() {
-        AsyncDbService.getInstance().dbOpr(this, DbOperation.Insert);
+        AsyncDbService.getInstance().dbOpr(this, DbOperation.INSERT);
     }
 
     /**
      * entity update
      */
     public final void update() {
-        AsyncDbService.getInstance().dbOpr(this, DbOperation.Update);
+        AsyncDbService.getInstance().dbOpr(this, DbOperation.UPDATE);
     }
 
     /**
@@ -54,7 +54,7 @@ public abstract class AsyncDbEntity<PK extends Serializable> implements Serializ
         if (!canDelete) {
             return;
         }
-        AsyncDbService.getInstance().dbOpr(this, DbOperation.Delete);
+        AsyncDbService.getInstance().dbOpr(this, DbOperation.DELETE);
     }
 
     protected void serialize() {

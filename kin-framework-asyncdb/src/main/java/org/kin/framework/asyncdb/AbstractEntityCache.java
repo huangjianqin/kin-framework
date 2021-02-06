@@ -199,11 +199,11 @@ public abstract class AbstractEntityCache<PK extends Serializable, E extends Asy
     @Override
     public void onError(E entity, DbOperation operation, Throwable ex) {
         afterOperation(entity, operation, ex);
-        if (DbOperation.Insert.equals(operation)) {
+        if (DbOperation.INSERT.equals(operation)) {
             //insert遇到异常, 重新提交db操作
             entity.insert();
         }
-        if (DbOperation.Update.equals(operation)) {
+        if (DbOperation.UPDATE.equals(operation)) {
             //update遇到异常, 重新提交db操作
             entity.update();
         }
@@ -213,11 +213,11 @@ public abstract class AbstractEntityCache<PK extends Serializable, E extends Asy
      * db操作之后执行, 不管成功与否
      */
     private void afterOperation(AsyncDbEntity<?> entity, DbOperation operation, Throwable ex) {
-        if (DbOperation.Update.equals(operation)) {
+        if (DbOperation.UPDATE.equals(operation)) {
             afterUpdate(entity);
         }
 
-        if (DbOperation.Delete.equals(operation)) {
+        if (DbOperation.DELETE.equals(operation)) {
             afterDelete(entity);
         }
     }
