@@ -64,7 +64,7 @@ final class FastThreadLocalRandom extends Random {
     private static final AtomicLong seedUniquifier = new AtomicLong();
 
     private static volatile long initialSeedUniquifier =
-            SysUtils.getLongSysProperty("io.netty.initialSeedUniquifier", 0);
+            SysUtils.getLongSysProperty("kin.framework.io.initialSeedUniquifier", 0);
 
     private static final Thread seedGeneratorThread;
     private static final BlockingQueue<Long> seedQueue;
@@ -210,11 +210,11 @@ final class FastThreadLocalRandom extends Random {
                 if (current == 0 && log.isDebugEnabled()) {
                     if (seedGeneratorEndTime != 0) {
                         log.debug(String.format(
-                                "-Dio.netty.initialSeedUniquifier: 0x%016x (took %d ms)",
+                                "-Dkin.framework.io.initialSeedUniquifier: 0x%016x (took %d ms)",
                                 actualCurrent,
                                 TimeUnit.NANOSECONDS.toMillis(seedGeneratorEndTime - seedGeneratorStartTime)));
                     } else {
-                        log.debug(String.format("-Dio.netty.initialSeedUniquifier: 0x%016x", actualCurrent));
+                        log.debug(String.format("-Dkin.framework.io.initialSeedUniquifier: 0x%016x", actualCurrent));
                     }
                 }
                 return next ^ System.nanoTime();
