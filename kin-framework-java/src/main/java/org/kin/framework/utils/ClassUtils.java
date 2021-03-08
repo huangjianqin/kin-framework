@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
@@ -30,6 +31,10 @@ public class ClassUtils {
     private static final Pattern INNER_PATTERN = Pattern.compile("\\$(\\d+).", Pattern.CASE_INSENSITIVE);
     /** 生成方法签名的参数命名 */
     public static final String METHOD_DECLARATION_ARG_NAME = "arg";
+    /**
+     *
+     */
+    private static final Map<Type, Class<?>> GENERIC_TYPES_CACHE = new ConcurrentHashMap<>();
 
     @FunctionalInterface
     private interface Matcher<T> {
@@ -826,5 +831,70 @@ public class ClassUtils {
             return targetName.substring(0, index).toLowerCase();
         }
         return null;
+    }
+
+    /**
+     * 根据genericType获取泛型类型, 只支持泛型类型只有一个的情况
+     * get inferred class for generic type, such as Flux like, please refer http://tutorials.jenkov.com/java-reflection/generics.html
+     * <p>
+     * 支持缓存
+     *
+     * @param genericType generic type
+     * @return inferred class
+     */
+    public static Class<?> getInferredClassForGeneric(Type genericType) {
+        //performance promotion by cache
+        if (!GENERIC_TYPES_CACHE.containsKey(genericType)) {
+            try {
+                Class<?> inferredClass = parseInferredClass(genericType);
+                if (inferredClass != null) {
+                    GENERIC_TYPES_CACHE.put(genericType, inferredClass);
+                } else {
+                    GENERIC_TYPES_CACHE.put(genericType, Object.class);
+                }
+            } catch (Exception e) {
+                return Object.class;
+            }
+        }
+        return GENERIC_TYPES_CACHE.get(genericType);
+    }
+
+    /**
+     * get inferred class for Generic Type, please refer http://tutorials.jenkov.com/java-reflection/generics.html
+     *
+     * @param genericType generic type
+     * @return inferred class
+     */
+    public static Class<?> parseInferredClass(Type genericType) {
+        Class<?> inferredClass = null;
+        if (genericType instanceof ParameterizedType) {
+            ParameterizedType type = (ParameterizedType) genericType;
+            Type[] typeArguments = type.getActualTypeArguments();
+            if (typeArguments.length > 0) {
+                final Type typeArgument = typeArguments[0];
+                if (typeArgument instanceof ParameterizedType) {
+                    inferredClass = (Class<?>) ((ParameterizedType) typeArgument).getActualTypeArguments()[0];
+                } else if (typeArgument instanceof Class) {
+                    inferredClass = (Class<?>) typeArgument;
+                } else {
+                    String typeName = typeArgument.getTypeName();
+                    if (typeName.contains(" ")) {
+                        typeName = typeName.substring(typeName.lastIndexOf(" ") + 1);
+                    }
+                    if (typeName.contains("<")) {
+                        typeName = typeName.substring(0, typeName.indexOf("<"));
+                    }
+                    try {
+                        inferredClass = Class.forName(typeName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        if (inferredClass == null && genericType instanceof Class) {
+            inferredClass = (Class<?>) genericType;
+        }
+        return inferredClass;
     }
 }
