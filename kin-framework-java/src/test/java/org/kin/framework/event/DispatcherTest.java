@@ -1,8 +1,6 @@
-package org.kin.framework.event.dispatcher;
+package org.kin.framework.event;
 
 
-import org.kin.framework.event.EventCallback;
-import org.kin.framework.event.ParallelEventDispatcher;
 import org.kin.framework.utils.SysUtils;
 
 /**

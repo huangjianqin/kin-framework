@@ -3,8 +3,8 @@ package org.kin.framework.statemachine;
 
 import org.kin.framework.event.BasicEventDispatcher;
 import org.kin.framework.event.EventHandler;
-import org.kin.framework.event.dispatcher.FirstEvent;
-import org.kin.framework.event.dispatcher.FirstEventType;
+import org.kin.framework.event.FirstEvent;
+import org.kin.framework.event.FirstEventType;
 
 import java.util.EnumSet;
 import java.util.Random;

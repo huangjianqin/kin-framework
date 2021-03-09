@@ -1,6 +1,4 @@
-package org.kin.framework.event.dispatcher;
-
-import org.kin.framework.event.Event;
+package org.kin.framework.event;
 
 /**
  * Created by 健勤 on 2017/8/9.

@@ -1,4 +1,4 @@
-package org.kin.framework.event.dispatcher.springdispatcher;
+package org.kin.framework.event.spring;
 
 import org.kin.framework.event.SpringEventDispatcher;
 import org.kin.framework.utils.SysUtils;
