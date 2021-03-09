@@ -20,14 +20,26 @@ public interface ScheduledPinnedThreadEventDispatcher extends PinnedThreadEventD
     Future<?> scheduleDispatch(int partitionId, Object event, TimeUnit unit, long delay);
 
     /**
-     * 定时调度事件分发
+     * 定时时间间隔调度事件分发
      * 该事件处理会在同一线程处理(根据 @param partitionId 区分)
      *
      * @param partitionId  分区id
      * @param event        事件
      * @param unit         时间单位
-     * @param initialDelay 延迟执行事件
-     * @param period       事件间隔
+     * @param initialDelay 延迟执行时间
+     * @param period       时间间隔
      */
     Future<?> scheduleDispatchAtFixRate(int partitionId, Object event, TimeUnit unit, long initialDelay, long period);
+
+    /**
+     * 固定时间延迟调度事件分发
+     * 该事件处理会在同一线程处理(根据 @param partitionId 区分)
+     *
+     * @param partitionId  分区id
+     * @param event        事件
+     * @param unit         时间单位
+     * @param initialDelay 延迟执行时间
+     * @param delay        时间延迟
+     */
+    Future<?> scheduleDispatchWithFixedDelay(int partitionId, Object event, TimeUnit unit, long initialDelay, long delay);
 }

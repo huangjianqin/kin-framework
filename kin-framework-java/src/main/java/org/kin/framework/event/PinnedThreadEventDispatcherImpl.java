@@ -32,11 +32,16 @@ public class PinnedThreadEventDispatcherImpl extends ParallelEventDispatcher imp
 
     @Override
     public Future<?> scheduleDispatch(int partitionId, Object event, TimeUnit unit, long delay) {
-        return scheduledExecutors.schedule(() -> dispatch(partitionId, event), delay, unit);
+        return executor.schedule(partitionId, () -> dispatch0(partitionId, event), delay, unit);
     }
 
     @Override
     public Future<?> scheduleDispatchAtFixRate(int partitionId, Object event, TimeUnit unit, long initialDelay, long period) {
-        return scheduledExecutors.scheduleAtFixedRate(() -> dispatch(partitionId, event), initialDelay, period, unit);
+        return executor.scheduleAtFixedRate(partitionId, () -> dispatch0(partitionId, event), initialDelay, period, unit);
+    }
+
+    @Override
+    public Future<?> scheduleDispatchWithFixedDelay(int partitionId, Object event, TimeUnit unit, long initialDelay, long delay) {
+        return executor.scheduleWithFixedDelay(partitionId, () -> dispatch0(partitionId, event), initialDelay, delay, unit);
     }
 }

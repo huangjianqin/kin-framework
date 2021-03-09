@@ -2,12 +2,8 @@ package org.kin.framework.event;
 
 import org.kin.framework.concurrent.DefaultPartitionExecutor;
 import org.kin.framework.concurrent.EfficientHashPartitioner;
-import org.kin.framework.concurrent.SimpleThreadFactory;
-import org.kin.framework.utils.SysUtils;
 
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,8 +16,6 @@ import java.util.concurrent.TimeUnit;
 public class ParallelEventDispatcher extends BasicEventDispatcher implements ScheduledDispatcher {
     /** 事件处理线程(分区处理) */
     protected final DefaultPartitionExecutor<Integer> executor;
-    /** 调度线程 */
-    protected final ScheduledExecutorService scheduledExecutors;
 
     public ParallelEventDispatcher(int parallelism) {
         this(parallelism, false);
@@ -30,12 +24,22 @@ public class ParallelEventDispatcher extends BasicEventDispatcher implements Sch
     @SuppressWarnings("unchecked")
     public ParallelEventDispatcher(int parallelism, boolean isEnhance) {
         super(isEnhance);
-        executor = new DefaultPartitionExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler-");
-
-        scheduledExecutors = new ScheduledThreadPoolExecutor(SysUtils.getSuitableThreadNum() / 2 + 1,
-                new SimpleThreadFactory("EventDispatcher$schedule-event-"));
+        executor = new DefaultPartitionExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "EventDispatcher$event-handler");
     }
 
+    /**
+     * 直接执行dispatch(EventContext)方法
+     */
+    protected void dispatch0(int partitionId, Object event) {
+        dispatch0(partitionId, event, EventCallback.EMPTY);
+    }
+
+    /**
+     * 直接执行dispatch(EventContext)方法
+     */
+    protected void dispatch0(int partitionId, Object event, EventCallback callback) {
+        dispatch(new EventContext(partitionId, event, callback));
+    }
 
     @Override
     public final void dispatch(Object event) {
@@ -45,17 +49,25 @@ public class ParallelEventDispatcher extends BasicEventDispatcher implements Sch
     @Override
     public final void dispatch(Object event, EventCallback callback) {
         int partitionId = event.hashCode();
-        executor.execute(partitionId, () -> dispatch(new EventContext(partitionId, event, callback)));
+        executor.execute(partitionId, () -> dispatch0(partitionId, event, callback));
     }
 
     @Override
     public final Future<?> scheduleDispatch(Object event, TimeUnit unit, long delay) {
-        return scheduledExecutors.schedule(() -> dispatch(event), delay, unit);
+        int partitionId = event.hashCode();
+        return executor.schedule(partitionId, () -> dispatch0(partitionId, event), delay, unit);
     }
 
     @Override
     public final Future<?> scheduleDispatchAtFixRate(Object event, TimeUnit unit, long initialDelay, long period) {
-        return scheduledExecutors.scheduleAtFixedRate(() -> dispatch(event), initialDelay, period, unit);
+        int partitionId = event.hashCode();
+        return executor.scheduleAtFixedRate(partitionId, () -> dispatch0(partitionId, event), initialDelay, period, unit);
+    }
+
+    @Override
+    public Future<?> scheduleDispatchWithFixedDelay(Object event, TimeUnit unit, long initialDelay, long delay) {
+        int partitionId = event.hashCode();
+        return executor.scheduleWithFixedDelay(partitionId, () -> dispatch0(partitionId, event), initialDelay, delay, unit);
     }
 
     @Override
@@ -66,7 +78,6 @@ public class ParallelEventDispatcher extends BasicEventDispatcher implements Sch
     @Override
     public final void shutdown() {
         executor.shutdown();
-        scheduledExecutors.shutdown();
 
         super.shutdown();
     }
