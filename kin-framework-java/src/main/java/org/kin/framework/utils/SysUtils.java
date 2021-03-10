@@ -159,10 +159,25 @@ public class SysUtils {
     }
 
     /**
+     * @return os名称
+     */
+    public static String getOsName() {
+        return getSysProperty("os.name");
+    }
+
+    /**
      * @return 当前运行环境是否是linux
      */
     public static boolean isLinux() {
-        String osName = getSysProperty("os.name");
-        return StringUtils.isNotBlank(osName) && osName.startsWith("Linux") && osName.startsWith("LINUX");
+        String osName = getOsName();
+        return StringUtils.isNotBlank(osName) && osName.toLowerCase().startsWith("Linux");
+    }
+
+    /**
+     * @return 当前运行环境是否是windows
+     */
+    public static boolean isWindows() {
+        String osName = getOsName();
+        return StringUtils.isNotBlank(osName) && osName.toLowerCase().startsWith("win");
     }
 }
