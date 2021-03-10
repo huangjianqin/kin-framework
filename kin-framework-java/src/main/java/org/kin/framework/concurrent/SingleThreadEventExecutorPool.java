@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadFactory;
  * @author huangjianqin
  * @date 2021/1/26
  */
-public abstract class SingleThreadEventExecutorPool extends EventExecutorPool {
+public class SingleThreadEventExecutorPool extends AbstractEventExecutorPool {
     public SingleThreadEventExecutorPool(int coreSize) {
         super(coreSize);
     }
@@ -29,7 +29,7 @@ public abstract class SingleThreadEventExecutorPool extends EventExecutorPool {
     }
 
     @Override
-    protected final EventExecutor newEventExecutor(ExecutorService executor) {
-        return new SingleThreadEventExecutor(executor);
+    protected EventExecutor newEventExecutor(ExecutorService executor) {
+        return new SingleThreadEventExecutor(this, executor);
     }
 }

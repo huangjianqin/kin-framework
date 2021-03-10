@@ -13,7 +13,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 /**
  * 拥有调度能力的单线程Executor
- * 调度完后, task执行仍然在该Executor
+ * 所有消息, 包括调度都在同一Executor(线程)处理
  *
  * @author huangjianqin
  * @date 2020/11/23
@@ -40,13 +40,15 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 任务队列 */
     private final BlockingQueue<ScheduledFutureTask<?>> taskQueue = new DelayQueue<>();
     /** 所属线程池 */
-    private final Executor parent;
+    private final Executor executor;
     /** 绑定线程是否已interrupted */
     private volatile boolean interrupted;
     /**
      * 是否时间敏感(也就是随系统时间发生变化而变化), 则TimeUnit.MILLISECONDS, 否则是TimeUnit.NANOSECONDS
      */
     private final TimeUnit timeUnit;
+    /** 所属group */
+    private final EventExecutorGroup parent;
 
     //------------------------------------------------------------------------------------------------------------------------
     private static void reject() {
@@ -54,19 +56,20 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     //------------------------------------------------------------------------------------------------------------------------
-    public SingleThreadEventExecutor(Executor parent) {
-        this(parent, false, RejectedExecutionHandler.EMPTY);
+    public SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor) {
+        this(parent, executor, false, RejectedExecutionHandler.EMPTY);
     }
 
-    public SingleThreadEventExecutor(Executor parent, boolean timeSensitive) {
-        this(parent, timeSensitive, RejectedExecutionHandler.EMPTY);
+    public SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor, boolean timeSensitive) {
+        this(parent, executor, timeSensitive, RejectedExecutionHandler.EMPTY);
     }
 
     /**
      * @param timeSensitive 是否时间敏感(也就是随系统时间发生变化而变化)
      */
-    public SingleThreadEventExecutor(Executor parent, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
+    public SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
         this.parent = parent;
+        this.executor = executor;
         if (timeSensitive) {
             timeUnit = TimeUnit.MILLISECONDS;
         } else {
@@ -128,7 +131,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+    public boolean awaitTermination(long timeout, @Nonnull TimeUnit unit) throws InterruptedException {
         long realTimeout = timeUnit.convert(timeout, unit);
         synchronized (this) {
             for (; ; ) {
@@ -198,7 +201,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     @Override
-    public <T> List<Future<T>> invokeAll(@Nonnull Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+    public <T> List<Future<T>> invokeAll(@Nonnull Collection<? extends Callable<T>> tasks, long timeout, @Nonnull TimeUnit unit) throws InterruptedException {
         Preconditions.checkArgument(CollectionUtils.isNonEmpty(tasks), "tasks is empty");
 
         long realTimeout = timeUnit.convert(timeout, unit);
@@ -325,7 +328,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     @Override
-    public ScheduledFuture<?> schedule(@Nonnull Runnable command, long delay, TimeUnit unit) {
+    public ScheduledFuture<?> schedule(@Nonnull Runnable command, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
         ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(delay, unit));
@@ -334,7 +337,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     @Override
-    public ScheduledFuture<?> scheduleAtFixedRate(@Nonnull Runnable command, long initialDelay, long period, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleAtFixedRate(@Nonnull Runnable command, long initialDelay, long period, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
         ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(period, unit));
@@ -343,7 +346,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     @Override
-    public <V> ScheduledFuture<V> schedule(@Nonnull Callable<V> callable, long delay, TimeUnit unit) {
+    public <V> ScheduledFuture<V> schedule(@Nonnull Callable<V> callable, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(callable, "task is null");
 
         ScheduledFutureTask<V> futureTask = new ScheduledFutureTask<>(callable, timeUnit.convert(delay, unit));
@@ -352,7 +355,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     @Override
-    public ScheduledFuture<?> scheduleWithFixedDelay(@Nonnull Runnable command, long initialDelay, long delay, TimeUnit unit) {
+    public ScheduledFuture<?> scheduleWithFixedDelay(@Nonnull Runnable command, long initialDelay, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
         ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(-delay, unit));
@@ -411,7 +414,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
             if (STATE_UPDATER.compareAndSet(this, ST_NOT_STARTED, ST_STARTED)) {
                 boolean success = false;
                 try {
-                    parent.execute(new InternalLoop());
+                    executor.execute(new InternalLoop());
                     success = true;
                 } finally {
                     if (!success) {
@@ -474,8 +477,8 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     @Override
-    public boolean isInEventLoop() {
-        return isInEventLoop(Thread.currentThread());
+    public EventExecutorGroup parent() {
+        return parent;
     }
 
     @Override
@@ -486,7 +489,6 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
 
         return false;
     }
-
     //------------------------------------------------------------------------------------------------------------------
 
     /**

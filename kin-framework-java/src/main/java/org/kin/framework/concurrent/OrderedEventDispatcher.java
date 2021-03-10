@@ -14,18 +14,22 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2020-04-26
  */
-public final class PinnedThreadDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
+@SuppressWarnings("rawtypes")
+public final class OrderedEventDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
+    /** OrderedEventLoopGroup */
+    private final CachedOrderedEventLoopGroup group;
     /** Receiver数据 */
-    private Map<KEY, PinnedThreadReceiver<MSG>> receivers = new ConcurrentHashMap<>();
+    private final Map<KEY, InternalReceiver<MSG>> receivers = new ConcurrentHashMap<>();
 
-    public PinnedThreadDispatcher(int parallelism) {
-        this(parallelism, "pinnedDispatcher");
+    public OrderedEventDispatcher(int parallelism) {
+        this(parallelism, "orderedEventDispatcher");
     }
 
-    public PinnedThreadDispatcher(int parallelism, String workerNamePrefix) {
+    public OrderedEventDispatcher(int parallelism, String workerNamePrefix) {
         super(ExecutionContext.elastic(
                 Math.min(parallelism, SysUtils.CPU_NUM * 10), SysUtils.CPU_NUM * 10, workerNamePrefix,
                 SysUtils.CPU_NUM / 2 + 1, workerNamePrefix.concat("-schedule")));
+        group = new CachedOrderedEventLoopGroup(executionContext, OrderedEventLoop::new);
     }
 
     @Override
@@ -44,7 +48,7 @@ public final class PinnedThreadDispatcher<KEY, MSG> extends AbstractDispatcher<K
 
         //保证receiver 先进行start, 后stop
         synchronized (this) {
-            if (Objects.nonNull(receivers.putIfAbsent(key, new PinnedThreadReceiver<>(receiver)))) {
+            if (Objects.nonNull(receivers.putIfAbsent(key, new InternalReceiver<>(receiver)))) {
                 throw new IllegalArgumentException(String.format("%s has registried", key));
             }
 
@@ -64,9 +68,9 @@ public final class PinnedThreadDispatcher<KEY, MSG> extends AbstractDispatcher<K
 
         //保证receiver 先进行start, 后stop
         synchronized (this) {
-            PinnedThreadReceiver<MSG> pinnedThreadReceiver = receivers.remove(key);
-            if (Objects.nonNull(pinnedThreadReceiver)) {
-                pinnedThreadReceiver.onStop();
+            InternalReceiver<MSG> receiver = receivers.remove(key);
+            if (Objects.nonNull(receiver)) {
+                receiver.onStop();
             }
         }
     }
@@ -93,9 +97,9 @@ public final class PinnedThreadDispatcher<KEY, MSG> extends AbstractDispatcher<K
             throw new IllegalArgumentException("arg 'key' or 'message' is null");
         }
 
-        PinnedThreadReceiver<MSG> pinnedThreadReceiver = receivers.get(key);
-        if (Objects.nonNull(pinnedThreadReceiver)) {
-            pinnedThreadReceiver.receive(message);
+        InternalReceiver<MSG> internalReceiver = receivers.get(key);
+        if (Objects.nonNull(internalReceiver)) {
+            internalReceiver.receive(message);
         }
     }
 
@@ -126,30 +130,34 @@ public final class PinnedThreadDispatcher<KEY, MSG> extends AbstractDispatcher<K
     /**
      * 线程安全receiver
      */
-    private class PinnedThreadReceiver<M> extends Receiver<M> {
+    @SuppressWarnings("rawtypes, unchecked")
+    private class InternalReceiver<M> extends Receiver<M> {
         /** executor */
-        private PinnedThreadExecutor executor;
+        private OrderedEventLoop loop;
         /** Receiver实例 */
         private Receiver<M> proxy;
 
-        private PinnedThreadReceiver(Receiver<M> receiver) {
-            this.executor = new PinnedThreadExecutor(PinnedThreadDispatcher.super.executionContext);
+        private InternalReceiver(Receiver<M> receiver) {
+            this.loop = group.next();
             this.proxy = receiver;
         }
 
         @Override
         public void receive(M mail) {
-            executor.receive(pal -> proxy.receive(mail));
+            loop.receive(pal -> proxy.receive(mail));
         }
 
         @Override
         protected void onStart() {
-            executor.receive(pal -> proxy.onStart());
+            loop.receive(pal -> proxy.onStart());
         }
 
         @Override
         protected void onStop() {
-            executor.receive(pal -> proxy.onStop());
+            loop.receive(pal -> {
+                proxy.onStop();
+                loop.shutdown();
+            });
         }
     }
 }

@@ -4,6 +4,7 @@ import org.kin.framework.utils.StringUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 /**
@@ -14,15 +15,15 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
  * @author huangjianqin
  * @date 2020/11/23
  */
-public abstract class EventExecutorPool {
+public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
     //状态枚举
     private static final byte ST_STARTED = 1;
     private static final byte ST_SHUTDOWN = 2;
     private static final byte ST_TERMINATED = 3;
 
     /** 原子更新状态值 */
-    private static final AtomicIntegerFieldUpdater<EventExecutorPool> STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(EventExecutorPool.class, "state");
+    private static final AtomicIntegerFieldUpdater<AbstractEventExecutorPool> STATE_UPDATER =
+            AtomicIntegerFieldUpdater.newUpdater(AbstractEventExecutorPool.class, "state");
 
     /** 状态值 */
     private volatile int state = ST_STARTED;
@@ -34,36 +35,36 @@ public abstract class EventExecutorPool {
     /** {@link EventExecutor}实例 */
     private final EventExecutor[] eventExecutors;
 
-    public EventExecutorPool(int coreSize) {
+    public AbstractEventExecutorPool(int coreSize) {
         this(coreSize, new GenericEventExecutorChooser(),
-                StringUtils.firstLowerCase(EventExecutorPool.class.getSimpleName()));
+                StringUtils.firstLowerCase(AbstractEventExecutorPool.class.getSimpleName()));
     }
 
-    public EventExecutorPool(int coreSize, EventExecutorChooser chooser) {
-        this(coreSize, chooser, StringUtils.firstLowerCase(EventExecutorPool.class.getSimpleName()));
+    public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser) {
+        this(coreSize, chooser, StringUtils.firstLowerCase(AbstractEventExecutorPool.class.getSimpleName()));
     }
 
-    public EventExecutorPool(int coreSize, EventExecutorChooser chooser, String workerNamePrefix) {
+    public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser, String workerNamePrefix) {
         this(coreSize, chooser, ExecutionContext.fix(coreSize, workerNamePrefix));
     }
 
-    public EventExecutorPool(int coreSize, EventExecutorChooser chooser, ThreadFactory threadFactory) {
+    public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser, ThreadFactory threadFactory) {
         this(coreSize, chooser, ExecutionContext.fix(coreSize, threadFactory));
     }
 
-    public EventExecutorPool(int coreSize, String workerNamePrefix) {
+    public AbstractEventExecutorPool(int coreSize, String workerNamePrefix) {
         this(coreSize, new GenericEventExecutorChooser(), ExecutionContext.fix(coreSize, workerNamePrefix));
     }
 
-    public EventExecutorPool(int coreSize, ThreadFactory threadFactory) {
+    public AbstractEventExecutorPool(int coreSize, ThreadFactory threadFactory) {
         this(coreSize, new GenericEventExecutorChooser(), ExecutionContext.fix(coreSize, threadFactory));
     }
 
-    public EventExecutorPool(int coreSize, ExecutorService executor) {
+    public AbstractEventExecutorPool(int coreSize, ExecutorService executor) {
         this(coreSize, new GenericEventExecutorChooser(), executor);
     }
 
-    public EventExecutorPool(int coreSize, EventExecutorChooser chooser, ExecutorService executor) {
+    public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser, ExecutorService executor) {
         this.chooser = chooser;
         this.executor = executor;
         this.eventExecutors = new EventExecutor[coreSize];
@@ -94,6 +95,7 @@ public abstract class EventExecutorPool {
     /**
      * shutdown
      */
+    @Override
     public final void shutdown() {
         //shutdown
         for (EventExecutor executor : eventExecutors) {
@@ -105,6 +107,7 @@ public abstract class EventExecutorPool {
             //等待所有Executor Shutdown
             boolean allShutdown = true;
             for (EventExecutor executor : eventExecutors) {
+                //todo shutdown不了
                 if (!executor.isShutdown()) {
                     allShutdown = false;
                     break;
@@ -145,8 +148,37 @@ public abstract class EventExecutorPool {
     /**
      * @return 是否Terminated
      */
+    @Override
     public final boolean isTerminated() {
         return state >= ST_TERMINATED;
+    }
+
+    @Override
+    public EventExecutor next() {
+        return choose();
+    }
+
+    @Override
+    public final boolean isShutdown() {
+        return state >= ST_SHUTDOWN;
+    }
+
+    @Override
+    public final boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+        long deadline = System.nanoTime() + unit.toNanos(timeout);
+        loop:
+        for (EventExecutor l : eventExecutors) {
+            for (; ; ) {
+                long timeLeft = deadline - System.nanoTime();
+                if (timeLeft <= 0) {
+                    break loop;
+                }
+                if (l.awaitTermination(timeLeft, TimeUnit.NANOSECONDS)) {
+                    break;
+                }
+            }
+        }
+        return isTerminated();
     }
 
     //getter

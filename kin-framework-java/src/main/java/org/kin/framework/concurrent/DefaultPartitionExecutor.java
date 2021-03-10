@@ -16,7 +16,7 @@ public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionEx
     /** 分区数 */
     private final int partitionNum;
     /** 线程池 */
-    private final FixPinnedThreadExecutorPool executors;
+    private final FixOrderedEventLoopGroup executors;
     /** 分区算法 */
     private final Partitioner<KEY> partitioner;
     /** 是否stopped */
@@ -38,8 +38,9 @@ public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionEx
         Preconditions.checkArgument(partitionNum > 0, "partitionNum field must be greater then 0");
 
         this.partitionNum = partitionNum;
-        this.executors = new FixPinnedThreadExecutorPool(partitionNum,
-                ExecutionContext.fix(partitionNum, workerNamePrefix, 2, workerNamePrefix.concat("-scheduled")));
+        this.executors = new FixOrderedEventLoopGroup(partitionNum,
+                ExecutionContext.fix(partitionNum, workerNamePrefix, 2, workerNamePrefix.concat("-scheduled")),
+                OrderedEventLoop::new);
         this.partitioner = partitioner;
     }
 
@@ -68,7 +69,7 @@ public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionEx
             throw new IllegalStateException("executor is stopped");
         }
         FutureTask<T> futureTask = new FutureTask<>(task);
-        executors.get(getPartitionId(key)).receive((e) -> futureTask.run());
+        executors.next(getPartitionId(key)).receive((e) -> futureTask.run());
         return futureTask;
     }
 
@@ -90,7 +91,7 @@ public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionEx
         if (isTerminated()) {
             throw new IllegalStateException("executor is stopped");
         }
-        return executors.get(getPartitionId(key)).schedule((e) -> execute(key, task), delay, unit);
+        return executors.next(getPartitionId(key)).schedule((e) -> execute(key, task), delay, unit);
     }
 
     @Override
@@ -100,7 +101,7 @@ public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionEx
         }
 
         FutureTask<V> futureTask = new FutureTask<V>(callable);
-        executors.get(getPartitionId(key)).schedule((e) -> futureTask.run(), delay, unit);
+        executors.next(getPartitionId(key)).schedule((e) -> futureTask.run(), delay, unit);
         return futureTask;
     }
 
@@ -109,7 +110,7 @@ public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionEx
         if (isTerminated()) {
             throw new IllegalStateException("executor is stopped");
         }
-        return executors.get(getPartitionId(key)).scheduleAtFixedRate((e) -> execute(key, task), initialDelay, period, unit);
+        return executors.next(getPartitionId(key)).scheduleAtFixedRate((e) -> execute(key, task), initialDelay, period, unit);
     }
 
     @Override
@@ -117,7 +118,7 @@ public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionEx
         if (isTerminated()) {
             throw new IllegalStateException("executor is stopped");
         }
-        return executors.get(getPartitionId(key)).scheduleWithFixedDelay((e) -> execute(key, task), initialDelay, delay, unit);
+        return executors.next(getPartitionId(key)).scheduleWithFixedDelay((e) -> execute(key, task), initialDelay, delay, unit);
     }
 
 }

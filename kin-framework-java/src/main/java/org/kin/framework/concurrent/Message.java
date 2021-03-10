@@ -5,9 +5,9 @@ package org.kin.framework.concurrent;
  * @date 2018/6/5
  */
 @FunctionalInterface
-public interface Message<TS extends PinnedThreadExecutor<?>> {
+public interface Message<EL extends EventLoop<EL>> {
     /**
-     * @param threadSafeHandler 处理该时间的PinnedThreadSafeHandler
+     * @param eventLoop 处理该消息的{@link EventLoop}
      */
-    void handle(TS threadSafeHandler);
+    void handle(EL eventLoop);
 }
