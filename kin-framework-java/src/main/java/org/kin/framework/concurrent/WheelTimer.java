@@ -4,20 +4,22 @@ import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 时间轮
+ * 类似于调度, 但并没有那么准
+ * 设定数据处理逻辑{@link SlotDataHandler}, 然后push未来某时刻需要处理的数据, 当轮转到该数据时, 进行数据处理
+ *
  * @author huangjianqin
  * @date 2020-03-18
- * <p>
- * 时间轮
  */
-public class TimeRing<D> implements KeeperAction {
+public final class WheelTimer<D> implements KeeperAction {
     /** 时间轮每个slot对应的数据 */
-    private Map<Integer, List<D>> ringData;
+    private ConcurrentHashMap<Integer, List<D>> ringData;
     /** 时间轮slot数量 */
     private int slot;
     /** 时间轮刻度前进时间, 毫秒 */
@@ -29,25 +31,28 @@ public class TimeRing<D> implements KeeperAction {
     //------------------------------------------------------------------------------------------------------------
     private Keeper.KeeperStopper stopper;
 
-    public TimeRing(int slot, long unit, SlotDataHandler<D> slotDataHandler) {
+    public WheelTimer(int slot, long unit, SlotDataHandler<D> slotDataHandler) {
         this(slot, unit, 2, slotDataHandler);
     }
 
-    public TimeRing(int slot, long unit, int slotPerRound, SlotDataHandler<D> slotDataHandler) {
+    public WheelTimer(int slot, long unit, int slotPerRound, SlotDataHandler<D> slotDataHandler) {
         this.slot = slot;
         this.unit = unit;
         this.slotPerRound = slotPerRound;
         this.slotDataHandler = slotDataHandler;
     }
 
-    public static <D> TimeRing<D> second(SlotDataHandler<D> slotDataHandler) {
+    public static <D> WheelTimer<D> second(SlotDataHandler<D> slotDataHandler) {
         return second(1, slotDataHandler);
     }
 
-    public static <D> TimeRing<D> second(int slotPerRound, SlotDataHandler<D> slotDataHandler) {
-        return new TimeRing<>(60, 1000, slotPerRound, slotDataHandler);
+    public static <D> WheelTimer<D> second(int slotPerRound, SlotDataHandler<D> slotDataHandler) {
+        return new WheelTimer<>(60, 1000, slotPerRound, slotDataHandler);
     }
 
+    /**
+     * 开始轮转
+     */
     public void start() {
         if (Objects.nonNull(stopper)) {
             stopper.stop();
@@ -56,15 +61,31 @@ public class TimeRing<D> implements KeeperAction {
         stopper = Keeper.keep(this);
     }
 
+    /**
+     * push未来某时刻需要处理的数据
+     */
     public void push(long time, D data) {
         int ringSlot = (int) ((time / unit) % slot);
-        List<D> ringItemData = ringData.computeIfAbsent(ringSlot, k -> new ArrayList<>());
+        List<D> ringItemData = CollectionUtils.putIfAbsent(ringData, ringSlot, new ArrayList<>());
         ringItemData.add(data);
     }
 
-    public void stop() {
+    /**
+     * 停止轮转
+     *
+     * @return 未处理的数据
+     */
+    public List<D> stop() {
         stopper.stop();
         stopper = null;
+
+        //返回未处理的数据
+        return ringData.values().stream().reduce((l1, l2) -> {
+            List<D> list = new ArrayList<>(l1.size() + l2.size());
+            list.addAll(l1);
+            list.addAll(l2);
+            return list;
+        }).orElse(Collections.emptyList());
     }
 
     @Override
