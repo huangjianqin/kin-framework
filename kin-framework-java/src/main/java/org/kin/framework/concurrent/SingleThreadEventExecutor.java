@@ -1,6 +1,9 @@
 package org.kin.framework.concurrent;
 
 import com.google.common.base.Preconditions;
+import org.kin.framework.collection.DefaultPriorityQueue;
+import org.kin.framework.collection.PriorityQueue;
+import org.kin.framework.collection.PriorityQueueNode;
 import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.CollectionUtils;
 
@@ -27,10 +30,12 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 原子更新状态值 */
     private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
-
-    /** 唤醒task, 单例, 标识, Do nothing */
-    private static final Runnable WAKEUP_TASK = () -> {
-    };
+    /**
+     *
+     */
+    private final long createTime = now();
+    private static final Comparator<ScheduledFutureTask<?>>
+            SCHEDULED_FUTURE_TASK_COMPARATOR = ScheduledFutureTask::compareTo;
 
     /** 执行线程 */
     private volatile Thread thread;
@@ -43,7 +48,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 任务队列 */
     private final BlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<>();
     /** 调度任务队列 */
-    private final Queue<ScheduledFutureTask<?>> scheduledTaskQueue = new PriorityQueue<>();
+    private final PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue = new DefaultPriorityQueue<>(SCHEDULED_FUTURE_TASK_COMPARATOR, 11);
     /** 所属线程池 */
     private final Executor executor;
     /** 绑定线程是否已interrupted */
@@ -372,7 +377,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         if (state > ST_STARTED) {
             reject();
         }
-        if (taskQueue.offer(task)) {
+        if (!taskQueue.offer(task)) {
             reject(task);
         }
     }
@@ -410,17 +415,6 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     /**
-     * 唤醒
-     */
-    protected void wakeup(boolean inEventLoop) {
-        if (!inEventLoop) {
-            // Use offer as we actually only need this to unblock the thread and if offer fails we do not care as there
-            // is already something in the queue.
-            taskQueue.offer(WAKEUP_TASK);
-        }
-    }
-
-    /**
      * 启动线程
      */
     private void startThread() {
@@ -452,6 +446,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     private <V> ScheduledFuture<V> schedule(ScheduledFutureTask<V> task) {
         if (isInEventLoop()) {
             scheduledTaskQueue.add(task);
+            //todo 需要wake up
         } else {
             throw new UnsupportedOperationException("unsupport schedule out of event loop");
         }
@@ -482,7 +477,6 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
      * @return 调度队列头的调度task
      */
     private ScheduledFutureTask<?> peekScheduledTask() {
-        Queue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
         return scheduledTaskQueue.peek();
     }
 
@@ -491,7 +485,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
             return true;
         }
 
-        long deadlineTime = now();
+        long deadlineTime = now() - createTime;
         for (; ; ) {
             Runnable scheduledTask = pollScheduledTask(deadlineTime);
             if (scheduledTask == null) {
@@ -517,15 +511,10 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
      * 取出task
      */
     private Runnable takeTask() throws InterruptedException {
-        BlockingQueue<Runnable> taskQueue = this.taskQueue;
         for (; ; ) {
             ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
             if (scheduledTask == null) {
-                Runnable task = taskQueue.take();
-                if (task == WAKEUP_TASK) {
-                    task = null;
-                }
-                return task;
+                return taskQueue.take();
             } else {
                 long delayTime = scheduledTask.getDelay(timeUnit);
                 Runnable task = null;
@@ -598,7 +587,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /**
      * 包装task信息, 装饰器
      */
-    private class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableScheduledFuture<V> {
+    private class ScheduledFutureTask<V> extends FutureTask<V> implements RunnableScheduledFuture<V>, PriorityQueueNode {
         /**
          * 间隔时间, nanoTime
          * 固定时间间隔模式, > 0
@@ -607,6 +596,10 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         private final long period;
         /** 触发时间, nanoTime */
         private long triggerTime;
+        /**
+         *
+         */
+        private int queueIndex = INDEX_NOT_IN_QUEUE;
 
         ScheduledFutureTask(Runnable r) {
             this(r, null, 0, 0);
@@ -653,16 +646,17 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
          */
         @Override
         public long getDelay(TimeUnit unit) {
-            return unit.convert(triggerTime - now(), timeUnit);
+            return unit.convert(triggerTime - now() + createTime, timeUnit);
         }
 
+        @SuppressWarnings("rawtypes")
         @Override
         public int compareTo(@Nonnull Delayed other) {
-            if (other == this) // compare zero if same object
-            {
+            if (other == this) {
+                // compare zero if same object
                 return 0;
             }
-            long diff = getDelay(timeUnit) - other.getDelay(timeUnit);
+            long diff = triggerTime - ((ScheduledFutureTask) other).triggerTime;
             return (diff < 0) ? -1 : (diff > 0) ? 1 : 0;
         }
 
@@ -678,11 +672,14 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
          * 初始化下次触发时间
          */
         private void initNextRunTime(long delay, long period) {
-            this.triggerTime = now() + delay;
+            this.triggerTime = now() - createTime + delay;
             if (period > 0) {
                 this.triggerTime += period;
             } else if (period < 0) {
                 this.triggerTime += (-period);
+            }
+            if (triggerTime < 0) {
+                triggerTime = Long.MAX_VALUE;
             }
         }
 
@@ -694,6 +691,9 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                 triggerTime = fixedRate();
             } else {
                 triggerTime = fixedDelay();
+            }
+            if (triggerTime < 0) {
+                triggerTime = Long.MAX_VALUE;
             }
         }
 
@@ -709,7 +709,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
          */
         private long fixedDelay() {
             long delay = -period;
-            return now() +
+            return now() - createTime +
                     ((delay < (Long.MAX_VALUE >> 1)) ? delay : overflowFree(delay));
         }
 
@@ -754,6 +754,16 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                 }
             }
         }
+
+        @Override
+        public int priorityQueueIndex(DefaultPriorityQueue<?> queue) {
+            return queueIndex;
+        }
+
+        @Override
+        public void priorityQueueIndex(DefaultPriorityQueue<?> queue, int i) {
+            queueIndex = i;
+        }
     }
 
     /**
@@ -771,9 +781,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                 for (; ; ) {
                     try {
                         Runnable task = takeTask();
-                        if (Objects.nonNull(task)) {
-                            task.run();
-                        }
+                        task.run();
                     } catch (Exception e) {
                         if (e instanceof InterruptedException) {
                             break;

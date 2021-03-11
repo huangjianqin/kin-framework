@@ -31,6 +31,7 @@ public class SingleThreadLoopTest {
                 }
             });
         }
+
         Thread.sleep(60_000);
 
         System.out.println(counter == successCounter.get());

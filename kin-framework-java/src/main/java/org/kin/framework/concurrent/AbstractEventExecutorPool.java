@@ -37,11 +37,11 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
 
     public AbstractEventExecutorPool(int coreSize) {
         this(coreSize, new GenericEventExecutorChooser(),
-                StringUtils.firstLowerCase(AbstractEventExecutorPool.class.getSimpleName()));
+                StringUtils.firstLowerCase("EventExecutorPool"));
     }
 
     public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser) {
-        this(coreSize, chooser, StringUtils.firstLowerCase(AbstractEventExecutorPool.class.getSimpleName()));
+        this(coreSize, chooser, StringUtils.firstLowerCase("EventExecutorPool"));
     }
 
     public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser, String workerNamePrefix) {
