@@ -21,7 +21,7 @@ public class OrderedEventLoopTest {
         AtomicInteger successCounter = new AtomicInteger();
         for (int j = 0; j < 5; j++) {
             executionContext.execute(() -> {
-                for (int i = 0; i < 1000000; i++) {
+                for (int i = 0; i < 1_000_000; i++) {
                     next.execute(() -> add());
                     next.receive(p -> add());
                     next.schedule(() -> add(), 1, TimeUnit.SECONDS);

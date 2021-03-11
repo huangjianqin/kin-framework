@@ -414,7 +414,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
             if (STATE_UPDATER.compareAndSet(this, ST_NOT_STARTED, ST_STARTED)) {
                 boolean success = false;
                 try {
-                    executor.execute(new InternalLoop());
+                    executor.execute(new Loop());
                     success = true;
                 } finally {
                     if (!success) {
@@ -632,7 +632,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
             } else if (super.runAndReset()) {
                 //循环定时任务
                 setNextRunTime();
-                if (isRunning()) {
+                if (!isCancelled()) {
                     //线程还运行中, 入队
                     addTask(this);
                 }
@@ -643,7 +643,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /**
      * 线程run方法逻辑
      */
-    private class InternalLoop implements Runnable {
+    private class Loop implements Runnable {
         @Override
         public void run() {
             thread = Thread.currentThread();
@@ -653,12 +653,15 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
 
             try {
                 for (; ; ) {
+                    if (isShutdown()) {
+                        break;
+                    }
                     try {
                         ScheduledFutureTask<?> task = takeTask();
                         task.run();
                     } catch (Exception e) {
                         if (e instanceof InterruptedException) {
-                            return;
+                            break;
                         }
                         error("Unexpected exception from an runned Task: ", e);
                     }

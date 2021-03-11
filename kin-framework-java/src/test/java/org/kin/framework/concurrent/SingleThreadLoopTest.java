@@ -19,7 +19,7 @@ public class SingleThreadLoopTest {
         AtomicInteger successCounter = new AtomicInteger();
         for (int j = 0; j < 5; j++) {
             executionContext.execute(() -> {
-                for (int i = 0; i < 1000000; i++) {
+                for (int i = 0; i < 1_000_000; i++) {
                     eventLoop.execute(() -> add());
                     eventLoop.receive(p -> add());
                     eventLoop.schedule(() -> add(), 1, TimeUnit.SECONDS);
@@ -29,7 +29,7 @@ public class SingleThreadLoopTest {
                 }
             });
         }
-        Thread.sleep(150_000);
+        Thread.sleep(60_000);
 
         System.out.println(counter == successCounter.get());
         System.out.println(counter);

@@ -32,7 +32,7 @@ public class OrderedEventLoop<P extends OrderedEventLoop<P>> implements EventLoo
     /** 是否已关闭 */
     private volatile boolean stopped = false;
     /** 内置Runnable */
-    private final Runner runner = new Runner();
+    private final Loop loop = new Loop();
 
     public OrderedEventLoop(EventLoopGroup<P> eventLoopGroup, ExecutionContext executionContext) {
         this.eventLoopGroup = eventLoopGroup;
@@ -93,7 +93,7 @@ public class OrderedEventLoop<P extends OrderedEventLoop<P>> implements EventLoo
      */
     private void tryRun() {
         if (!isShutdown() && boxSize.incrementAndGet() == 1) {
-            executionContext.execute(runner);
+            executionContext.execute(loop);
         }
     }
 
@@ -106,8 +106,8 @@ public class OrderedEventLoop<P extends OrderedEventLoop<P>> implements EventLoo
 
     @Override
     public boolean isInEventLoop(Thread thread) {
-        if (isShutdown() && Objects.nonNull(runner.currentThread)) {
-            return runner.currentThread == Thread.currentThread();
+        if (isShutdown() && Objects.nonNull(loop.currentThread)) {
+            return loop.currentThread == Thread.currentThread();
         }
 
         return false;
@@ -141,6 +141,7 @@ public class OrderedEventLoop<P extends OrderedEventLoop<P>> implements EventLoo
         return schedule(runnable2Message(command), delay, unit);
     }
 
+    @Deprecated
     @Override
     public <V> ScheduledFuture<V> schedule(@Nonnull Callable<V> callable, long delay, @Nonnull TimeUnit unit) {
         throw new UnsupportedOperationException();
@@ -156,41 +157,49 @@ public class OrderedEventLoop<P extends OrderedEventLoop<P>> implements EventLoo
         return scheduleWithFixedDelay(runnable2Message(command), initialDelay, delay, unit);
     }
 
+    @Deprecated
     @Override
     public List<Runnable> shutdownNow() {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public <T> Future<T> submit(@Nonnull Callable<T> task) {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public <T> Future<T> submit(@Nonnull Runnable task, T result) {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public Future<?> submit(@Nonnull Runnable task) {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public <T> List<Future<T>> invokeAll(@Nonnull Collection<? extends Callable<T>> tasks) throws InterruptedException {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public <T> List<Future<T>> invokeAll(@Nonnull Collection<? extends Callable<T>> tasks, long timeout, @Nonnull TimeUnit unit) throws InterruptedException {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public <T> T invokeAny(@Nonnull Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     @Override
     public <T> T invokeAny(@Nonnull Collection<? extends Callable<T>> tasks, long timeout, @Nonnull TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         throw new UnsupportedOperationException();
@@ -202,7 +211,7 @@ public class OrderedEventLoop<P extends OrderedEventLoop<P>> implements EventLoo
     }
 
     //------------------------------------------------------------------------------------------------------------------------------
-    private class Runner implements Runnable {
+    private class Loop implements Runnable {
         /** 当前占用线程, 因为存在线程问题, 不能set null */
         private volatile Thread currentThread;
 
