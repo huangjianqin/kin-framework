@@ -1,5 +1,7 @@
 package org.kin.framework.concurrent;
 
+import org.kin.framework.utils.TimeUtils;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,6 +18,12 @@ public class SingleThreadLoopTest {
         SingleThreadEventLoopGroup eventLoopGroup = new SingleThreadEventLoopGroup(5);
         SingleThreadEventLoop eventLoop = eventLoopGroup.next();
 
+        eventLoop.execute(() -> {
+            System.out.println(TimeUtils.timestamp());
+            eventLoop.schedule(() -> System.out.println(TimeUtils.timestamp() + "---1"), 10, TimeUnit.SECONDS);
+            eventLoop.schedule(p -> System.out.println(TimeUtils.timestamp() + "---2"), 25000, TimeUnit.MILLISECONDS);
+        });
+
         AtomicInteger successCounter = new AtomicInteger();
         for (int j = 0; j < 5; j++) {
             executionContext.execute(() -> {
@@ -31,6 +39,7 @@ public class SingleThreadLoopTest {
                 }
             });
         }
+
 
         Thread.sleep(60_000);
 

@@ -107,7 +107,6 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
             //等待所有Executor Shutdown
             boolean allShutdown = true;
             for (EventExecutor executor : eventExecutors) {
-                //todo shutdown不了
                 if (!executor.isShutdown()) {
                     allShutdown = false;
                     break;

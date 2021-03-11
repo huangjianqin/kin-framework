@@ -30,12 +30,12 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 原子更新状态值 */
     private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
-    /**
-     *
-     */
-    private final long createTime = now();
+    /** 调度task 通用Comparator */
     private static final Comparator<ScheduledFutureTask<?>>
             SCHEDULED_FUTURE_TASK_COMPARATOR = ScheduledFutureTask::compareTo;
+
+    /** 实例创建时间 */
+    private final long createTime = now();
 
     /** 执行线程 */
     private volatile Thread thread;
@@ -53,9 +53,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     private final Executor executor;
     /** 绑定线程是否已interrupted */
     private volatile boolean interrupted;
-    /**
-     * 是否时间敏感(也就是随系统时间发生变化而变化), 则TimeUnit.MILLISECONDS, 否则是TimeUnit.NANOSECONDS
-     */
+    /** 是否时间敏感(也就是随系统时间发生变化而变化), 则TimeUnit.MILLISECONDS, 否则是TimeUnit.NANOSECONDS */
     private final TimeUnit timeUnit;
     /** 所属group */
     private final EventExecutorGroup parent;
@@ -101,6 +99,15 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         }
     }
 
+    /**
+     * 用该时间作为now基准, 以提高数值运算效率
+     *
+     * @return 时间间隔
+     */
+    private long interval() {
+        return now() - createTime;
+    }
+
     @Override
     public void shutdown() {
         synchronized (this) {
@@ -126,9 +133,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
             shutdown();
 
             taskQueue.drainTo(taskList);
-            if (!taskQueue.isEmpty()) {
-                taskList.addAll(Arrays.asList(taskQueue.toArray(new Runnable[0])));
-            }
+            taskList.addAll(Arrays.asList(scheduledTaskQueue.toArray(new Runnable[0])));
         }
         return taskList;
     }
@@ -275,7 +280,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         Preconditions.checkArgument(CollectionUtils.isNonEmpty(tasks), "tasks is empty");
 
         boolean timed = timeout > 0;
-        long realTimeout = timeUnit.convert(timeout, unit);
+        long realTimeout = Objects.nonNull(unit) ? timeUnit.convert(timeout, unit) : 0;
         int ntasks = tasks.size();
         ArrayList<Future<T>> futures = new ArrayList<Future<T>>(ntasks);
         ExecutorCompletionService<T> ecs =
@@ -371,7 +376,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     //------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * 任务入队
+     * task入队
      */
     private void addTask(Runnable task) {
         if (state > ST_STARTED) {
@@ -383,7 +388,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     /**
-     * 执行task
+     * 执行task同一入口
      */
     private void execute0(Runnable task) {
         addTask(task);
@@ -446,7 +451,6 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     private <V> ScheduledFuture<V> schedule(ScheduledFutureTask<V> task) {
         if (isInEventLoop()) {
             scheduledTaskQueue.add(task);
-            //todo 需要wake up
         } else {
             throw new UnsupportedOperationException("unsupport schedule out of event loop");
         }
@@ -480,25 +484,31 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         return scheduledTaskQueue.peek();
     }
 
-    private boolean fetchFromScheduledTaskQueue() {
+    /**
+     * 从调度队列fetch并把task push到taskqueue
+     */
+    private void fetchFromScheduledTaskQueue() {
         if (scheduledTaskQueue.isEmpty()) {
-            return true;
+            return;
         }
 
         long deadlineTime = now() - createTime;
         for (; ; ) {
             Runnable scheduledTask = pollScheduledTask(deadlineTime);
             if (scheduledTask == null) {
-                return true;
+                return;
             }
             if (!taskQueue.offer(scheduledTask)) {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
                 scheduledTaskQueue.add((ScheduledFutureTask<?>) scheduledTask);
-                return false;
+                return;
             }
         }
     }
 
+    /**
+     * 从队列头开始移除过期的调度task
+     */
     private Runnable pollScheduledTask(long deadlineTime) {
         ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
         if (scheduledTask == null || scheduledTask.triggerTime - deadlineTime > 0) {
@@ -508,6 +518,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     /**
+     * main
      * 取出task
      */
     private Runnable takeTask() throws InterruptedException {
@@ -547,12 +558,11 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
      * 取消所有未执行的调度task
      */
     private void cancelScheduledTasks() {
-        Queue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
         if (CollectionUtils.isNonEmpty(scheduledTaskQueue)) {
             return;
         }
 
-        final ScheduledFutureTask<?>[] scheduledTasks =
+        ScheduledFutureTask<?>[] scheduledTasks =
                 scheduledTaskQueue.toArray(new ScheduledFutureTask<?>[0]);
 
         for (ScheduledFutureTask<?> task : scheduledTasks) {
@@ -596,9 +606,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         private final long period;
         /** 触发时间, nanoTime */
         private long triggerTime;
-        /**
-         *
-         */
+        /** priority queue下标, 用与排序 */
         private int queueIndex = INDEX_NOT_IN_QUEUE;
 
         ScheduledFutureTask(Runnable r) {
@@ -646,7 +654,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
          */
         @Override
         public long getDelay(TimeUnit unit) {
-            return unit.convert(triggerTime - now() + createTime, timeUnit);
+            return unit.convert(triggerTime - interval(), timeUnit);
         }
 
         @SuppressWarnings("rawtypes")
@@ -672,7 +680,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
          * 初始化下次触发时间
          */
         private void initNextRunTime(long delay, long period) {
-            this.triggerTime = now() - createTime + delay;
+            this.triggerTime = interval() + delay;
             if (period > 0) {
                 this.triggerTime += period;
             } else if (period < 0) {
@@ -709,7 +717,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
          */
         private long fixedDelay() {
             long delay = -period;
-            return now() - createTime +
+            return interval() +
                     ((delay < (Long.MAX_VALUE >> 1)) ? delay : overflowFree(delay));
         }
 

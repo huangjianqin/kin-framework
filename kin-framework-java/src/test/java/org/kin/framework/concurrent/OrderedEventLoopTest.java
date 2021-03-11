@@ -1,5 +1,7 @@
 package org.kin.framework.concurrent;
 
+import org.kin.framework.utils.TimeUtils;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,16 +18,22 @@ public class OrderedEventLoopTest {
         ExecutionContext executionContext = ExecutionContext.cache("worker", 1, "worker_scheudle");
         FixOrderedEventLoopGroup pool = new FixOrderedEventLoopGroup(num, executionContext, OrderedEventLoop::new);
 
-        OrderedEventLoop next = pool.next(0);
+        OrderedEventLoop eventLoop = pool.next(0);
+
+        eventLoop.execute(() -> {
+            System.out.println(TimeUtils.timestamp());
+            eventLoop.schedule(() -> System.out.println(TimeUtils.timestamp() + "---1"), 10, TimeUnit.SECONDS);
+            eventLoop.schedule(p -> System.out.println(TimeUtils.timestamp() + "---2"), 25000, TimeUnit.MILLISECONDS);
+        });
 
         AtomicInteger successCounter = new AtomicInteger();
         for (int j = 0; j < 5; j++) {
             executionContext.execute(() -> {
                 for (int i = 0; i < 1_000_000; i++) {
-                    next.execute(() -> add());
-                    next.receive(p -> add());
-                    next.schedule(() -> add(), 1, TimeUnit.SECONDS);
-                    next.schedule(p -> add(), 1, TimeUnit.SECONDS);
+                    eventLoop.execute(() -> add());
+                    eventLoop.receive(p -> add());
+                    eventLoop.schedule(() -> add(), 1, TimeUnit.SECONDS);
+                    eventLoop.schedule(p -> add(), 1, TimeUnit.SECONDS);
 
                     successCounter.addAndGet(4);
                 }
