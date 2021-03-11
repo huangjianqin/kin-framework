@@ -22,8 +22,10 @@ public class SingleThreadLoopTest {
                 for (int i = 0; i < 1_000_000; i++) {
                     eventLoop.execute(() -> add());
                     eventLoop.receive(p -> add());
-                    eventLoop.schedule(() -> add(), 1, TimeUnit.SECONDS);
-                    eventLoop.schedule(p -> add(), 1, TimeUnit.SECONDS);
+                    eventLoop.execute(() -> {
+                        eventLoop.schedule(() -> add(), 1, TimeUnit.SECONDS);
+                        eventLoop.schedule(p -> add(), 1, TimeUnit.SECONDS);
+                    });
 
                     successCounter.addAndGet(4);
                 }

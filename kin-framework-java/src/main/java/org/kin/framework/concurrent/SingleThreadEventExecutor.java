@@ -9,8 +9,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import static java.util.concurrent.TimeUnit.NANOSECONDS;
-
 /**
  * 拥有调度能力的单线程Executor
  * 所有消息, 包括调度都在同一Executor(线程)处理
@@ -29,6 +27,11 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 原子更新状态值 */
     private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
+
+    /** 唤醒task, 单例, 标识, Do nothing */
+    private static final Runnable WAKEUP_TASK = () -> {
+    };
+
     /** 执行线程 */
     private volatile Thread thread;
     /** 线程锁, 用于关闭时阻塞 */
@@ -38,7 +41,9 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 状态值 */
     private volatile int state = ST_NOT_STARTED;
     /** 任务队列 */
-    private final BlockingQueue<ScheduledFutureTask<?>> taskQueue = new DelayQueue<>();
+    private final BlockingQueue<Runnable> taskQueue = new LinkedBlockingQueue<>();
+    /** 调度任务队列 */
+    private final Queue<ScheduledFutureTask<?>> scheduledTaskQueue = new PriorityQueue<>();
     /** 所属线程池 */
     private final Executor executor;
     /** 绑定线程是否已interrupted */
@@ -73,7 +78,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         if (timeSensitive) {
             timeUnit = TimeUnit.MILLISECONDS;
         } else {
-            timeUnit = NANOSECONDS;
+            timeUnit = TimeUnit.NANOSECONDS;
         }
         this.rejectedExecutionHandler = rejectedExecutionHandler;
     }
@@ -94,10 +99,13 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     @Override
     public void shutdown() {
         synchronized (this) {
-            if (state < ST_STARTED || state >= ST_SHUTTING_DOWN) {
-                //未开始
+            if (state >= ST_SHUTTING_DOWN) {
                 //已结束
                 return;
+            }
+            if (state < ST_STARTED) {
+                //未开始
+                STATE_UPDATER.set(SingleThreadEventExecutor.this, ST_TERMINATED);
             }
 
             if (Objects.nonNull(thread)) {
@@ -151,7 +159,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     public <T> Future<T> submit(@Nonnull Callable<T> task) {
         Preconditions.checkNotNull(task, "task is null");
         ScheduledFutureTask<T> futureTask = new ScheduledFutureTask<>(task);
-        lazyExecute(futureTask);
+        execute(futureTask);
         return futureTask;
     }
 
@@ -159,7 +167,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     public <T> Future<T> submit(@Nonnull Runnable task, T result) {
         Preconditions.checkNotNull(task, "task is null");
         ScheduledFutureTask<T> futureTask = new ScheduledFutureTask<>(task, result);
-        lazyExecute(futureTask);
+        execute(futureTask);
         return futureTask;
     }
 
@@ -324,43 +332,35 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     public void execute(@Nonnull Runnable command) {
         Preconditions.checkNotNull(command, "task is null");
 
-        lazyExecute(new ScheduledFutureTask<>(command));
+        execute0(command);
     }
 
     @Override
     public ScheduledFuture<?> schedule(@Nonnull Runnable command, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(delay, unit));
-        lazyExecute(futureTask);
-        return futureTask;
+        return schedule(new ScheduledFutureTask<>(command, timeUnit.convert(delay, unit)));
     }
 
     @Override
     public ScheduledFuture<?> scheduleAtFixedRate(@Nonnull Runnable command, long initialDelay, long period, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(period, unit));
-        lazyExecute(futureTask);
-        return futureTask;
+        return schedule(new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(period, unit)));
     }
 
     @Override
     public <V> ScheduledFuture<V> schedule(@Nonnull Callable<V> callable, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(callable, "task is null");
 
-        ScheduledFutureTask<V> futureTask = new ScheduledFutureTask<>(callable, timeUnit.convert(delay, unit));
-        lazyExecute(futureTask);
-        return futureTask;
+        return schedule(new ScheduledFutureTask<>(callable, timeUnit.convert(delay, unit)));
     }
 
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(@Nonnull Runnable command, long initialDelay, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        ScheduledFutureTask<?> futureTask = new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(-delay, unit));
-        lazyExecute(futureTask);
-        return futureTask;
+        return schedule(new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(-delay, unit)));
     }
 
     //------------------------------------------------------------------------------------------------------------------------
@@ -368,19 +368,22 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /**
      * 任务入队
      */
-    private void addTask(ScheduledFutureTask<?> task) {
+    private void addTask(Runnable task) {
         if (state > ST_STARTED) {
-            return;
+            reject();
         }
-        taskQueue.offer(task);
+        if (taskQueue.offer(task)) {
+            reject(task);
+        }
     }
 
     /**
-     * 懒初始化, 并执行task
+     * 执行task
      */
-    private void lazyExecute(ScheduledFutureTask<?> task) {
+    private void execute0(Runnable task) {
         addTask(task);
-        if (!isInEventLoop()) {
+        boolean inEventLoop = isInEventLoop();
+        if (!inEventLoop) {
             if (state > ST_NOT_STARTED) {
                 return;
             }
@@ -407,6 +410,17 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     /**
+     * 唤醒
+     */
+    protected void wakeup(boolean inEventLoop) {
+        if (!inEventLoop) {
+            // Use offer as we actually only need this to unblock the thread and if offer fails we do not care as there
+            // is already something in the queue.
+            taskQueue.offer(WAKEUP_TASK);
+        }
+    }
+
+    /**
      * 启动线程
      */
     private void startThread() {
@@ -428,9 +442,21 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /**
      * 移除task
      */
-    private boolean removeTask(ScheduledFutureTask<?> task) {
+    private boolean removeTask(Runnable task) {
         return taskQueue.remove(task);
+    }
 
+    /**
+     * 调度task统一接口
+     */
+    private <V> ScheduledFuture<V> schedule(ScheduledFutureTask<V> task) {
+        if (isInEventLoop()) {
+            scheduledTaskQueue.add(task);
+        } else {
+            throw new UnsupportedOperationException("unsupport schedule out of event loop");
+        }
+
+        return task;
     }
 
     /**
@@ -453,20 +479,98 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     }
 
     /**
+     * @return 调度队列头的调度task
+     */
+    private ScheduledFutureTask<?> peekScheduledTask() {
+        Queue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
+        return scheduledTaskQueue.peek();
+    }
+
+    private boolean fetchFromScheduledTaskQueue() {
+        if (scheduledTaskQueue.isEmpty()) {
+            return true;
+        }
+
+        long deadlineTime = now();
+        for (; ; ) {
+            Runnable scheduledTask = pollScheduledTask(deadlineTime);
+            if (scheduledTask == null) {
+                return true;
+            }
+            if (!taskQueue.offer(scheduledTask)) {
+                // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
+                scheduledTaskQueue.add((ScheduledFutureTask<?>) scheduledTask);
+                return false;
+            }
+        }
+    }
+
+    private Runnable pollScheduledTask(long deadlineTime) {
+        ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+        if (scheduledTask == null || scheduledTask.triggerTime - deadlineTime > 0) {
+            return null;
+        }
+        return scheduledTaskQueue.remove();
+    }
+
+    /**
      * 取出task
      */
-    private ScheduledFutureTask<?> takeTask() throws InterruptedException {
-        return taskQueue.take();
+    private Runnable takeTask() throws InterruptedException {
+        BlockingQueue<Runnable> taskQueue = this.taskQueue;
+        for (; ; ) {
+            ScheduledFutureTask<?> scheduledTask = peekScheduledTask();
+            if (scheduledTask == null) {
+                Runnable task = taskQueue.take();
+                if (task == WAKEUP_TASK) {
+                    task = null;
+                }
+                return task;
+            } else {
+                long delayTime = scheduledTask.getDelay(timeUnit);
+                Runnable task = null;
+                if (delayTime > 0) {
+                    task = taskQueue.poll(delayTime, timeUnit);
+                }
+
+                if (task == null) {
+                    // We need to fetch the scheduled tasks now as otherwise there may be a chance that
+                    // scheduled tasks are never executed if there is always one task in the taskQueue.
+                    fetchFromScheduledTaskQueue();
+                    task = taskQueue.poll();
+                }
+
+                if (task != null) {
+                    return task;
+                }
+            }
+        }
     }
 
     /**
      * 取消所有未执行的task
      */
     private void cancelAllTasks() {
-        ScheduledFutureTask<?>[] scheduledFutureTasks = taskQueue.toArray(new ScheduledFutureTask<?>[0]);
-        for (ScheduledFutureTask<?> futureTask : scheduledFutureTasks) {
-            futureTask.cancel(true);
+        cancelScheduledTasks();
+    }
+
+    /**
+     * 取消所有未执行的调度task
+     */
+    private void cancelScheduledTasks() {
+        Queue<ScheduledFutureTask<?>> scheduledTaskQueue = this.scheduledTaskQueue;
+        if (CollectionUtils.isNonEmpty(scheduledTaskQueue)) {
+            return;
         }
+
+        final ScheduledFutureTask<?>[] scheduledTasks =
+                scheduledTaskQueue.toArray(new ScheduledFutureTask<?>[0]);
+
+        for (ScheduledFutureTask<?> task : scheduledTasks) {
+            task.cancel(false);
+        }
+
+        scheduledTaskQueue.clear();
     }
 
     /**
@@ -527,7 +631,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         ScheduledFutureTask(Runnable r, V result, long delay, long period) {
             super(r, result);
             this.period = period;
-            this.triggerTime = now() + delay + period;
+            initNextRunTime(delay, period);
         }
 
         ScheduledFutureTask(Callable<V> c) {
@@ -541,7 +645,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         ScheduledFutureTask(Callable<V> c, long delay, long period) {
             super(c);
             this.period = period;
-            this.triggerTime = now() + delay + period;
+            initNextRunTime(delay, period);
         }
 
         /**
@@ -571,9 +675,21 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         }
 
         /**
+         * 初始化下次触发时间
+         */
+        private void initNextRunTime(long delay, long period) {
+            this.triggerTime = now() + delay;
+            if (period > 0) {
+                this.triggerTime += period;
+            } else if (period < 0) {
+                this.triggerTime += (-period);
+            }
+        }
+
+        /**
          * 循环定时任务, 更新下次触发时间
          */
-        private void setNextRunTime() {
+        private void updateNextRunTime() {
             if (period > 0) {
                 triggerTime = fixedRate();
             } else {
@@ -601,7 +717,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
          * 防溢出
          */
         private long overflowFree(long delay) {
-            Delayed head = SingleThreadEventExecutor.this.taskQueue.peek();
+            Delayed head = peekScheduledTask();
             if (head != null) {
                 long headDelay = head.getDelay(timeUnit);
                 if (headDelay < 0 && (delay - headDelay < 0)) {
@@ -631,10 +747,10 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                 super.run();
             } else if (super.runAndReset()) {
                 //循环定时任务
-                setNextRunTime();
+                updateNextRunTime();
                 if (!isCancelled()) {
                     //线程还运行中, 入队
-                    addTask(this);
+                    schedule(this);
                 }
             }
         }
@@ -653,12 +769,11 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
 
             try {
                 for (; ; ) {
-                    if (isShutdown()) {
-                        break;
-                    }
                     try {
-                        ScheduledFutureTask<?> task = takeTask();
-                        task.run();
+                        Runnable task = takeTask();
+                        if (Objects.nonNull(task)) {
+                            task.run();
+                        }
                     } catch (Exception e) {
                         if (e instanceof InterruptedException) {
                             break;
@@ -678,7 +793,6 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                 }
 
                 try {
-                    cancelAllTasks();
                     for (; ; ) {
                         int oldState = state;
                         if (oldState >= ST_SHUTDOWN || STATE_UPDATER.compareAndSet(
