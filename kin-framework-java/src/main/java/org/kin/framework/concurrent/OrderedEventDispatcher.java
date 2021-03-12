@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2020-04-26
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "unchecked"})
 public final class OrderedEventDispatcher<KEY, MSG> extends AbstractDispatcher<KEY, MSG> {
     /** OrderedEventLoopGroup */
     private final CachedOrderedEventLoopGroup group;
@@ -130,10 +130,9 @@ public final class OrderedEventDispatcher<KEY, MSG> extends AbstractDispatcher<K
     /**
      * 线程安全receiver
      */
-    @SuppressWarnings("rawtypes, unchecked")
     private class InternalReceiver<M> extends Receiver<M> {
         /** executor */
-        private OrderedEventLoop loop;
+        private EventLoop loop;
         /** Receiver实例 */
         private Receiver<M> proxy;
 
