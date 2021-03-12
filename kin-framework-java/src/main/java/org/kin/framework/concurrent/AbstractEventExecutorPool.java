@@ -9,6 +9,9 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 /**
  * {@link EventExecutor}池
+ * 基于{@link FastThreadLocalThreadFactory}
+ * 默认使用{@link FastThreadLocalThread}
+ * <p>
  * 抽象父类
  * 子类实现时, 需提供注册绑定EventExecutor的接口, 用于给外部组件绑定固定的EventExecutor, 类似于netty的EventLoop与channel的绑定
  *
@@ -45,7 +48,7 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
     }
 
     public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser, String workerNamePrefix) {
-        this(coreSize, chooser, ExecutionContext.fix(coreSize, workerNamePrefix));
+        this(coreSize, chooser, ExecutionContext.fix(coreSize, new FastThreadLocalThreadFactory(workerNamePrefix)));
     }
 
     public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser, ThreadFactory threadFactory) {
@@ -53,7 +56,7 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
     }
 
     public AbstractEventExecutorPool(int coreSize, String workerNamePrefix) {
-        this(coreSize, new GenericEventExecutorChooser(), ExecutionContext.fix(coreSize, workerNamePrefix));
+        this(coreSize, new GenericEventExecutorChooser(), ExecutionContext.fix(coreSize, new FastThreadLocalThreadFactory(workerNamePrefix)));
     }
 
     public AbstractEventExecutorPool(int coreSize, ThreadFactory threadFactory) {

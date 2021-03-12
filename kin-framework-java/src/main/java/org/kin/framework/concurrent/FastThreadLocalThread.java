@@ -70,4 +70,9 @@ public class FastThreadLocalThread extends Thread {
     public final void setThreadLocalMap(InternalThreadLocalMap threadLocalMap) {
         this.threadLocalMap = threadLocalMap;
     }
+
+    @Override
+    public String toString() {
+        return "FastThreadLocalThread{" + super.toString() + "}";
+    }
 }

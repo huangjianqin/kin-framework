@@ -21,7 +21,7 @@ public class OrderedEventLoopTest {
         OrderedEventLoop eventLoop = pool.next(0);
 
         eventLoop.execute(() -> {
-            System.out.println(TimeUtils.timestamp());
+            System.out.println(Thread.currentThread() + ">>>" + TimeUtils.timestamp());
             eventLoop.schedule(() -> System.out.println(TimeUtils.timestamp() + "---1"), 10, TimeUnit.SECONDS);
             eventLoop.schedule(p -> System.out.println(TimeUtils.timestamp() + "---2"), 25000, TimeUnit.MILLISECONDS);
         });

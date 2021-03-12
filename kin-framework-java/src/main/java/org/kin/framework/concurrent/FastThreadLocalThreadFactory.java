@@ -29,7 +29,7 @@ public class FastThreadLocalThreadFactory extends SimpleThreadFactory {
 
     @Override
     protected Thread newThread(ThreadGroup threadGroup, Runnable r, String prefix, int count) {
-        return new FastThreadLocalThread(threadGroup, new RunnableDecorator(r), prefix + count);
+        return new FastThreadLocalThread(threadGroup, new RunnableWrapper(r), prefix + count);
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -37,11 +37,11 @@ public class FastThreadLocalThreadFactory extends SimpleThreadFactory {
     /**
      * 包装Runnable, 该Runnable执行完后会移除所有FastThreadLocal
      */
-    private static final class RunnableDecorator implements Runnable {
+    private static final class RunnableWrapper implements Runnable {
 
         private final Runnable r;
 
-        RunnableDecorator(Runnable r) {
+        RunnableWrapper(Runnable r) {
             this.r = r;
         }
 
