@@ -11,7 +11,7 @@ import java.util.concurrent.*;
  * @author huangjianqin
  * @date 2020-05-18
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionExecutor<KEY> {
     /** 分区数 */
     private final int partitionNum;
