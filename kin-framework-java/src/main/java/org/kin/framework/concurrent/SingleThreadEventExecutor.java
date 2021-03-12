@@ -21,10 +21,15 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
  */
 public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     //状态枚举
+    /** not start */
     private static final byte ST_NOT_STARTED = 1;
+    /** started */
     private static final byte ST_STARTED = 2;
+    /** shutting down */
     private static final byte ST_SHUTTING_DOWN = 3;
+    /** shutdown */
     private static final byte ST_SHUTDOWN = 4;
+    /** terminated */
     private static final byte ST_TERMINATED = 5;
 
     /** 原子更新状态值 */
@@ -42,6 +47,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 线程锁, 用于关闭时阻塞 */
     private final CountDownLatch threadLock = new CountDownLatch(1);
 
+    /** task reject逻辑实现 */
     private final RejectedExecutionHandler rejectedExecutionHandler;
     /** 状态值 */
     private volatile int state = ST_NOT_STARTED;
@@ -572,13 +578,6 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         scheduledTaskQueue.clear();
     }
 
-    /**
-     * 是否运行中
-     */
-    private boolean isRunning() {
-        return state == ST_STARTED;
-    }
-
     @Override
     public EventExecutorGroup parent() {
         return parent;
@@ -606,7 +605,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         private final long period;
         /** 触发时间, nanoTime */
         private long triggerTime;
-        /** priority queue下标, 用与排序 */
+        /** priority queue下标, 用于排序 */
         private int queueIndex = INDEX_NOT_IN_QUEUE;
 
         ScheduledFutureTask(Runnable r) {

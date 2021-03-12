@@ -39,7 +39,7 @@ public class OrderedEventLoopTest {
                 }
             });
         }
-        Thread.sleep(60_000);
+        Thread.sleep(40_000);
 
         System.out.println(counter == successCounter.get());
         System.out.println(counter);

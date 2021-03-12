@@ -12,6 +12,10 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * 两者的区别在于{@link SingleThreadEventLoop}所有消息处理都在同一线程,
  * 而{@link OrderedEventLoop}保证消息按顺序处理, 但不保证在同一线程处理, 故{@link ThreadLocal}和{@link FastThreadLocal}都不能使用
+ * <p>
+ * 性能:
+ * 1. {@link SingleThreadEventLoop}要比{@link OrderedEventLoop}好, 接近netty DefaultEventExecutor
+ * 2. {@link OrderedEventLoop}性能接近于基于{@link java.util.concurrent.DelayQueue}实现的SingleThreadEventLoop(之前的版本, 看git)
  *
  * @author huangjianqin
  * @date 2021/3/10
