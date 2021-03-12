@@ -376,7 +376,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     public ScheduledFuture<?> scheduleWithFixedDelay(@Nonnull Runnable command, long initialDelay, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        return schedule(new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(-delay, unit)));
+        return schedule(new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), -timeUnit.convert(delay, unit)));
     }
 
     //------------------------------------------------------------------------------------------------------------------------
@@ -458,7 +458,10 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         if (isInEventLoop()) {
             scheduledTaskQueue.add(task);
         } else {
-            throw new UnsupportedOperationException("unsupport schedule out of event loop");
+            //not in event loop, just execute and in event loop
+            execute(() -> {
+                schedule(task);
+            });
         }
 
         return task;
