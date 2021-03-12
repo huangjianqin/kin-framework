@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
  * 性能:
  * 1. {@link SingleThreadEventLoop}要比{@link OrderedEventLoop}好, 接近netty DefaultEventExecutor
  * 2. {@link OrderedEventLoop}性能接近于基于{@link java.util.concurrent.DelayQueue}实现的SingleThreadEventLoop(之前的版本, 看git)
+ * 当前版本的{@link SingleThreadEventLoop}调度触发只能是在event loop内, 而之前版本基于{@link java.util.concurrent.DelayQueue}实现的SingleThreadEventLoop,
+ * 则支持非event loop内触发(异步)
  *
  * @author huangjianqin
  * @date 2021/3/10
