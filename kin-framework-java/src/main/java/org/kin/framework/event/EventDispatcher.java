@@ -1,7 +1,5 @@
 package org.kin.framework.event;
 
-import java.lang.reflect.Method;
-
 /**
  * 事件分发接口
  *
@@ -12,11 +10,10 @@ public interface EventDispatcher {
     /**
      * 注册事件处理器
      *
-     * @param eventClass 事件类
-     * @param handler    事件处理实例
-     * @param method     事件处理方法
+     * @param eventClass   事件类, 目前事件类最好比较native, 也就是不带泛型的, 也最好不是集合类, 数组等等
+     * @param eventHandler {@link EventHandler}实现类
      */
-    void register(Class<?> eventClass, Object handler, Method method);
+    <T> void register(Class<T> eventClass, EventHandler<T> eventHandler);
 
     /**
      * 分发事件
@@ -24,14 +21,6 @@ public interface EventDispatcher {
      * @param event 事件实例
      */
     void dispatch(Object event);
-
-    /**
-     * 分发事件
-     *
-     * @param event    事件实例
-     * @param callback callback回调
-     */
-    void dispatch(Object event, EventCallback callback);
 
     /**
      * shutdown
