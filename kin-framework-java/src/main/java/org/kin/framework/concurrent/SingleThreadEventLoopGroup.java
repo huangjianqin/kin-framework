@@ -28,6 +28,18 @@ public class SingleThreadEventLoopGroup extends SingleThreadEventExecutorPool im
         super(coreSize, chooser, executor);
     }
 
+    public SingleThreadEventLoopGroup(int coreSize, String workerNamePrefix) {
+        super(coreSize, workerNamePrefix);
+    }
+
+    public SingleThreadEventLoopGroup(int coreSize, ThreadFactory threadFactory) {
+        super(coreSize, threadFactory);
+    }
+
+    public SingleThreadEventLoopGroup(int coreSize, ExecutorService executor) {
+        super(coreSize, executor);
+    }
+
     @Override
     public SingleThreadEventLoop next() {
         return (SingleThreadEventLoop) super.next();

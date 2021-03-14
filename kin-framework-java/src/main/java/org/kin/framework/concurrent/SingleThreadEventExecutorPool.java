@@ -28,6 +28,18 @@ public class SingleThreadEventExecutorPool extends AbstractEventExecutorPool {
         super(coreSize, chooser, executor);
     }
 
+    public SingleThreadEventExecutorPool(int coreSize, String workerNamePrefix) {
+        super(coreSize, workerNamePrefix);
+    }
+
+    public SingleThreadEventExecutorPool(int coreSize, ThreadFactory threadFactory) {
+        super(coreSize, threadFactory);
+    }
+
+    public SingleThreadEventExecutorPool(int coreSize, ExecutorService executor) {
+        super(coreSize, executor);
+    }
+
     @Override
     protected EventExecutor newEventExecutor(ExecutorService executor) {
         return new SingleThreadEventExecutor(this, executor);
