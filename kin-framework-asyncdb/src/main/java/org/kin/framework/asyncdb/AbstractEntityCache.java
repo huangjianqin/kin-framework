@@ -43,7 +43,7 @@ public abstract class AbstractEntityCache<PK extends Serializable, E extends Asy
         }
         this.cache = cache;
 
-        List<Class<?>> genericTypes = ClassUtils.getSuperClassGenericActualTypes(getClass());
+        List<Class<?>> genericTypes = ClassUtils.getSuperClassGenericRawTypes(getClass());
         entityClass = (Class<E>) genericTypes.get(1);
     }
 

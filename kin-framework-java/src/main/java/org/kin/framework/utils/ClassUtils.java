@@ -536,19 +536,23 @@ public class ClassUtils {
      * 获取类泛型具体实现类型
      * 由于类型擦除, 获取不了本类的泛型类型参数具体类型, 但其保存的父类的泛型类型参数具体类型, 所以可以获取父类的泛型类型参数具体类型
      */
-    public static List<Class<?>> getSuperClassGenericActualTypes(Class<?> claxx) {
-        List<Class<?>> result = new ArrayList<>();
-
+    public static List<Type> getSuperClassGenericActualTypes(Class<?> claxx) {
         Type genericSuperclass = claxx.getGenericSuperclass();
-        for (Type actualTypeArgument : ((ParameterizedType) genericSuperclass).getActualTypeArguments()) {
-            if (actualTypeArgument instanceof ParameterizedType) {
-                result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
-            } else {
-                result.add((Class<?>) actualTypeArgument);
-            }
-        }
+        return new ArrayList<>(Arrays.asList(((ParameterizedType) genericSuperclass).getActualTypeArguments()));
+    }
 
-        return result;
+    /**
+     * 继承的父类
+     * 获取类泛型raw type(如果该类也是带泛型的, 则会丢掉泛型信息)
+     */
+    public static List<Class<?>> getSuperClassGenericRawTypes(Class<?> claxx) {
+        return getSuperClassGenericActualTypes(claxx).stream().map(type -> {
+            if (type instanceof ParameterizedType) {
+                return (Class<?>) ((ParameterizedType) type).getRawType();
+            } else {
+                return ((Class<?>) type);
+            }
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -559,14 +563,14 @@ public class ClassUtils {
      * @param claxx          接口实现类
      * @param interfaceClass 指定接口
      */
-    public static List<Class<?>> getSuperInterfacesGenericActualTypes(Class<?> interfaceClass, Class<?> claxx) {
+    public static List<Type> getSuperInterfacesGenericActualTypes(Class<?> interfaceClass, Class<?> claxx) {
         if (!interfaceClass.isAssignableFrom(claxx)) {
             //非实现类
             return Collections.emptyList();
         }
 
         //临时缓存父类泛型参数名字以及类型的对应关系
-        Map<String, Class<?>> paramName2Type = new HashMap<>();
+        Map<String, Type> paramName2Type = new HashMap<>();
         Type target = claxx;
         while (!Object.class.equals(target)) {
             Type[] genericInterfaces;
@@ -582,10 +586,8 @@ public class ClassUtils {
                 Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
                 TypeVariable<? extends Class<?>>[] typeParameters = parameterizedType.getRawType().getTypeParameters();
                 for (int i = 0; i < typeParameters.length; i++) {
-                    if (actualTypeArguments[i] instanceof Class) {
-                        TypeVariable<? extends Class<?>> typeVariable = typeParameters[i];
-                        paramName2Type.put(typeVariable.getName(), (Class<?>) actualTypeArguments[i]);
-                    }
+                    TypeVariable<? extends Class<?>> typeVariable = typeParameters[i];
+                    paramName2Type.put(typeVariable.getName(), actualTypeArguments[i]);
                 }
                 target = parameterizedType.getRawType().getGenericSuperclass();
             } else {
@@ -600,12 +602,9 @@ public class ClassUtils {
                     continue;
                 }
                 //找到对应的interfaceClass
-                List<Class<?>> result = new ArrayList<>();
+                List<Type> result = new ArrayList<>();
                 for (Type actualTypeArgument : parameterizedInterface.getActualTypeArguments()) {
-                    if (actualTypeArgument instanceof ParameterizedType) {
-                        //泛型参数类型
-                        result.add((Class<?>) ((ParameterizedType) actualTypeArgument).getRawType());
-                    } else if (actualTypeArgument instanceof TypeVariableImpl) {
+                    if (actualTypeArgument instanceof TypeVariableImpl) {
                         //父类中, 根据泛型参数名字获取对应的类型
                         TypeVariableImpl<?> typeVariable = (TypeVariableImpl<?>) actualTypeArgument;
                         String paramName = typeVariable.getName();
@@ -613,7 +612,7 @@ public class ClassUtils {
                             result.add(paramName2Type.get(paramName));
                         }
                     } else {
-                        result.add((Class<?>) actualTypeArgument);
+                        result.add(actualTypeArgument);
                     }
                 }
 
@@ -623,6 +622,23 @@ public class ClassUtils {
 
 
         return Collections.emptyList();
+    }
+
+    /**
+     * 实现的接口
+     * 获取指定接口的泛型raw type(如果该类也是带泛型的, 则会丢掉泛型信息)
+     *
+     * @param claxx          接口实现类
+     * @param interfaceClass 指定接口
+     */
+    public static List<Class<?>> getSuperInterfacesGenericRawTypes(Class<?> interfaceClass, Class<?> claxx) {
+        return getSuperInterfacesGenericActualTypes(interfaceClass, claxx).stream().map(type -> {
+            if (type instanceof ParameterizedType) {
+                return (Class<?>) ((ParameterizedType) type).getRawType();
+            } else {
+                return ((Class<?>) type);
+            }
+        }).collect(Collectors.toList());
     }
 
     /**

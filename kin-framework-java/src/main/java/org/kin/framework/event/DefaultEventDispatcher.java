@@ -1,9 +1,13 @@
 package org.kin.framework.event;
 
 import com.google.common.base.Preconditions;
+import org.kin.framework.utils.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +24,37 @@ public class DefaultEventDispatcher implements EventDispatcher, NullEventDispatc
     private static final Logger log = LoggerFactory.getLogger(DefaultEventDispatcher.class);
     /** key -> event class, vaklue -> event handler */
     protected final Map<Class<?>, EventHandler<?>> event2Handler = new ConcurrentHashMap<>();
+
+    /**
+     * 从{@link EventHandler}泛型中解析出事件raw type
+     *
+     * @param handleClass {@link EventHandler} class
+     */
+    protected Class<?> parseEventRawTypeFromHanlder(Class<?> handleClass) {
+        return parseEventRawType(ClassUtils.getSuperInterfacesGenericActualTypes(EventHandler.class, handleClass).get(0));
+    }
+
+    /**
+     * 从event class 泛型实际类型中解析出事件raw type
+     *
+     * @param eventActualType event class 泛型实际类型
+     */
+    protected Class<?> parseEventRawType(Type eventActualType) {
+        if (eventActualType instanceof ParameterizedType) {
+            ParameterizedType parameterType = (ParameterizedType) eventActualType;
+            Class<?> parameterRawType = (Class<?>) parameterType.getRawType();
+            if (Collection.class.isAssignableFrom(parameterRawType)) {
+                //事件合并, 获取第一个泛型参数真实类型
+                //以真实事件类型来注册事件处理器
+                return (Class<?>) parameterType.getActualTypeArguments()[0];
+            } else {
+                //普通事件
+                return parameterRawType;
+            }
+        } else {
+            return (Class<?>) eventActualType;
+        }
+    }
 
     @Override
     public <T> void register(Class<T> eventClass, EventHandler<T> eventHandler) {

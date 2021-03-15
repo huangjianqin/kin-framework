@@ -76,7 +76,7 @@ public final class AsyncDbService implements Closeable, LoggerOprs {
     public void register(Class<?> claxx, DbSynchronzier dbSynchronzier) {
         //校验dbSynchronzier的泛型类是否于claxx一致
         Class<? extends DbSynchronzier> implClass = dbSynchronzier.getClass();
-        List<Class<?>> genericTypes = ClassUtils.getSuperInterfacesGenericActualTypes(DbSynchronzier.class, implClass);
+        List<Class<?>> genericTypes = ClassUtils.getSuperInterfacesGenericRawTypes(DbSynchronzier.class, implClass);
         if (CollectionUtils.isEmpty(genericTypes)) {
             throw new IllegalArgumentException(String.format("%s doesn't have generic param", implClass));
         }

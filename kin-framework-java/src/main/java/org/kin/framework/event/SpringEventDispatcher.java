@@ -4,7 +4,6 @@ import org.kin.framework.proxy.Javassists;
 import org.kin.framework.proxy.MethodDefinition;
 import org.kin.framework.proxy.ProxyInvoker;
 import org.kin.framework.proxy.Proxys;
-import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -120,14 +118,7 @@ public class SpringEventDispatcher extends DefaultOrderedEventDispatcher impleme
                             if (EventDispatcher.class.isAssignableFrom(parameterRawType)) {
                                 dispatcherParamIndex = i;
                             } else {
-                                if (Collection.class.isAssignableFrom(parameterRawType)) {
-                                    //事件合并, 获取第一个泛型参数真实类型
-                                    //以真实事件类型来注册事件处理器
-                                    eventClass = (Class<?>) parameterType.getActualTypeArguments()[0];
-                                } else {
-                                    //普通事件
-                                    eventClass = parameterRawType;
-                                }
+                                eventClass = parseEventRawType(parameterType);
                             }
                         } else {
                             //普通事件
@@ -135,7 +126,7 @@ public class SpringEventDispatcher extends DefaultOrderedEventDispatcher impleme
                             if (EventDispatcher.class.isAssignableFrom(parameterType)) {
                                 dispatcherParamIndex = i;
                             } else {
-                                eventClass = parameterType;
+                                eventClass = parseEventRawType(parameterType);
                             }
                         }
                     }
@@ -148,9 +139,7 @@ public class SpringEventDispatcher extends DefaultOrderedEventDispatcher impleme
         //处理EventHandler bean
         Map<String, EventHandler> eventHandlerBeans = applicationContext.getBeansOfType(EventHandler.class);
         for (EventHandler eventHandler : eventHandlerBeans.values()) {
-            //获取EventHandler接口泛型类型
-            Class<?> eventClass = ClassUtils.getSuperInterfacesGenericActualTypes(EventHandler.class, eventHandler.getClass()).get(0);
-            register(eventClass, eventHandler);
+            register(parseEventRawTypeFromHanlder(eventHandler.getClass()), eventHandler);
         }
     }
 

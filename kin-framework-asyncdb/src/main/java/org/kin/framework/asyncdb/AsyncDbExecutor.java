@@ -121,7 +121,7 @@ class AsyncDbExecutor implements Closeable, LoggerOprs {
      */
     @SuppressWarnings("unchecked")
     public void addListener(EntityListener<?> listener) {
-        List<Class<?>> genericTypes = ClassUtils.getSuperInterfacesGenericActualTypes(EntityListener.class, listener.getClass());
+        List<Class<?>> genericTypes = ClassUtils.getSuperInterfacesGenericRawTypes(EntityListener.class, listener.getClass());
         this.listeners.put((Class<? extends AsyncDbEntity<?>>) genericTypes.get(0), listener);
     }
 

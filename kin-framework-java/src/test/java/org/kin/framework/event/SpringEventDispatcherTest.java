@@ -44,7 +44,7 @@ public class SpringEventDispatcherTest {
             Thread.sleep(200);
         }
 
-        Thread.sleep(10_000);
+        Thread.sleep(5_000);
         System.exit(0);
     }
 }
