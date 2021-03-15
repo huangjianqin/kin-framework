@@ -35,8 +35,38 @@ public final class OrderUtils {
     };
 
     /**
-     * @param o
-     * @return
+     * @return org.springframework.core.annotation.Order注解的value
+     */
+    @SuppressWarnings("unchecked")
+    public static int getSpringOrder(Object o) {
+        //寻找classpath里面有没有spring order注解, 如果有就优先使用spring order, 再解析自定义order注解
+        Class<? extends Annotation> springOrderClass = null;
+        try {
+            springOrderClass = (Class<? extends Annotation>) Class.forName("org.springframework.core.annotation.Order");
+        } catch (ClassNotFoundException e) {
+            //do nothing
+        }
+
+        if (Objects.nonNull(springOrderClass)) {
+            Annotation springOrderAnno = o.getClass().getAnnotation(springOrderClass);
+            if (Objects.nonNull(springOrderAnno)) {
+                try {
+                    Method valueMethod = springOrderClass.getMethod("value");
+                    if (!valueMethod.isAccessible()) {
+                        valueMethod.setAccessible(true);
+                    }
+                    return (int) valueMethod.invoke(springOrderAnno);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    //do nothing
+                }
+            }
+        }
+
+        throw new IllegalStateException("can't get org.springframework.core.annotation.Order's order value");
+    }
+
+    /**
+     * @see {@link OrderUtils#getOrder(Object, int)}
      */
     public static int getOrder(Object o) {
         return getOrder(o, Ordered.LOWEST_PRECEDENCE);
@@ -48,32 +78,14 @@ public final class OrderUtils {
      * @param defaultOrder 默认order value
      * @return 该实例的order value
      */
-    @SuppressWarnings("unchecked")
     public static int getOrder(Object o, int defaultOrder) {
         if (o instanceof Ordered) {
             return ((Ordered) o).getOrder();
         } else {
-            //寻找classpath里面有没有spring order注解, 如果有就优先使用spring order, 再解析自定义order注解
-            Class<? extends Annotation> springOrderClass = null;
             try {
-                springOrderClass = (Class<? extends Annotation>) Class.forName("org.springframework.core.annotation.Order");
-            } catch (ClassNotFoundException e) {
+                return getSpringOrder(o);
+            } catch (Exception e) {
                 //do nothing
-            }
-
-            if (Objects.nonNull(springOrderClass)) {
-                Annotation springOrderAnno = o.getClass().getAnnotation(springOrderClass);
-                if (Objects.nonNull(springOrderAnno)) {
-                    try {
-                        Method valueMethod = springOrderClass.getMethod("value");
-                        if (!valueMethod.isAccessible()) {
-                            valueMethod.setAccessible(true);
-                        }
-                        return (int) valueMethod.invoke(springOrderAnno);
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        //do nothing
-                    }
-                }
             }
 
             Order orderAnno = o.getClass().getAnnotation(Order.class);
