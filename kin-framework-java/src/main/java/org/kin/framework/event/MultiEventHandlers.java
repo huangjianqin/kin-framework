@@ -1,5 +1,6 @@
 package org.kin.framework.event;
 
+import org.kin.framework.utils.OrderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,7 @@ class MultiEventHandlers<T> implements EventHandler<T> {
 
     void addHandler(EventHandler<T> handler) {
         handlers.add(handler);
+        OrderUtils.sort(handlers);
     }
 
     //getter

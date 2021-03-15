@@ -5,6 +5,7 @@ import org.kin.framework.proxy.MethodDefinition;
 import org.kin.framework.proxy.ProxyInvoker;
 import org.kin.framework.proxy.Proxys;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.OrderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -12,6 +13,8 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
 
 import java.lang.reflect.Method;
@@ -20,6 +23,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 获取有{@link EventFunction}注解或者实现了{@link EventHandler}的bean并注册事件及其处理器
@@ -56,7 +60,13 @@ public class SpringEventDispatcher extends DefaultOrderedEventDispatcher impleme
      * @param dispatcherParamIndex EventDispatcher实现类的方法参数位置, 默认没有
      */
     private void register(Class<?> eventClass, Object proxy, Method method, int dispatcherParamIndex) {
-        register(eventClass, new MethodBaseEventHandler<>(getHandler(proxy, method), dispatcherParamIndex));
+        Order order = method.getAnnotation(Order.class);
+        register(eventClass,
+                new MethodBaseEventHandler<>(
+                        getHandler(proxy, method),
+                        dispatcherParamIndex,
+                        OrderUtils.getOrder(method,
+                                Objects.nonNull(order) ? order.value() : Ordered.LOWEST_PRECEDENCE)));
     }
 
     @Override

@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import java.util.List;
 
@@ -20,6 +21,12 @@ public class SpringEventDispatcherTest {
         SpringEventDispatcher dispatcher = new SpringEventDispatcher(SysUtils.getSuitableThreadNum(), true);
         dispatcher.register(FirstEvent.class, new FirstEventHandler());
         return dispatcher;
+    }
+
+    @Order(100)
+    @EventFunction
+    public void handleFirstEvent(FirstEvent event) {
+        System.out.println("priority handle " + event.toString());
     }
 
     @EventFunction

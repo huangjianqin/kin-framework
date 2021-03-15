@@ -1,5 +1,6 @@
 package org.kin.framework.event;
 
+import org.kin.framework.common.Ordered;
 import org.kin.framework.proxy.ProxyInvoker;
 
 /**
@@ -8,15 +9,22 @@ import org.kin.framework.proxy.ProxyInvoker;
  * @author huangjianqin
  * @date 2021/3/12
  */
-class MethodBaseEventHandler<T> implements EventHandler<T> {
+class MethodBaseEventHandler<T> implements EventHandler<T>, Ordered {
     /** 事件处理方法代理 */
     private final ProxyInvoker<?> proxy;
     /** EventDispatcher实现类的方法参数位置, 默认没有 */
     private final int dispatcherParamIndex;
+    /** 优先级 */
+    private final int order;
 
-    MethodBaseEventHandler(ProxyInvoker<?> proxy, int dispatcherParamIndex) {
+    public MethodBaseEventHandler(ProxyInvoker<?> proxy, int dispatcherParamIndex) {
+        this(proxy, dispatcherParamIndex, LOWEST_PRECEDENCE);
+    }
+
+    MethodBaseEventHandler(ProxyInvoker<?> proxy, int dispatcherParamIndex, int order) {
         this.proxy = proxy;
         this.dispatcherParamIndex = dispatcherParamIndex;
+        this.order = order;
     }
 
     @Override
@@ -30,6 +38,11 @@ class MethodBaseEventHandler<T> implements EventHandler<T> {
             params = new Object[]{event};
         }
         proxy.invoke(params);
+    }
+
+    @Override
+    public int getOrder() {
+        return order;
     }
 
     //getter

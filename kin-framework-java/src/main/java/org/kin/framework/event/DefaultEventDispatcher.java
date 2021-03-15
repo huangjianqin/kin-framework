@@ -75,20 +75,20 @@ public class DefaultEventDispatcher implements EventDispatcher, NullEventDispatc
     }
 
     /**
-     * 真正分派事件逻辑
+     * 分派事件逻辑
      */
-    protected void realDispatch(EventContext eventContext) {
+    protected void execDispatch(EventContext eventContext) {
         Object event = eventContext.getEvent();
-        realDispatch0(event.getClass(), event);
+        execDispatch0(event.getClass(), event);
     }
 
     /**
-     * 真正分派事件逻辑
+     * 分派事件逻辑
      *
      * @param eventClass 事件类型
      * @param event      事件实例
      */
-    protected final void realDispatch0(Class<?> eventClass, Object event) {
+    protected final void execDispatch0(Class<?> eventClass, Object event) {
         EventHandler handler = event2Handler.get(eventClass);
         if (handler != null) {
             try {
@@ -103,7 +103,7 @@ public class DefaultEventDispatcher implements EventDispatcher, NullEventDispatc
 
     @Override
     public void dispatch(Object event) {
-        realDispatch(new EventContext(event));
+        execDispatch(new EventContext(event));
     }
 
     @Override
