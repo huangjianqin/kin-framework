@@ -92,6 +92,13 @@ public class SysUtils {
     }
 
     /**
+     * @return boolean类型的system property value, 默认false
+     */
+    public static boolean getBoolSysProperty(String key) {
+        return getBoolSysProperty(key, false);
+    }
+
+    /**
      * @return boolean类型的system property value
      */
     public static boolean getBoolSysProperty(String key, boolean def) {
@@ -117,6 +124,13 @@ public class SysUtils {
     }
 
     /**
+     * @return int类型的system property value, 默认0
+     */
+    public static int getIntSysProperty(String key) {
+        return getIntSysProperty(key, 0);
+    }
+
+    /**
      * @return int类型的system property value
      */
     public static int getIntSysProperty(String key, int def) {
@@ -135,6 +149,13 @@ public class SysUtils {
         }
 
         return def;
+    }
+
+    /**
+     * @return long类型的system property value, 默认0
+     */
+    public static long getLongSysProperty(String key) {
+        return getLongSysProperty(key, 0);
     }
 
     /**
