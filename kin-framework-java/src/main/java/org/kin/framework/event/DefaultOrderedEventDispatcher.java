@@ -47,7 +47,7 @@ public class DefaultOrderedEventDispatcher extends DefaultEventDispatcher implem
             EventMergeContext eventMergeContext = CollectionUtils.putIfAbsent(mergeContexts, eventClass, new EventMergeContext(eventClass, eventMerge));
             eventMergeContext.mergeEvent(eventContext);
         } else {
-            execDispatch(eventContext);
+            doDispatch(eventContext);
         }
     }
 
@@ -153,7 +153,7 @@ public class DefaultOrderedEventDispatcher extends DefaultEventDispatcher implem
                     eventContexts.stream().collect(Collectors.groupingBy(EventContext::getPartitionId));
             for (Map.Entry<Integer, List<EventContext>> entry : partitionId2MergedEvents.entrySet()) {
                 executor.execute(entry.getKey(),
-                        () -> DefaultOrderedEventDispatcher.super.execDispatch0(
+                        () -> DefaultOrderedEventDispatcher.super.doDispatch(
                                 eventClass,
                                 entry.getValue().stream().map(EventContext::getEvent).collect(Collectors.toList())
                         )
