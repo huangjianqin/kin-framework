@@ -23,6 +23,9 @@ import static org.kin.framework.collection.PriorityQueueNode.INDEX_NOT_IN_QUEUE;
 
 /**
  * 效率比{@link java.util.PriorityQueue}稍高, 量级越高越明显
+ * 都是基于最小堆算法
+ * 区别:
+ * 额外支持item重排序, 并且可以通过index直接访问到对应的item
  * <p>
  * A priority queue which uses natural ordering of elements. Elements are also required to be of type
  * {@link PriorityQueueNode} for the purpose of maintaining the index in the priority queue.
