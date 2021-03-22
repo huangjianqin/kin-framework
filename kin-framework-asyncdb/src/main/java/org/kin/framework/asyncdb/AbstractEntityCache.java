@@ -213,20 +213,9 @@ public abstract class AbstractEntityCache<PK extends Serializable, E extends Asy
      * db操作之后执行, 不管成功与否
      */
     private void afterOperation(AsyncDbEntity<?> entity, DbOperation operation, Throwable ex) {
-        if (DbOperation.UPDATE.equals(operation)) {
-            afterUpdate(entity);
-        }
-
         if (DbOperation.DELETE.equals(operation)) {
             afterDelete(entity);
         }
-    }
-
-    /**
-     * update操作之后执行, 不管成功与否
-     */
-    private void afterUpdate(AsyncDbEntity<?> entity) {
-        entity.resetUpdating();
     }
 
     /**

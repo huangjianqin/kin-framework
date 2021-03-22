@@ -1,7 +1,6 @@
 package org.kin.framework.asyncdb;
 
 import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -15,8 +14,6 @@ public abstract class AsyncDbEntity<PK extends Serializable> implements Serializ
     private final AtomicReference<DbStatus> status = new AtomicReference<>(DbStatus.NORMAL);
     /** 数据库同步操作 */
     private volatile DbSynchronzier<PK, ?> dbSynchronzier;
-    /** 实体进行过update标识, 主要用于减少update的次数 */
-    private final AtomicBoolean updating = new AtomicBoolean();
     /** 是否支持删除操作 */
     private final boolean canDelete;
 
@@ -99,23 +96,6 @@ public abstract class AsyncDbEntity<PK extends Serializable> implements Serializ
         return true;
     }
 
-    /**
-     * 尝试获取进行更新, 如果前一次更新还未进行完, 本次则skip
-     */
-    boolean tryUpdate() {
-        return updating.compareAndSet(false, true);
-    }
-
-    /**
-     * 重置实体更新中标识
-     */
-    void resetUpdating() {
-        if (!updating.compareAndSet(true, false)) {
-            //异常, 直接set
-            updating.set(false);
-        }
-    }
-
     //setter && getter
     DbSynchronzier<PK, ?> getDbSynchronzier() {
         return dbSynchronzier;
@@ -131,9 +111,5 @@ public abstract class AsyncDbEntity<PK extends Serializable> implements Serializ
 
     public boolean isCanDelete() {
         return canDelete;
-    }
-
-    public AtomicBoolean getUpdating() {
-        return updating;
     }
 }

@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2019/3/31
  */
+@SuppressWarnings("rawtypes")
 public final class AsyncDbService implements Closeable, LoggerOprs {
     /** 单例 */
     private static AsyncDbService INSTANCE;
@@ -109,11 +110,6 @@ public final class AsyncDbService implements Closeable, LoggerOprs {
                     asyncDbEntity.setDbSynchronzier(dbSynchronzier);
                 }
                 if (asyncDbEntity.isCanPersist(operation)) {
-                    if (DbOperation.UPDATE.equals(operation) && !asyncDbEntity.tryUpdate()) {
-                        //队列中有该实体的update操作, 不需要再执行了, 直接返回true, 表示操作成功的
-                        return true;
-                    }
-
                     return workers.submit(asyncDbEntity);
                 }
             } else {
@@ -121,9 +117,6 @@ public final class AsyncDbService implements Closeable, LoggerOprs {
                         String.format("Entity '%s' does not have DbSynchronzier", asyncDbEntity.getClass().getName()));
             }
         } catch (Exception e) {
-            if (DbOperation.UPDATE.equals(operation)) {
-                asyncDbEntity.resetUpdating();
-            }
             error("", e);
         }
 
