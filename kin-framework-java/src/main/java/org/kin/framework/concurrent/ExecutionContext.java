@@ -36,6 +36,7 @@ public class ExecutionContext implements ScheduledExecutorService {
         this.worker = worker;
         if (scheduleParallelism > 0) {
             ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(scheduleParallelism, scheduleThreadFactory);
+            //默认future cancel时移除task queue, 稍微加大cpu消耗以及阻塞, 以减少堆内存消耗
             scheduledExecutor.setRemoveOnCancelPolicy(true);
             this.scheduleExecutor = scheduledExecutor;
         }
