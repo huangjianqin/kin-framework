@@ -7,14 +7,14 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public interface ScheduledOrderedEventDispatcher extends OrderedEventDispatcher {
+public interface ScheduledOrderedEventBus extends OrderedEventBus {
     /**
      * 延迟调度事件分发
      *
      * @param partitionId 分区id
      * @param unit        时间单位
      * @param delay       延迟执行事件
-     * @param unit         时间单位
+     * @param unit        时间单位
      */
     Future<?> schedule(int partitionId, Object event, long delay, TimeUnit unit);
 

@@ -9,12 +9,12 @@ package org.kin.framework.event;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public interface OrderedEventDispatcher extends EventDispatcher {
+public interface OrderedEventBus extends EventBus {
     /**
      * 分发事件
      *
      * @param partitionId 分区
      * @param event       事件实例
      */
-    void dispatch(int partitionId, Object event);
+    void post(int partitionId, Object event);
 }

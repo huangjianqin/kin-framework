@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2020-01-11
  */
-public interface ScheduledDispatcher extends EventDispatcher {
+public interface ScheduledEventBus extends EventBus {
     /**
      * 延迟调度事件分发
      *

@@ -14,13 +14,13 @@ import java.util.List;
  */
 @HandleEvent
 @Configuration
-public class SpringEventDispatcherTest {
+public class SpringEventBusTest {
 
     @Bean
-    public SpringEventDispatcher dispatcher() {
-        SpringEventDispatcher dispatcher = new SpringEventDispatcher(SysUtils.getSuitableThreadNum(), true);
-        dispatcher.register(FirstEvent.class, new FirstEventHandler());
-        return dispatcher;
+    public SpringEventBus eventBus() {
+        SpringEventBus bus = new SpringEventBus(SysUtils.getSuitableThreadNum(), true);
+        bus.register(new FirstEventHandler());
+        return bus;
     }
 
     @Order(100)
@@ -41,13 +41,13 @@ public class SpringEventDispatcherTest {
 
     public static void main(String[] args) throws InterruptedException {
         ApplicationContext context = new AnnotationConfigApplicationContext("org.kin.framework.event");
-        SpringEventDispatcher dispatcher = context.getBean(SpringEventDispatcher.class);
+        SpringEventBus bus = context.getBean(SpringEventBus.class);
 
-        dispatcher.dispatch(new FirstEvent());
-        dispatcher.dispatch(new SecondEvent());
+        bus.post(new FirstEvent());
+        bus.post(new SecondEvent());
 
         for (int i = 0; i < 8; i++) {
-            dispatcher.dispatch(new ThirdEvent());
+            bus.post(new ThirdEvent());
             Thread.sleep(200);
         }
 

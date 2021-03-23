@@ -12,28 +12,28 @@ import org.kin.framework.proxy.ProxyInvoker;
 class MethodBaseEventHandler<T> implements EventHandler<T>, Ordered {
     /** 事件处理方法代理 */
     private final ProxyInvoker<?> proxy;
-    /** EventDispatcher实现类的方法参数位置, 默认没有 */
-    private final int dispatcherParamIndex;
+    /** {@link EventBus} 实现类的方法参数位置, 默认没有 */
+    private final int busParamIndex;
     /** 优先级 */
     private final int order;
 
-    public MethodBaseEventHandler(ProxyInvoker<?> proxy, int dispatcherParamIndex) {
-        this(proxy, dispatcherParamIndex, LOWEST_PRECEDENCE);
+    public MethodBaseEventHandler(ProxyInvoker<?> proxy, int busParamIndex) {
+        this(proxy, busParamIndex, LOWEST_PRECEDENCE);
     }
 
-    MethodBaseEventHandler(ProxyInvoker<?> proxy, int dispatcherParamIndex, int order) {
+    MethodBaseEventHandler(ProxyInvoker<?> proxy, int busParamIndex, int order) {
         this.proxy = proxy;
-        this.dispatcherParamIndex = dispatcherParamIndex;
+        this.busParamIndex = busParamIndex;
         this.order = order;
     }
 
     @Override
-    public void handle(EventDispatcher dispatcher, T event) throws Exception {
+    public void handle(EventBus bus, T event) throws Exception {
         Object[] params;
-        if (dispatcherParamIndex == 1) {
-            params = new Object[]{dispatcher, event};
-        } else if (dispatcherParamIndex == 2) {
-            params = new Object[]{event, dispatcher};
+        if (busParamIndex == 1) {
+            params = new Object[]{bus, event};
+        } else if (busParamIndex == 2) {
+            params = new Object[]{event, bus};
         } else {
             params = new Object[]{event};
         }

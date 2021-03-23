@@ -13,5 +13,5 @@ public interface EventHandler<T> {
      *
      * @param event 事件实现类
      */
-    void handle(EventDispatcher dispatcher, T event) throws Exception;
+    void handle(EventBus bus, T event) throws Exception;
 }

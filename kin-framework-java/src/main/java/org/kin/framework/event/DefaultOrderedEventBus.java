@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2020/12/9
  */
-public class DefaultOrderedEventDispatcher extends DefaultEventDispatcher implements ScheduledDispatcher, ScheduledOrderedEventDispatcher {
+public class DefaultOrderedEventBus extends DefaultEventBus implements ScheduledEventBus, ScheduledOrderedEventBus {
     /** 事件处理线程(分区处理) */
     protected final DefaultPartitionExecutor<Integer> executor;
     /** 事件合并上下文 */
@@ -31,15 +31,20 @@ public class DefaultOrderedEventDispatcher extends DefaultEventDispatcher implem
     /** 时间轮, 用于控制事件合并window */
     protected final HashedWheelTimer wheelTimer = new HashedWheelTimer();
 
+    public DefaultOrderedEventBus(int parallelism) {
+        this(parallelism, true);
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public DefaultOrderedEventDispatcher(int parallelism) {
-        executor = new DefaultPartitionExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "ParallelEventDispatcher");
+    public DefaultOrderedEventBus(int parallelism, boolean isEnhance) {
+        super(isEnhance);
+        executor = new DefaultPartitionExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "OrderedEventBus");
     }
 
     /**
-     * 如果需要合并事件则合并, 否则直接执行dispatch(EventContext)方法
+     * 如果需要合并事件则合并, 否则直接执行doPost(EventContext)方法
      */
-    private void dispatch0(EventContext eventContext) {
+    private void post0(EventContext eventContext) {
         Object event = eventContext.getEvent();
         Class<?> eventClass = event.getClass();
         EventMerge eventMerge = eventClass.getAnnotation(EventMerge.class);
@@ -47,64 +52,67 @@ public class DefaultOrderedEventDispatcher extends DefaultEventDispatcher implem
             EventMergeContext eventMergeContext = CollectionUtils.putIfAbsent(mergeContexts, eventClass, new EventMergeContext(eventClass, eventMerge));
             eventMergeContext.mergeEvent(eventContext);
         } else {
-            doDispatch(eventContext);
+            doPost(eventContext);
         }
     }
 
-    private void dispatch0(int partitionId, Object event) {
-        dispatch0(new EventContext(partitionId, event));
+    private void post0(int partitionId, Object event) {
+        post0(new EventContext(partitionId, event));
+    }
+
+    /**
+     * @return 分区id, 默认按类分区
+     */
+    private int getPartitionId(Object obj) {
+        return obj.getClass().hashCode();
     }
 
     @Override
-    public final void dispatch(Object event) {
-        dispatch(event.getClass().hashCode(), event);
+    public final void post(Object event) {
+        post(getPartitionId(event), event);
     }
 
     @Override
     public final Future<?> schedule(Object event, long delay, TimeUnit unit) {
-        return schedule(event.getClass().hashCode(), event, delay, unit);
+        return schedule(getPartitionId(event), event, delay, unit);
     }
 
     @Override
     public final Future<?> scheduleAtFixRate(Object event, long initialDelay, long period, TimeUnit unit) {
-        return scheduleAtFixRate(event.getClass().hashCode(), event, initialDelay, period, unit);
+        return scheduleAtFixRate(getPartitionId(event), event, initialDelay, period, unit);
     }
 
     @Override
     public final Future<?> scheduleWithFixedDelay(Object event, long initialDelay, long delay, TimeUnit unit) {
-        return scheduleWithFixedDelay(event.getClass().hashCode(), event, initialDelay, delay, unit);
+        return scheduleWithFixedDelay(getPartitionId(event), event, initialDelay, delay, unit);
     }
 
     @Override
-    public final void dispatch(int partitionId, Object event) {
-        executor.execute(partitionId, () -> dispatch0(partitionId, event));
+    public final void post(int partitionId, Object event) {
+        executor.execute(partitionId, () -> post0(partitionId, event));
     }
 
     @Override
     public final Future<?> schedule(int partitionId, Object event, long delay, TimeUnit unit) {
-        return executor.schedule(partitionId, () -> dispatch0(partitionId, event), delay, unit);
+        return executor.schedule(partitionId, () -> post0(partitionId, event), delay, unit);
     }
 
     @Override
     public final Future<?> scheduleAtFixRate(int partitionId, Object event, long initialDelay, long period, TimeUnit unit) {
-        return executor.scheduleAtFixedRate(partitionId, () -> dispatch0(partitionId, event), initialDelay, period, unit);
+        return executor.scheduleAtFixedRate(partitionId, () -> post0(partitionId, event), initialDelay, period, unit);
     }
 
     @Override
     public final Future<?> scheduleWithFixedDelay(int partitionId, Object event, long initialDelay, long delay, TimeUnit unit) {
-        return executor.scheduleWithFixedDelay(partitionId, () -> dispatch0(partitionId, event), initialDelay, delay, unit);
+        return executor.scheduleWithFixedDelay(partitionId, () -> post0(partitionId, event), initialDelay, delay, unit);
     }
 
     @Override
-    public final void dispatch(Runnable runnable) {
-        executor.execute(runnable.getClass().hashCode(), runnable);
-    }
-
-    @Override
-    public void shutdown() {
+    public final void shutdown() {
         executor.shutdown();
         wheelTimer.stop();
         mergeContexts.clear();
+
         super.shutdown();
     }
 
@@ -153,7 +161,7 @@ public class DefaultOrderedEventDispatcher extends DefaultEventDispatcher implem
                     eventContexts.stream().collect(Collectors.groupingBy(EventContext::getPartitionId));
             for (Map.Entry<Integer, List<EventContext>> entry : partitionId2MergedEvents.entrySet()) {
                 executor.execute(entry.getKey(),
-                        () -> DefaultOrderedEventDispatcher.super.doDispatch(
+                        () -> DefaultOrderedEventBus.super.doPost(
                                 eventClass,
                                 entry.getValue().stream().map(EventContext::getEvent).collect(Collectors.toList())
                         )

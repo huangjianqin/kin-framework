@@ -6,7 +6,7 @@ package org.kin.framework.event;
  */
 public class FirstEventHandler implements EventHandler<FirstEvent> {
     @Override
-    public void handle(EventDispatcher dispatcher, FirstEvent event) throws Exception {
+    public void handle(EventBus bus, FirstEvent event) throws Exception {
         System.out.println("handle " + event.toString());
     }
 }

@@ -20,10 +20,10 @@ class MultiEventHandlers<T> implements EventHandler<T> {
     private final List<EventHandler<T>> handlers = new LinkedList<>();
 
     @Override
-    public void handle(EventDispatcher dispatcher, T event) throws Exception {
+    public void handle(EventBus bus, T event) throws Exception {
         for (EventHandler<T> handler : handlers) {
             try {
-                handler.handle(dispatcher, event);
+                handler.handle(bus, event);
             } catch (Exception e) {
                 log.error("", e);
             }
