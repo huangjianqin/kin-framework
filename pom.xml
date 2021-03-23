@@ -28,7 +28,7 @@
         <logback.version>1.2.3</logback.version>
         <log4j.version>1.2.17</log4j.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <guava.version>27.1-jre</guava.version>
+        <guava.version>30.1-jre</guava.version>
         <fastutil.version>8.1.0</fastutil.version>
         <spring.version>5.2.7.RELEASE</spring.version>
         <kin-java-agent.version>0.1.0.0</kin-java-agent.version>
