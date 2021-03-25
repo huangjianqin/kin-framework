@@ -12,7 +12,7 @@
         <module>kin-framework-groovy</module>
     </modules>
     <groupId>org.kin</groupId>
-    <version>0.1.0.0</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -22,6 +22,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <revision>0.1.0.0</revision>
 
         <scala.version>2.12.10</scala.version>
         <scala.version.head>2.12</scala.version.head>
