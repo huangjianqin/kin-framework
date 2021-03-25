@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.checkerframework.checker.units.qual.C;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -19,6 +20,7 @@ public class JSON {
 
     static {
         PARSER.setTypeFactory(TypeFactory.defaultInstance());
+        PARSER.findAndRegisterModules();
     }
 
     private JSON() {
@@ -129,6 +131,7 @@ public class JSON {
      * @param jsonStr   json字符串
      * @param itemClass 元素类型
      */
+    @SuppressWarnings("unchecked")
     public static <T> List<T> readList(String jsonStr, Class<T> itemClass) {
         return readCollection(jsonStr, ArrayList.class, itemClass);
     }
@@ -139,6 +142,7 @@ public class JSON {
      * @param jsonStr   json字符串
      * @param itemClass 元素类型
      */
+    @SuppressWarnings("unchecked")
     public static <T> Set<T> readSet(String jsonStr, Class<T> itemClass) {
         return readCollection(jsonStr, HashSet.class, itemClass);
     }
@@ -184,5 +188,27 @@ public class JSON {
      */
     public static <C> C convert(Object jsonObj, Class<? extends C> targetClass) {
         return PARSER.convertValue(jsonObj, targetClass);
+    }
+
+    /**
+     * 从json bytes 字段数据更新现有Obj实例中的字段值
+     */
+    public static void updateFieldValue(byte[] bytes, Object object) {
+        try {
+            PARSER.readerForUpdating(object).readValue(new ByteArrayInputStream(bytes));
+        } catch (IOException e) {
+            ExceptionUtils.throwExt(e);
+        }
+    }
+
+    /**
+     * 从json字符串字段数据更新现有Obj实例中的字段值
+     */
+    public static void updateFieldValue(String text, Object object) {
+        try {
+            PARSER.readerForUpdating(object).readValue(text);
+        } catch (JsonProcessingException e) {
+            ExceptionUtils.throwExt(e);
+        }
     }
 }
