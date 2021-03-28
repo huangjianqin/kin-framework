@@ -51,4 +51,9 @@ public class CollectionUtils {
             return oldValue;
         }
     }
+
+    /** 判断两集合是否一致 */
+    public static <T> boolean isSame(Collection<T> source, Collection<T> other) {
+        return source.size() == other.size() && source.containsAll(other) && other.containsAll(source);
+    }
 }
