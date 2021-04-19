@@ -51,6 +51,11 @@ def fieldName2Types = clazz.getFields()
 
 def firstLowerCaseClassName = firstLowerCase(clazz.getSimpleName())
 def sb = new StringBuilder()
+//builder static method
+sb.append("public static Builder builder(){ return new Builder();}\n")
+sb.append("\n")
+//注释
+sb.append("/** builder **/\n")
 //类声明
 sb.append("public static class Builder" + typeParameterStr + " {\r\n")
 //字段
@@ -67,6 +72,6 @@ sb.append(String.format("        public %s build(){\r\n", className))
         .append(String.format("                return %s;\r\n", firstLowerCaseClassName))
         .append("        }\r\n")
 
-sb.append("    }\r\n")
+sb.append("    }")
 
 return sb.toString()
