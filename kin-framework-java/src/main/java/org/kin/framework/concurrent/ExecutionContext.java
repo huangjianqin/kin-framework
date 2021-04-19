@@ -137,7 +137,7 @@ public class ExecutionContext implements ScheduledExecutorService {
      */
     public static ExecutionContext elastic(int coreParallelism, int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         return new ExecutionContext(
-                new ThreadPoolExecutor(coreParallelism, maxParallelism, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), workerThreadFactory),
+                EagerThreadPoolExecutor.create(coreParallelism, maxParallelism, 60L, TimeUnit.SECONDS, workerThreadFactory),
                 scheduleParallelism, scheduleThreadFactory);
     }
     //--------------------------------------------------------------------------------------------
