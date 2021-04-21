@@ -143,7 +143,13 @@ public class JavassistFactory implements ProxyFactory {
         Object service = definition.getService();
         Class<?> serviceClass = service.getClass();
         Method target = definition.getMethod();
-        String packageName = serviceClass.getPackage().getName();
+        String packageName;
+        if (Objects.nonNull(serviceClass.getPackage())) {
+            //jdk 代理的类, 则无法获取getPackage()
+            packageName = serviceClass.getPackage().getName();
+        } else {
+            packageName = target.getDeclaringClass().getPackage().getName();
+        }
         String proxyCtClassName = packageName.concat(".").concat(serviceClass.getSimpleName().concat("$").concat(ClassUtils.getUniqueName(target))).concat("$JavassistProxy");
 
         Class<?> realProxyClass = null;
