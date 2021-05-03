@@ -408,23 +408,41 @@ public class ClassUtils {
      */
     public static Object getDefaultValue(Class<?> claxx) {
         if (claxx.isPrimitive()) {
+            if (Boolean.TYPE.equals(claxx)) {
+                return false;
+            } else if (Byte.TYPE.equals(claxx)) {
+                return 0;
+            } else if (Character.TYPE.equals(claxx)) {
+                return "";
+            } else if (Short.TYPE.equals(claxx)) {
+                return 0;
+            } else if (Integer.TYPE.equals(claxx)) {
+                return 0;
+            } else if (Long.TYPE.equals(claxx)) {
+                return 0L;
+            } else if (Float.TYPE.equals(claxx)) {
+                return 0.0F;
+            } else if (Double.TYPE.equals(claxx)) {
+                return 0.0D;
+            }
+        } else {
             if (String.class.equals(claxx)) {
                 return "";
-            } else if (Boolean.class.equals(claxx) || Boolean.TYPE.equals(claxx)) {
+            } else if (Boolean.class.equals(claxx)) {
                 return false;
-            } else if (Byte.class.equals(claxx) || Byte.TYPE.equals(claxx)) {
+            } else if (Byte.class.equals(claxx)) {
                 return 0;
-            } else if (Character.class.equals(claxx) || Character.TYPE.equals(claxx)) {
+            } else if (Character.class.equals(claxx)) {
                 return "";
-            } else if (Short.class.equals(claxx) || Short.TYPE.equals(claxx)) {
+            } else if (Short.class.equals(claxx)) {
                 return 0;
-            } else if (Integer.class.equals(claxx) || Integer.TYPE.equals(claxx)) {
+            } else if (Integer.class.equals(claxx)) {
                 return 0;
-            } else if (Long.class.equals(claxx) || Long.TYPE.equals(claxx)) {
+            } else if (Long.class.equals(claxx)) {
                 return 0L;
-            } else if (Float.class.equals(claxx) || Float.TYPE.equals(claxx)) {
+            } else if (Float.class.equals(claxx)) {
                 return 0.0F;
-            } else if (Double.class.equals(claxx) || Double.TYPE.equals(claxx)) {
+            } else if (Double.class.equals(claxx)) {
                 return 0.0D;
             }
         }
