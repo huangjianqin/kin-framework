@@ -59,7 +59,7 @@ sb.append("/** builder **/\n")
 //类声明
 sb.append("public static class Builder" + typeParameterStr + " {\r\n")
 //字段
-sb.append(String.format("        private %s %s = new %s();\r\n\r\n", className, firstLowerCaseClassName, className))
+sb.append(String.format("        private final %s %s = new %s();\r\n\r\n", className, firstLowerCaseClassName, className))
 //生成字段赋值方法
 for (field in fieldName2Types) {
     sb.append(String.format("        public %s %s(%s %s){\r\n", "Builder" + typeParameterStr, field.getKey(), field.getValue(), field.getKey()))
