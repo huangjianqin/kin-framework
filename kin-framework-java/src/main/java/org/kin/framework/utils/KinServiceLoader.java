@@ -5,7 +5,10 @@ import com.google.common.collect.Multimap;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -20,87 +23,138 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2020/9/27
  */
 public class KinServiceLoader {
-    /** 默认路径 */
-    private static final String DEFAULT_FILE_NAME = "META-INF/kin.factories";
+    private static final String META_INF = "META-INF/";
+    /** 默认会加载META-INF, META-INF/kin, META-INF/services下面的kin.factories文件 */
+    private static final String DEFAULT_FILE_NAME = "kin.factories";
+    /** 默认kin目录路径 */
+    private static final String DEFAULT_DIR_NAME = META_INF.concat("kin");
+    /** 默认java spi加载目录 */
+    private static final String DEFAULT_JAVA_DIR_NAME = META_INF.concat("services");
 
     /** The class loader used to locate, load, and instantiate providers */
     private final ClassLoader classLoader;
     /** The access control context taken when the ServiceLoader is created */
     private final AccessControlContext acc;
-    /** key -> service class name || {@link SPI}注解的值, value -> service implement class name */
-    private volatile Multimap<String, String> service2Implement;
+    /**
+     * key -> service class name || {@link SPI}注解的值, value -> service implement class name
+     * 一写多读
+     */
+    private volatile Multimap<String, String> serviceN2ImplementClassN = LinkedListMultimap.create();
     /** key -> service class, value -> service implement instance */
-    private volatile Map<Class<?>, ServiceLoader<?>> service2Loader;
+    private Map<Class<?>, ServiceLoader<?>> serviceClass2Loader = new ConcurrentHashMap<>();
 
-    private KinServiceLoader(String fileName, ClassLoader cl) {
+    private KinServiceLoader(ClassLoader cl) {
+        //取默认的class loader
         classLoader = (cl == null) ? ClassLoader.getSystemClassLoader() : cl;
+        //获取security manager
         acc = (System.getSecurityManager() != null) ? AccessController.getContext() : null;
-        reload(fileName);
+
+        //加载默认支持的文件或目录
+        load(META_INF.concat(DEFAULT_FILE_NAME));
+        load(DEFAULT_DIR_NAME);
+        load(DEFAULT_JAVA_DIR_NAME);
     }
 
     //-------------------------------------------------------------------------------------------------------------------
     public static KinServiceLoader load() {
-        return load(DEFAULT_FILE_NAME, Thread.currentThread().getContextClassLoader());
+        return new KinServiceLoader(Thread.currentThread().getContextClassLoader());
     }
 
-    public static KinServiceLoader load(String fileName) {
-        return load(fileName, Thread.currentThread().getContextClassLoader());
+    public static KinServiceLoader load(String... fileNames) {
+        KinServiceLoader loader = load();
+        for (String fileName : fileNames) {
+            loader.load(fileName);
+        }
+        return loader;
     }
 
-    public static KinServiceLoader loadInstalled(String fileName) {
+    public static KinServiceLoader loadInstalled() {
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         ClassLoader prev = null;
         while (cl != null) {
             prev = cl;
             cl = cl.getParent();
         }
-        return load(fileName, prev);
+        return new KinServiceLoader(prev);
     }
 
-    public static KinServiceLoader load(String fileName, ClassLoader loader) {
-        return new KinServiceLoader(fileName, loader);
+    public static KinServiceLoader loadInstalled(String... fileNames) {
+        KinServiceLoader loader = loadInstalled();
+        for (String fileName : fileNames) {
+            loader.load(fileName);
+        }
+        return loader;
     }
     //-------------------------------------------------------------------------------------------------------------------
 
     /**
      * 重新加载
+     *
+     * @param fileName 可以是file也可以是directory
      */
-    public synchronized void reload(String fileName) {
-        service2Implement = LinkedListMultimap.create();
-        service2Loader = new ConcurrentHashMap<>();
-
-        Enumeration<URL> configs;
+    public synchronized void load(String fileName) {
+        Enumeration<URL> props;
         try {
             if (classLoader == null) {
-                configs = ClassLoader.getSystemResources(fileName);
+                props = ClassLoader.getSystemResources(fileName);
             } else {
-                configs = classLoader.getResources(fileName);
+                props = classLoader.getResources(fileName);
             }
 
-            while (configs.hasMoreElements()) {
-                URL url = configs.nextElement();
-                parse(url);
+            Multimap<String, String> serviceN2ImplementClassN = LinkedListMultimap.create();
+            serviceN2ImplementClassN.putAll(this.serviceN2ImplementClassN);
+
+            //遍历该url下所有items
+            while (props.hasMoreElements()) {
+                URL url = props.nextElement();
+
+                FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                        if (path.toFile().isDirectory()) {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        //解析文件
+                        parse(serviceN2ImplementClassN, path.toUri().toURL());
+                        return FileVisitResult.CONTINUE;
+                    }
+                };
+                try {
+                    //遍历该url下所有文件
+                    Files.walkFileTree(Paths.get(url.toURI()), visitor);
+                } catch (IOException | URISyntaxException e) {
+                    ExceptionUtils.throwExt(e);
+                }
             }
-        } catch (Exception e) {
+            this.serviceN2ImplementClassN = serviceN2ImplementClassN;
+        } catch (IOException e) {
             ExceptionUtils.throwExt(e);
+        } catch (Exception e) {
+            //ignore
         }
     }
 
     /**
      * 解析配置文件
      */
-    private void parse(URL url) {
+    private void parse(Multimap<String, String> serviceN2ImplementClassN, URL url) {
         try {
             Properties properties = new Properties();
             try (InputStream is = url.openStream()) {
+                //加载properties
                 properties.load(is);
                 for (String serviceClassName : properties.stringPropertyNames()) {
                     String implementClassNames = properties.getProperty(serviceClassName);
-                    HashSet<String> filtered = new HashSet<>(Arrays.asList(implementClassNames.split(",")));
-                    service2Implement.putAll(serviceClassName, filtered);
+                    if (StringUtils.isNotBlank(implementClassNames)) {
+                        HashSet<String> filtered = new HashSet<>(Arrays.asList(implementClassNames.split(",")));
+                        serviceN2ImplementClassN.putAll(serviceClassName, filtered);
+                    } else {
+                        //只有key, 没有value, 则是没有配置class name或class key, 仅仅配置了implement class name
+                        serviceN2ImplementClassN.put(Paths.get(url.toURI()).toFile().getName(), serviceClassName);
+                    }
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             ExceptionUtils.throwExt(e);
         }
     }
@@ -110,7 +164,7 @@ public class KinServiceLoader {
      */
     private void checkSupport(Class<?> serviceClass) {
         if (!serviceClass.isAnnotationPresent(SPI.class)) {
-            throw new IllegalArgumentException(serviceClass.getCanonicalName().concat(" doesn't support spi, please ensure @SPI"));
+            throw new IllegalArgumentException(serviceClass.getCanonicalName().concat("doesn't support spi, please ensure @SPI"));
         }
     }
 
@@ -120,19 +174,20 @@ public class KinServiceLoader {
     @SuppressWarnings("unchecked")
     private synchronized <S> Iterator<S> iterator(Class<S> serviceClass) {
         checkSupport(serviceClass);
-        //从接口名 或者 @SPI注解的提供的value 获取该接口实现类
-        HashSet<String> filtered = new HashSet<>(service2Implement.get(serviceClass.getCanonicalName()));
-
+        //1. 从 接口名 获取该接口实现类
+        HashSet<String> filtered = new HashSet<>(serviceN2ImplementClassN.get(serviceClass.getCanonicalName()));
+        //2. 从 @SPI注解的提供的value 获取该接口实现类
         SPI spi = serviceClass.getAnnotation(SPI.class);
         if (Objects.nonNull(spi)) {
             String key = spi.key();
             if (StringUtils.isNotBlank(key)) {
-                filtered.addAll(service2Implement.get(key));
+                filtered.addAll(serviceN2ImplementClassN.get(key));
             }
         }
 
+        //获取service loader
         ServiceLoader<S> newLoader = new ServiceLoader<>(serviceClass, new ArrayList<>(filtered));
-        ServiceLoader<?> loader = service2Loader.putIfAbsent(serviceClass, newLoader);
+        ServiceLoader<?> loader = serviceClass2Loader.putIfAbsent(serviceClass, newLoader);
         if (Objects.isNull(loader)) {
             //本来没有值
             loader = newLoader;
@@ -285,11 +340,11 @@ public class KinServiceLoader {
                 try {
                     c = Class.forName(cn, false, classLoader);
                 } catch (ClassNotFoundException x) {
-                    throw new ServiceConfigurationError(String.format("%s: Provider %s not found", service.getCanonicalName(), cn));
+                    throw new ServiceConfigurationError(String.format("%s: provider %s not found", service.getCanonicalName(), cn));
                 }
 
                 if (!service.isAssignableFrom(c)) {
-                    throw new ServiceConfigurationError(String.format("%s: Provider %s not a subtype", service.getCanonicalName(), cn));
+                    throw new ServiceConfigurationError(String.format("%s: provider %s not a subtype", service.getCanonicalName(), cn));
                 }
                 try {
                     S p = service.cast(c.newInstance());
@@ -297,7 +352,7 @@ public class KinServiceLoader {
                     index++;
                     return p;
                 } catch (Throwable x) {
-                    throw new ServiceConfigurationError(String.format("%s: Provider %s could not be instantiated", service.getCanonicalName(), cn), x);
+                    throw new ServiceConfigurationError(String.format("%s: provider %s could not be instantiated", service.getCanonicalName(), cn), x);
                 }
             }
 

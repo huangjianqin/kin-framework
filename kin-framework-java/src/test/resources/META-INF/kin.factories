@@ -1,0 +1,2 @@
+kins=org.kin.framework.utils.KinServiceA
+org.kin.framework.utils.KinService=org.kin.framework.utils.KinServiceB
