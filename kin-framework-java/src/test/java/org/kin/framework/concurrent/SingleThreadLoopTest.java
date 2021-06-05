@@ -1,5 +1,6 @@
 package org.kin.framework.concurrent;
 
+import com.google.common.base.Stopwatch;
 import org.kin.framework.utils.TimeUtils;
 
 import java.util.concurrent.ExecutionException;
@@ -18,10 +19,12 @@ public class SingleThreadLoopTest {
         SingleThreadEventLoopGroup eventLoopGroup = new SingleThreadEventLoopGroup(5);
         SingleThreadEventLoop eventLoop = eventLoopGroup.next();
 
+        Stopwatch watch = Stopwatch.createStarted();
+
         eventLoop.execute(() -> {
             System.out.println(Thread.currentThread() + ">>>" + TimeUtils.timestamp());
             eventLoop.schedule(() -> System.out.println(TimeUtils.timestamp() + "---1"), 10, TimeUnit.SECONDS);
-            eventLoop.schedule(p -> System.out.println(TimeUtils.timestamp() + "---2"), 25000, TimeUnit.MILLISECONDS);
+            eventLoop.schedule(p -> System.out.println(TimeUtils.timestamp() + "---2"), 25_000, TimeUnit.MILLISECONDS);
         });
 
         AtomicInteger successCounter = new AtomicInteger();
@@ -38,16 +41,24 @@ public class SingleThreadLoopTest {
             });
         }
 
+        Thread.sleep(10_000);
 
-        Thread.sleep(30_000);
+        while (counter != successCounter.get()) {
+            Thread.sleep(5_000);
+            System.out.println(counter);
+            System.out.println(successCounter.get());
+            System.out.println("---------------");
+        }
 
-        System.out.println(counter == successCounter.get());
         System.out.println(counter);
         System.out.println(successCounter.get());
 
         eventLoop.shutdown();
         executionContext.shutdown();
         eventLoopGroup.shutdown();
+
+        watch.stop();
+        System.out.println(String.format("耗时: %d秒", watch.elapsed(TimeUnit.SECONDS)));
     }
 
     private static void add() {

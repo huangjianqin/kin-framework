@@ -59,8 +59,6 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     private final Executor executor;
     /** 绑定线程是否已interrupted */
     private volatile boolean interrupted;
-    /** 是否时间敏感(也就是随系统时间发生变化而变化), 则TimeUnit.MILLISECONDS, 否则是TimeUnit.NANOSECONDS */
-    private final TimeUnit timeUnit;
     /** 所属group */
     private final EventExecutorGroup parent;
 
@@ -71,24 +69,12 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
 
     //------------------------------------------------------------------------------------------------------------------------
     public SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor) {
-        this(parent, executor, false, RejectedExecutionHandler.EMPTY);
+        this(parent, executor, RejectedExecutionHandler.EMPTY);
     }
 
-    public SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor, boolean timeSensitive) {
-        this(parent, executor, timeSensitive, RejectedExecutionHandler.EMPTY);
-    }
-
-    /**
-     * @param timeSensitive 是否时间敏感(也就是随系统时间发生变化而变化)
-     */
-    public SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
+    public SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor, RejectedExecutionHandler rejectedExecutionHandler) {
         this.parent = parent;
         this.executor = executor;
-        if (timeSensitive) {
-            timeUnit = TimeUnit.MILLISECONDS;
-        } else {
-            timeUnit = TimeUnit.NANOSECONDS;
-        }
         this.rejectedExecutionHandler = rejectedExecutionHandler;
     }
 
@@ -98,11 +84,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
      * 获取当前时间
      */
     private long now() {
-        if (TimeUnit.MILLISECONDS.equals(timeUnit)) {
-            return System.currentTimeMillis();
-        } else {
-            return System.nanoTime();
-        }
+        return System.nanoTime();
     }
 
     /**
@@ -156,17 +138,16 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
 
     @Override
     public boolean awaitTermination(long timeout, @Nonnull TimeUnit unit) throws InterruptedException {
-        long realTimeout = timeUnit.convert(timeout, unit);
         synchronized (this) {
             for (; ; ) {
                 if (state >= ST_TERMINATED) {
                     return true;
                 }
-                if (realTimeout <= 0) {
+                if (timeout <= 0) {
                     return false;
                 }
 
-                threadLock.await(realTimeout, timeUnit);
+                threadLock.await(timeout, unit);
             }
         }
     }
@@ -228,7 +209,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     public <T> List<Future<T>> invokeAll(@Nonnull Collection<? extends Callable<T>> tasks, long timeout, @Nonnull TimeUnit unit) throws InterruptedException {
         Preconditions.checkArgument(CollectionUtils.isNonEmpty(tasks), "tasks is empty");
 
-        long realTimeout = timeUnit.convert(timeout, unit);
+        long nanos = unit.toNanos(timeout);
         ArrayList<Future<T>> futures = new ArrayList<>(tasks.size());
         boolean done = false;
         try {
@@ -237,28 +218,28 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                 futures.add(f);
             }
 
-            long deadline = now() + realTimeout;
+            long deadline = now() + nanos;
             for (Future<T> future : futures) {
                 execute((Runnable) future);
                 //减去调度任务耗时
-                realTimeout = deadline - now();
-                if (realTimeout <= 0L) {
+                nanos = deadline - now();
+                if (nanos <= 0L) {
                     return futures;
                 }
             }
 
             for (Future<T> f : futures) {
                 if (!f.isDone()) {
-                    if (realTimeout <= 0L) {
+                    if (nanos <= 0L) {
                         return futures;
                     }
                     try {
-                        f.get(realTimeout, timeUnit);
+                        f.get(nanos, TimeUnit.NANOSECONDS);
                     } catch (CancellationException | ExecutionException ignore) {
                     } catch (TimeoutException toe) {
                         return futures;
                     }
-                    realTimeout = deadline - now();
+                    nanos = deadline - now();
                 }
             }
             done = true;
@@ -286,7 +267,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         Preconditions.checkArgument(CollectionUtils.isNonEmpty(tasks), "tasks is empty");
 
         boolean timed = timeout > 0;
-        long realTimeout = Objects.nonNull(unit) ? timeUnit.convert(timeout, unit) : 0;
+        long nanos = Objects.nonNull(unit) ? unit.toNanos(timeout) : 0;
         int ntasks = tasks.size();
         ArrayList<Future<T>> futures = new ArrayList<Future<T>>(ntasks);
         ExecutorCompletionService<T> ecs =
@@ -294,7 +275,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
 
         try {
             ExecutionException ee = null;
-            final long deadline = timed ? now() + realTimeout : 0L;
+            final long deadline = timed ? now() + nanos : 0L;
             Iterator<? extends Callable<T>> it = tasks.iterator();
 
             // Start one task for sure; the rest incrementally
@@ -312,11 +293,11 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                     } else if (active == 0) {
                         break;
                     } else if (timed) {
-                        f = ecs.poll(realTimeout, timeUnit);
+                        f = ecs.poll(nanos, TimeUnit.NANOSECONDS);
                         if (f == null) {
                             throw new TimeoutException();
                         }
-                        realTimeout = deadline - now();
+                        nanos = deadline - now();
                     } else {
                         f = ecs.take();
                     }
@@ -355,28 +336,28 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     public ScheduledFuture<?> schedule(@Nonnull Runnable command, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        return schedule(new ScheduledFutureTask<>(command, timeUnit.convert(delay, unit)));
+        return schedule(new ScheduledFutureTask<>(command, unit.toNanos(delay)));
     }
 
     @Override
     public ScheduledFuture<?> scheduleAtFixedRate(@Nonnull Runnable command, long initialDelay, long period, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        return schedule(new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), timeUnit.convert(period, unit)));
+        return schedule(new ScheduledFutureTask<>(command, unit.toNanos(initialDelay), unit.toNanos(period)));
     }
 
     @Override
     public <V> ScheduledFuture<V> schedule(@Nonnull Callable<V> callable, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(callable, "task is null");
 
-        return schedule(new ScheduledFutureTask<>(callable, timeUnit.convert(delay, unit)));
+        return schedule(new ScheduledFutureTask<>(callable, unit.toNanos(delay)));
     }
 
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(@Nonnull Runnable command, long initialDelay, long delay, @Nonnull TimeUnit unit) {
         Preconditions.checkNotNull(command, "task is null");
 
-        return schedule(new ScheduledFutureTask<>(command, timeUnit.convert(initialDelay, unit), -timeUnit.convert(delay, unit)));
+        return schedule(new ScheduledFutureTask<>(command, unit.toNanos(initialDelay), -unit.toNanos(delay)));
     }
 
     //------------------------------------------------------------------------------------------------------------------------
@@ -536,10 +517,10 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
             if (scheduledTask == null) {
                 return taskQueue.take();
             } else {
-                long delayTime = scheduledTask.getDelay(timeUnit);
+                long delayTime = scheduledTask.getDelay(TimeUnit.NANOSECONDS);
                 Runnable task = null;
                 if (delayTime > 0) {
-                    task = taskQueue.poll(delayTime, timeUnit);
+                    task = taskQueue.poll(delayTime, TimeUnit.NANOSECONDS);
                 }
 
                 if (task == null) {
@@ -656,7 +637,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
          */
         @Override
         public long getDelay(TimeUnit unit) {
-            return unit.convert(triggerTime - interval(), timeUnit);
+            return unit.convert(triggerTime - interval(), unit);
         }
 
         @SuppressWarnings("rawtypes")
@@ -729,7 +710,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         private long overflowFree(long delay) {
             Delayed head = peekScheduledTask();
             if (head != null) {
-                long headDelay = head.getDelay(timeUnit);
+                long headDelay = head.getDelay(TimeUnit.NANOSECONDS);
                 if (headDelay < 0 && (delay - headDelay < 0)) {
                     delay = Long.MAX_VALUE + headDelay;
                 }

@@ -12,12 +12,8 @@ public class SingleThreadEventLoop extends SingleThreadEventExecutor implements 
         super(parent, executor);
     }
 
-    public SingleThreadEventLoop(EventLoopGroup<SingleThreadEventLoop> parent, Executor executor, boolean timeSensitive) {
-        super(parent, executor, timeSensitive);
-    }
-
-    public SingleThreadEventLoop(EventLoopGroup<SingleThreadEventLoop> parent, Executor executor, boolean timeSensitive, RejectedExecutionHandler rejectedExecutionHandler) {
-        super(parent, executor, timeSensitive, rejectedExecutionHandler);
+    public SingleThreadEventLoop(EventLoopGroup<SingleThreadEventLoop> parent, Executor executor, RejectedExecutionHandler rejectedExecutionHandler) {
+        super(parent, executor, rejectedExecutionHandler);
     }
 
     @SuppressWarnings("unchecked")
