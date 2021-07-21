@@ -13,8 +13,8 @@ public class Reporters {
         out.append("-------------------------------counter report-------------------------------");
         out.append(System.lineSeparator());
         for (CounterGroup counterGroup : Counters.counterGroups.values()) {
-            out.append("<<<").append(counterGroup.group).append(">>>").append(System.lineSeparator());
-            for (Counter value : counterGroup.counters.values()) {
+            out.append("<<<").append(counterGroup.getGroup()).append(">>>").append(System.lineSeparator());
+            for (Counter value : counterGroup.getCounters().values()) {
                 out.append(value.report()).append(System.lineSeparator());
             }
             out.append("<<<<<<");

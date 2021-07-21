@@ -12,10 +12,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
+ * 用于控制jvm close时, 释放占用资源
+ *
  * @author huangjianqin
  * @date 2019/2/28
- * <p>
- * 用于控制jvm close时, 释放占用资源
  */
 public class JvmCloseCleaner {
     private final Logger log = LoggerFactory.getLogger(JvmCloseCleaner.class);

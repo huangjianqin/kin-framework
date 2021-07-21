@@ -11,9 +11,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class Counter implements Reporter {
     /** uuid */
-    private String uuid;
+    private final String uuid;
     /** count */
-    private AtomicLong count;
+    private final AtomicLong count;
 
     Counter(String uuid) {
         this.uuid = uuid;

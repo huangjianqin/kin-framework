@@ -1,9 +1,10 @@
 package org.kin.framework.statemachine;
 
 /**
- * @author 健勤
- * @date 2017/8/9
  * 状态机接口
+ *
+ * @author huangjianqin
+ * @date 2017/8/9
  */
 public interface StateMachine<STATE extends Enum<STATE>, EVENTTYPE extends Enum<EVENTTYPE>, EVENT> {
     /**

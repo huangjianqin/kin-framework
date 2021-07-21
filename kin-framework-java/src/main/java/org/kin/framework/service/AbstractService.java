@@ -9,9 +9,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @author 健勤
- * @date 2017/8/8
  * 服务抽象
+ *
+ * @author huangjianqin
+ * @date 2017/8/8
  */
 public abstract class AbstractService implements Service {
     private static final List<ServiceStateChangeListener> GLOBAL_LISTENERS = new CopyOnWriteArrayList<>();

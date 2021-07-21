@@ -11,9 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2020/9/2
  */
 public class CounterGroup {
-    final String group;
+    private final String group;
     /** counter */
-    Map<String, Counter> counters = new ConcurrentHashMap<>();
+    private final Map<String, Counter> counters = new ConcurrentHashMap<>();
 
     public CounterGroup(String group) {
         this.group = group;
@@ -37,5 +37,14 @@ public class CounterGroup {
      */
     public void reset() {
         counters.values().forEach(Counter::reset);
+    }
+
+    //getter
+    public String getGroup() {
+        return group;
+    }
+
+    public Map<String, Counter> getCounters() {
+        return counters;
     }
 }

@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
  * @author huangjianqin
  * @date 2020-01-12
  */
-public class ReflectionInvoker<S> implements ProxyInvoker<S> {
+class ReflectionInvoker<S> implements ProxyInvoker<S> {
     /** 实例 */
     private final S proxyObj;
     /** 目标方法 */

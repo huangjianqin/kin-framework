@@ -83,7 +83,6 @@ public class CommandUtils {
 
             //设置超时
             ExecuteWatchdog watchdog = new ExecuteWatchdog(timeout);
-//            DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
             // executor
             DefaultExecutor executor = new DefaultExecutor();
             executor.setWatchdog(watchdog);
@@ -92,6 +91,8 @@ public class CommandUtils {
                 executor.setWorkingDirectory(workingDirectoryFile);
             }
             return executor.execute(commandline);
+
+//            DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
 //            executor.execute(commandline, resultHandler);
 //            resultHandler.waitFor();
 //            return resultHandler.getExitValue();

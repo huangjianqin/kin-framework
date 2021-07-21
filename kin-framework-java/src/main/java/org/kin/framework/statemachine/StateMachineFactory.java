@@ -9,8 +9,6 @@ import java.lang.reflect.TypeVariable;
 import java.util.*;
 
 /**
- * @author 健勤
- * @date 2017/8/9
  * 状态机工厂类
  * 延迟构造状态拓扑图
  * <p>
@@ -18,6 +16,9 @@ import java.util.*;
  * STATE 该状态机的状态类型
  * EVENTTYPE 触发该状态机状态转换的事件类型
  * EVENT 触发该状态机状态转换的事件类
+ *
+ * @author huangjianqin
+ * @date 2017/8/9
  */
 public class StateMachineFactory<OPERAND, STATE extends Enum<STATE>, EVENTTYPE extends Enum<EVENTTYPE>, EVENT> {
     private static Logger log = LoggerFactory.getLogger(StateMachine.class);

@@ -53,10 +53,17 @@
         </dependency>
 
         <!-- java运行时元数据分析工具-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.reflections</groupId>-->
+        <!--            <artifactId>reflections</artifactId>-->
+        <!--            <version>${reflections.version}</version>-->
+        <!--        </dependency>-->
+
+        <!-- 超快速超轻量级并行化的Java classpath scanner -->
         <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>${reflections.version}</version>
+            <groupId>io.github.classgraph</groupId>
+            <artifactId>classgraph</artifactId>
+            <version>${classgraph.version}</version>
         </dependency>
 
         <!-- java微基准测试工具   用于较细粒度测试-->

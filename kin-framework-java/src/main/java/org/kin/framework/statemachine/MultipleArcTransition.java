@@ -1,9 +1,10 @@
 package org.kin.framework.statemachine;
 
 /**
- * @author 健勤
- * @date 2017/8/9
  * 一对多状态转换逻辑处理
+ *
+ * @author huangjianqin
+ * @date 2017/8/9
  */
 @FunctionalInterface
 public interface MultipleArcTransition<OPERAND, EVENT, STATE extends Enum<STATE>> {

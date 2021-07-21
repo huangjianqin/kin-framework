@@ -3,9 +3,10 @@ package org.kin.framework.service;
 import org.kin.framework.Closeable;
 
 /**
- * @author 健勤
- * @date 2017/8/8
  * 服务接口
+ *
+ * @author huangjianqin
+ * @date 2017/8/8
  */
 public interface Service extends Closeable {
     /**

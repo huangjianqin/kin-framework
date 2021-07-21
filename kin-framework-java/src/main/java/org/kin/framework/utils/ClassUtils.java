@@ -31,9 +31,6 @@ public class ClassUtils {
     private static final Pattern INNER_PATTERN = Pattern.compile("\\$(\\d+).", Pattern.CASE_INSENSITIVE);
     /** 生成方法签名的参数命名 */
     public static final String METHOD_DECLARATION_ARG_NAME = "arg";
-    /**
-     *
-     */
     private static final Map<Type, Class<?>> GENERIC_TYPES_CACHE = new ConcurrentHashMap<>();
 
     @FunctionalInterface
@@ -151,6 +148,7 @@ public class ClassUtils {
         return Collections.emptySet();
     }
 
+    @SuppressWarnings("rawtypes")
     public static <T> Set<Class<? extends T>> scanClasspathAndFindMatch(String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar) {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         ClassLoader staticClassLoader = ClassUtils.class.getClassLoader();
@@ -167,7 +165,7 @@ public class ClassUtils {
         return subClasses;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> Set<Class<T>> scanClasspathAndFindMatch(ClassLoader contextClassLoader, String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar) {
         Set<Class<T>> subClasses = Sets.newLinkedHashSet();
 
@@ -342,10 +340,7 @@ public class ClassUtils {
         try {
             if (isBoolean(field.getType())) {
                 //如果是boolean, 先尝试is开头的getter方法, 找不到再尝试get开头
-                Method getterMethod = target.getMethod("is" + new String(items));
-                if (getterMethod != null) {
-                    return getterMethod;
-                }
+                return target.getMethod("is" + new String(items));
             }
             return target.getMethod("get" + new String(items));
         } catch (NoSuchMethodException e) {

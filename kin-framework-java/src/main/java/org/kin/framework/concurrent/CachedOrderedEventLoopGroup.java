@@ -17,7 +17,7 @@ public class CachedOrderedEventLoopGroup<P extends OrderedEventLoop<P>> implemen
     private final ExecutionContext executionContext;
     /** 自定义{@link OrderedEventLoop}实例构建逻辑 */
     private final OrderedEventLoopBuilder<P> builder;
-    /** PinnedThreadExecutor缓存 */
+    /** OrderedEventLoop缓存 */
     private final List<P> executors = new LinkedList<>();
 
     public CachedOrderedEventLoopGroup(ExecutionContext ec, OrderedEventLoopBuilder<P> builder) {

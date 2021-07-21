@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public final class FixOrderedEventLoopGroup<P extends OrderedEventLoop<P>> implements EventLoopGroup<P> {
     /** 线程池 */
     private final ExecutionContext executionContext;
-    /** PinnedThreadExecutor缓存 */
+    /** OrderedEventLoop缓存 */
     private final List<P> executors;
 
     @SuppressWarnings("unchecked")

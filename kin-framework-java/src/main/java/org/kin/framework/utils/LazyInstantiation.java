@@ -13,7 +13,7 @@ public abstract class LazyInstantiation<C> {
     /** target class */
     protected final Class<? extends C> targetClass;
     /** 实例 */
-    protected C instance;
+    protected volatile C instance;
 
     public LazyInstantiation(Class<? extends C> targetClass) {
         this.targetClass = targetClass;

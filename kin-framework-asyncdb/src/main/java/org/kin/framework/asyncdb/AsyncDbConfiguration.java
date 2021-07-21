@@ -1,9 +1,9 @@
 package org.kin.framework.asyncdb;
 
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ScanResult;
 import org.kin.framework.spring.ConditionOnMissingBean;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -31,18 +31,24 @@ public class AsyncDbConfiguration implements ApplicationListener<ContextRefreshe
         return AsyncDbService.getInstance();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void onApplicationEvent(@Nonnull ContextRefreshedEvent event) {
         //自动从Spring容器获取持久化实现类
         ApplicationContext context = event.getApplicationContext();
 
-        Reflections reflections = new Reflections("", new TypeAnnotationsScanner(), new SubTypesScanner());
-        for (Class<?> targetClass : reflections.getTypesAnnotatedWith(DbSynchronzierClass.class)) {
-            DbSynchronzierClass anno = targetClass.getAnnotation(DbSynchronzierClass.class);
-            Class<? extends DbSynchronzier> synchronzierClass = anno.type();
-            DbSynchronzier dbSynchronzier = context.getBean(synchronzierClass);
-            asyncDbService.register(targetClass, dbSynchronzier);
+        try (ScanResult scanResult = new ClassGraph()
+                .enableAnnotationInfo()
+                .enableClassInfo()
+                .acceptPackages("")
+                .scan()) {
+            for (ClassInfo targetClassInfo : scanResult.getClassesWithAnnotation(DbSynchronzierClass.class.getCanonicalName())) {
+                Class<?> targetClass = targetClassInfo.loadClass();
+                DbSynchronzierClass anno = targetClass.getAnnotation(DbSynchronzierClass.class);
+                Class<? extends DbSynchronzier> synchronzierClass = anno.type();
+                DbSynchronzier dbSynchronzier = context.getBean(synchronzierClass);
+                asyncDbService.register(targetClass, dbSynchronzier);
+            }
         }
 
         for (AbstractEntityCache entityCache : context.getBeansOfType(AbstractEntityCache.class).values()) {

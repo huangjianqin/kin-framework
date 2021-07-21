@@ -41,11 +41,7 @@ public class GitUtils {
         if (CollectionUtils.isNonEmpty(branches)) {
             clone.setBranchesToClone(branches);
         }
-//        if (REMOTE_URL.contains("ssh")) {
-//            MySShSessionFactory myFactory = new MySShSessionFactory();
-//            myFactory.setSshKeyFilePath("C:/id_rsa");
-//            SshSessionFactory.setInstance(myFactory);
-//        }
+
         if (remote.contains("http") || remote.contains("https")) {
             UsernamePasswordCredentialsProvider provider = new UsernamePasswordCredentialsProvider(user, password);
             clone.setCredentialsProvider(provider);
@@ -54,14 +50,6 @@ public class GitUtils {
         Git clonedRepository;
         clonedRepository = clone.call();
         clonedRepository.close();
-        // now open the created repository
-//            FileRepositoryBuilder builder = new FileRepositoryBuilder();
-//            Repository repository = builder.setGitDir(new File(localPath + "/.git")).readEnvironment()
-//                    // scan environment GIT_DIR
-//                    // GIT_WORK_TREE
-//                    // variables
-//                    .findGitDir() // scan up the file system tree
-//                    .build();
         return true;
     }
 }

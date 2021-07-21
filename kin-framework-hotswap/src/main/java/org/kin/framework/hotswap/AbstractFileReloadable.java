@@ -3,9 +3,10 @@ package org.kin.framework.hotswap;
 import java.io.InputStream;
 
 /**
+ * 文件热更新父类
+ *
  * @author huangjianqin
  * @date 2018/2/1
- * 热更新文件，特别是配置文件
  */
 public abstract class AbstractFileReloadable implements Reloadable {
     private final String filePath;

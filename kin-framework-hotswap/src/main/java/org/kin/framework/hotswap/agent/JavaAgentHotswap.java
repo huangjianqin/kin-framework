@@ -29,9 +29,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 单例模式
+ *
  * @author huangjianqin
  * @date 2018/2/3
- * 单例模式
  */
 public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
     private static final Logger log = LoggerFactory.getLogger(JavaAgentHotswap.class);

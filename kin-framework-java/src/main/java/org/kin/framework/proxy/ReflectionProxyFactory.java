@@ -12,7 +12,7 @@ import java.lang.reflect.Proxy;
  */
 public class ReflectionProxyFactory implements ProxyFactory {
     /** 单例 */
-    public static ReflectionProxyFactory INSTANCE = new ReflectionProxyFactory();
+    public static final ReflectionProxyFactory INSTANCE = new ReflectionProxyFactory();
 
     private ReflectionProxyFactory() {
     }

@@ -7,9 +7,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
+ * 单例模式 每次热更后, 都会检查版本号, 执行开发者自定义逻辑
+ *
  * @author huangjianqin
  * @date 2018/10/31
- * 单例模式 每次热更后, 都会检查版本号, 执行开发者自定义逻辑
  */
 public class HotFix {
     private static HotFix HOT_FIX = new HotFix();

@@ -6,9 +6,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * @author 健勤
- * @date 2017/8/11
  * 组合服务,也就是说该类或继承该类的子类会拥有许多服务
+ *
+ * @author huangjianqin
+ * @date 2017/8/11
  */
 public class CompsiteService extends AbstractService {
     private List<Service> services = new LinkedList<>();

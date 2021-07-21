@@ -1,9 +1,10 @@
 package org.kin.framework.service;
 
 /**
- * @author 健勤
- * @date 2017/8/8
  * 某一具体服务状态的类
+ *
+ * @author huangjianqin
+ * @date 2017/8/8
  */
 public class ServiceState {
     private String serviceName;

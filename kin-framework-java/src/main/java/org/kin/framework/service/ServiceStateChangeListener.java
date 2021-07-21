@@ -1,9 +1,10 @@
 package org.kin.framework.service;
 
 /**
- * @author 健勤
- * @date 2017/8/8
  * 服务状态改变触发的监听器
+ *
+ * @author huangjianqin
+ * @date 2017/8/8
  */
 @FunctionalInterface
 public interface ServiceStateChangeListener<S extends Service> {

@@ -30,7 +30,7 @@ public class HashUtils {
     public static int efficientHash(Object key, int limit) {
         int h;
         //高低位异或 目的是增加hash的复杂度
-        return key == null ? 0 : (((h = key.hashCode()) ^ h >>> 16) & (limit - 1));
+        return key == null ? 0 : (((h = key.hashCode()) ^ (h >>> 16)) & (limit - 1));
     }
 
 

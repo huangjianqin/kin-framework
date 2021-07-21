@@ -14,28 +14,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author huangjianqin
- * @date 2018/2/1
  * 文件监听器   单例模式
  * 利用nio 新api监听文件变换
  * 该api底层本质上是监听了操作系统的文件系统触发的文件更改事件
  * <p>
  * 异步热加载文件 同步类热更新
+ *
+ * @author huangjianqin
+ * @date 2018/2/1
  */
 public class FileMonitor extends Thread implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(FileMonitor.class);
     private WatchService watchService;
     /** hash(file name) -> Reloadable 实例 */
     private Map<Integer, AbstractFileReloadable> monitorItems;
-    /** 类热加载工厂 */
-    private JavaAgentHotswap javaAgentHotswap = JavaAgentHotswap.instance();
-    /** 分段锁 */
-    private Object[] locks;
     /** 异步热加载文件 执行线程 */
     private ExecutionContext executionContext;
     private volatile boolean isStopped = false;
@@ -60,12 +58,7 @@ public class FileMonitor extends Thread implements Closeable {
     private void init() throws IOException {
         watchService = FileSystems.getDefault().newWatchService();
 
-        monitorItems = new HashMap<>();
-        locks = new Object[5];
-        for (int i = 0; i < locks.length; i++) {
-            locks[i] = new Object();
-        }
-
+        monitorItems = new ConcurrentHashMap<>();
         if (executionContext == null) {
             //默认设置
             this.executionContext = ExecutionContext.elastic(0, SysUtils.CPU_NUM, "file-monitor");
@@ -111,23 +104,21 @@ public class FileMonitor extends Thread implements Closeable {
                             //处理类热更新
                             changedClasses.add(childPath);
                         } else {
-                            synchronized (getLock(hashKey)) {
-                                //处理文件热更新
-                                AbstractFileReloadable fileReloadable = monitorItems.get(hashKey);
-                                if (fileReloadable != null) {
-                                    executionContext.execute(() -> {
-                                        try {
-                                            long startTime = System.currentTimeMillis();
-                                            try (InputStream is = new FileInputStream(childPath.toFile())) {
-                                                fileReloadable.reload(is);
-                                            }
-                                            long endTime = System.currentTimeMillis();
-                                            log.info("hotswap file '{}' finished, time cost {} ms", childPath.toString(), endTime - startTime);
-                                        } catch (IOException e) {
-                                            log.error("", e);
+                            //处理文件热更新
+                            AbstractFileReloadable fileReloadable = monitorItems.get(hashKey);
+                            if (fileReloadable != null) {
+                                executionContext.execute(() -> {
+                                    try {
+                                        long startTime = System.currentTimeMillis();
+                                        try (InputStream is = new FileInputStream(childPath.toFile())) {
+                                            fileReloadable.reload(is);
                                         }
-                                    });
-                                }
+                                        long endTime = System.currentTimeMillis();
+                                        log.info("hotswap file '{}' finished, time cost {} ms", childPath.toString(), endTime - startTime);
+                                    } catch (IOException e) {
+                                        log.error("", e);
+                                    }
+                                });
                             }
                         }
                     }
@@ -140,18 +131,11 @@ public class FileMonitor extends Thread implements Closeable {
 
             if (changedClasses.size() > 0) {
                 //类热更新
-                executionContext.execute(() -> javaAgentHotswap.hotswap(changedClasses));
+                executionContext.execute(() -> JavaAgentHotswap.instance().hotswap(changedClasses));
                 HotFix.instance().fix();
             }
         }
         log.info("file monitor end");
-    }
-
-    /**
-     * 获取分段锁
-     */
-    private Object getLock(int key) {
-        return locks[key % locks.length];
     }
 
     public void shutdown() {
@@ -165,8 +149,6 @@ public class FileMonitor extends Thread implements Closeable {
             executionContext.shutdown();
             //help GC
             monitorItems = null;
-//            hotswapFactory = null;
-            locks = null;
             executionContext = null;
 
             //中断监控线程, 让本线程退出
@@ -174,7 +156,7 @@ public class FileMonitor extends Thread implements Closeable {
         }
     }
 
-    //-----------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------API---------------------------------------------------------------
     private void checkStatus() {
         if (isStopped) {
             throw new IllegalStateException("file monitor has shutdowned");
@@ -204,12 +186,13 @@ public class FileMonitor extends Thread implements Closeable {
      * 监听文件变化
      */
     private void monitorFile0(Path file, String itemName, AbstractFileReloadable fileReloadable) throws IOException {
-        file.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
 
         int key = itemName.hashCode();
-        synchronized (getLock(key)) {
-            monitorItems.put(key, fileReloadable);
+        AbstractFileReloadable old = monitorItems.putIfAbsent(key, fileReloadable);
+        if (Objects.nonNull(old)) {
+            throw new IllegalStateException(String.format("file '%s' has been monitored", file));
         }
+        file.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
     }
 
     @Override

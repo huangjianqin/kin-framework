@@ -15,7 +15,7 @@ import java.util.stream.Stream;
  * @date 2017/10/28
  */
 public class ConcurrentHashSet<E> extends AbstractSet<E> {
-    private ConcurrentHashMap<E, Boolean> items = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<E, Boolean> items = new ConcurrentHashMap<>();
 
     @Override
     @NonNull

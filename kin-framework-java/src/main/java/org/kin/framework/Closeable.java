@@ -3,7 +3,6 @@ package org.kin.framework;
 /**
  * @author huangjianqin
  * @date 2019/2/28
- * <p>
  */
 public interface Closeable {
     /**
