@@ -2,13 +2,20 @@ package org.kin.framework.utils;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
+import com.sun.nio.zipfs.ZipFileSystem;
+import com.sun.nio.zipfs.ZipFileSystemProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.spi.FileSystemProvider;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -23,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2020/9/27
  */
 public class KinServiceLoader {
+    private static final Logger log = LoggerFactory.getLogger(KinServiceLoader.class);
+
     private static final String META_INF = "META-INF/";
     /** 默认会加载META-INF, META-INF/kin, META-INF/services下面的kin.factories文件 */
     private static final String DEFAULT_FILE_NAME = "kin.factories";
@@ -111,34 +120,77 @@ public class KinServiceLoader {
                 FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
-                        if (path.toFile().isDirectory()) {
+                        //对于非file schema, 无法用path转换成File来判断是否是目录, 只能用通用抽象方法
+                        if (attrs.isDirectory()) {
                             return FileVisitResult.CONTINUE;
                         }
                         //解析文件
-                        parse(serviceN2ImplementClassN, path.toUri().toURL());
+                        //对于非file schema, 无法用path转换成File来获取文件名, 故通过通用抽象Path来获取
+                        parse(serviceN2ImplementClassN, path);
                         return FileVisitResult.CONTINUE;
                     }
                 };
-                try {
-                    //遍历该url下所有文件
-                    Files.walkFileTree(Paths.get(url.toURI()), visitor);
-                } catch (IOException | URISyntaxException e) {
-                    ExceptionUtils.throwExt(e);
+                URI uri = url.toURI();
+                String scheme = uri.getScheme();
+                FileSystem otherFs = null;
+                if (!scheme.equalsIgnoreCase("file")) {
+                    //非file schema, 则需要手动加载其file system, 否则解析不出path, 然后就无法遍历目录了
+                    Map<String, String> env = new HashMap<>();
+                    env.put("create", "true");
+                    otherFs = FileSystems.newFileSystem(uri, env);
+                }
+                //遍历该url下所有文件
+                Path path = Paths.get(uri);
+                Files.walkFileTree(path, visitor);
+                if (Objects.nonNull(otherFs)) {
+                    //扫描完即可移除, 因为其是临时资源, 不释放会浪费内存
+                    removeFromZipProvider(uri, otherFs);
                 }
             }
             this.serviceN2ImplementClassN = serviceN2ImplementClassN;
-        } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
         } catch (Exception e) {
-            //ignore
+            ExceptionUtils.throwExt(e);
+        }
+    }
+
+    /**
+     * 因为需要扫描整个classpath的所有resources, 并且解析后, 这些数据是可以丢弃的,
+     * 如果可以释放, 可以减少内存占用. 但是ZipFileSystemProvider并没有把相关方法开放出来(并不想开发者调用??),
+     * 故使用反射从其FileSystem缓存中移除
+     */
+    @SuppressWarnings("JavaReflectionInvocation")
+    private void removeFromZipProvider(URI uri, FileSystem fileSystem) {
+        try {
+            Class<ZipFileSystemProvider> providerClass = ZipFileSystemProvider.class;
+            //获取移除缓存方法
+            Method removeMethod = providerClass.getDeclaredMethod("removeFileSystem", Path.class, ZipFileSystem.class);
+            if (!removeMethod.isAccessible()) {
+                removeMethod.setAccessible(true);
+            }
+            //该方法将URI转换成的Path, 并作为缓存的key
+            Method uriToPathMethod = providerClass.getDeclaredMethod("uriToPath", URI.class);
+            if (!uriToPathMethod.isAccessible()) {
+                uriToPathMethod.setAccessible(true);
+            }
+            for (FileSystemProvider installedProvider : FileSystemProvider.installedProviders()) {
+                if (installedProvider.getClass().equals(providerClass)) {
+                    //remove
+                    Path path = (Path) uriToPathMethod.invoke(installedProvider, uri);
+                    removeMethod.invoke(installedProvider, path.toRealPath(), fileSystem);
+                }
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | IOException e) {
+            log.error("remove temporary file system error!!!", e);
         }
     }
 
     /**
      * 解析配置文件
      */
-    private void parse(Multimap<String, String> serviceN2ImplementClassN, URL url) {
+    private void parse(Multimap<String, String> serviceN2ImplementClassN, Path path) {
         try {
+            URL url = path.toUri().toURL();
+            String fileName = path.getFileName().toString();
             Properties properties = new Properties();
             try (InputStream is = url.openStream()) {
                 //加载properties
@@ -150,11 +202,11 @@ public class KinServiceLoader {
                         serviceN2ImplementClassN.putAll(serviceClassName, filtered);
                     } else {
                         //只有key, 没有value, 则是没有配置class name或class key, 仅仅配置了implement class name
-                        serviceN2ImplementClassN.put(Paths.get(url.toURI()).toFile().getName(), serviceClassName);
+                        serviceN2ImplementClassN.put(fileName, serviceClassName);
                     }
                 }
             }
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
     }
