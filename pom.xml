@@ -10,44 +10,11 @@
         <module>kin-framework-asyncdb</module>
         <module>kin-framework-hotswap</module>
         <module>kin-framework-groovy</module>
+        <module>kin-framework-bom</module>
     </modules>
     <groupId>org.kin</groupId>
     <version>${revision}</version>
     <packaging>pom</packaging>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.kin</groupId>
-                <artifactId>kin-framework-asyncdb</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.kin</groupId>
-                <artifactId>kin-framework-groovy</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.kin</groupId>
-                <artifactId>kin-framework-hotswap</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.kin</groupId>
-                <artifactId>kin-framework-java</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.kin</groupId>
-                <artifactId>kin-framework-scala</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <properties>
         <java.version>1.8</java.version>
