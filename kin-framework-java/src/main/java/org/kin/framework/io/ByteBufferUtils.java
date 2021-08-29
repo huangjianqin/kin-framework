@@ -61,4 +61,18 @@ public class ByteBufferUtils {
         copy(target, src);
         src.clear();
     }
+
+    /**
+     * 获取{@link ByteBuffer}可读字节数
+     */
+    public static int getReadableBytes(ByteBuffer target) {
+        return target.limit() - target.position();
+    }
+
+    /**
+     * 获取{@link ByteBuffer}最大可写字节数
+     */
+    public static int getMaxWritableBytes(ByteBuffer target) {
+        return target.capacity() - target.position();
+    }
 }
