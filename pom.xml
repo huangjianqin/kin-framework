@@ -7,7 +7,6 @@
     <modules>
         <module>kin-framework-java</module>
         <module>kin-framework-scala</module>
-        <module>kin-framework-asyncdb</module>
         <module>kin-framework-hotswap</module>
         <module>kin-framework-groovy</module>
         <module>kin-framework-bom</module>
@@ -47,7 +46,6 @@
         <qdox.version>2.0.0</qdox.version>
         <groovy.version>3.0.5</groovy.version>
         <byte-buddy.version>1.10.18</byte-buddy.version>
-        <springboot.version>2.5.0</springboot.version>
         <mysql-connector-java.version>8.0.19</mysql-connector-java.version>
         <druid.version>1.1.9</druid.version>
         <mybatis-plus.version>3.4.1</mybatis-plus.version>
