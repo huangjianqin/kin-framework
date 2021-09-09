@@ -8,7 +8,7 @@ import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
-import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
+import org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -33,13 +33,12 @@ import static org.springframework.core.BridgeMethodResolver.isVisibilityBridgeMe
 import static org.springframework.core.GenericTypeResolver.resolveTypeArgument;
 
 /**
- * 利用spring {@link InstantiationAwareBeanPostProcessorAdapter} 处理自定义注解注入逻辑
+ * 利用spring {@link SmartInstantiationAwareBeanPostProcessor} 处理自定义注解注入逻辑
  *
  * @author huangjianqin
  * @date 2020/12/14
  */
-public abstract class AbstractAnnotationBeanPostProcessor extends
-        InstantiationAwareBeanPostProcessorAdapter implements MergedBeanDefinitionPostProcessor, DisposableBean {
+public abstract class AbstractAnnotationBeanPostProcessor implements SmartInstantiationAwareBeanPostProcessor, MergedBeanDefinitionPostProcessor, DisposableBean {
     private final Logger log = LoggerFactory.getLogger(getClass());
     /** 需处理的注解 */
     private final Class<? extends Annotation>[] annotationTypes;
@@ -355,6 +354,9 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
 
         @Override
         protected void inject(@Nonnull Object bean, String beanName, PropertyValues pvs) throws Throwable {
+            if (Objects.isNull(pd)) {
+                return;
+            }
             Class<?> injectedType = pd.getPropertyType();
             Object injectedObject = getInjectedObject(attributes, bean, beanName, injectedType, this);
             ReflectionUtils.makeAccessible(method);
