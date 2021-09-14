@@ -2,6 +2,7 @@ package org.kin.framework.utils;
 
 import com.google.common.collect.Sets;
 import org.kin.framework.collection.Tuple;
+import org.springframework.util.Assert;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 import sun.reflect.generics.reflectiveObjects.TypeVariableImpl;
 
@@ -31,7 +32,28 @@ public class ClassUtils {
     private static final Pattern INNER_PATTERN = Pattern.compile("\\$(\\d+).", Pattern.CASE_INSENSITIVE);
     /** 生成方法签名的参数命名 */
     public static final String METHOD_DECLARATION_ARG_NAME = "arg";
+    /** key -> 泛型类型, value -> 第一个泛型类型参数 */
     private static final Map<Type, Class<?>> GENERIC_TYPES_CACHE = new ConcurrentHashMap<>();
+    /** key -> 基础类型, value -> 包装类 */
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER_TYPE_MAP = new IdentityHashMap<>(8);
+    /** key -> 包装类, value -> 基础类型 */
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_TYPE_TO_WRAPPER_MAP = new IdentityHashMap<>(8);
+
+    static {
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Boolean.class, boolean.class);
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Byte.class, byte.class);
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Character.class, char.class);
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Double.class, double.class);
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Float.class, float.class);
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Integer.class, int.class);
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Long.class, long.class);
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Short.class, short.class);
+        PRIMITIVE_WRAPPER_TYPE_MAP.put(Void.class, void.class);
+
+        for (Map.Entry<Class<?>, Class<?>> entry : PRIMITIVE_WRAPPER_TYPE_MAP.entrySet()) {
+            PRIMITIVE_TYPE_TO_WRAPPER_MAP.put(entry.getValue(), entry.getKey());
+        }
+    }
 
     @FunctionalInterface
     private interface Matcher<T> {
@@ -689,6 +711,24 @@ public class ClassUtils {
         }
         ParameterizedType parameterizedType = (ParameterizedType) field.getGenericType();
         return new Tuple<>((Class<?>) parameterizedType.getActualTypeArguments()[0], (Class<?>) parameterizedType.getActualTypeArguments()[1]);
+    }
+
+    /**
+     * 判断是否可以rhsType是可以被assigned to lhsType, 考虑基础类型
+     */
+    public static boolean isAssignable(Class<?> lhsType, Class<?> rhsType) {
+        Assert.notNull(lhsType, "Left-hand side type must not be null");
+        Assert.notNull(rhsType, "Right-hand side type must not be null");
+        if (lhsType.isAssignableFrom(rhsType)) {
+            return true;
+        }
+        if (lhsType.isPrimitive()) {
+            Class<?> resolvedPrimitive = PRIMITIVE_WRAPPER_TYPE_MAP.get(rhsType);
+            return (lhsType == resolvedPrimitive);
+        } else {
+            Class<?> resolvedWrapper = PRIMITIVE_TYPE_TO_WRAPPER_MAP.get(rhsType);
+            return (resolvedWrapper != null && lhsType.isAssignableFrom(resolvedWrapper));
+        }
     }
 
     //------------------------------------------------------------字节码相关------------------------------------------------------------
