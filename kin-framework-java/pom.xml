@@ -16,32 +16,27 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>${logback.version}</version>
         </dependency>
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
         </dependency>
 
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
             <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -49,14 +44,12 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
 
         <!-- 超快速超轻量级并行化的Java classpath scanner -->
         <dependency>
             <groupId>io.github.classgraph</groupId>
             <artifactId>classgraph</artifactId>
-            <version>${classgraph.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -64,14 +57,12 @@
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
-            <version>${jmh.version}</version>
             <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
-            <version>${jmh.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -79,7 +70,6 @@
         <dependency>
             <groupId>org.jyaml</groupId>
             <artifactId>jyaml</artifactId>
-            <version>${jyaml.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -87,14 +77,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
             <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -102,7 +90,6 @@
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
-            <version>${javassist.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -110,7 +97,6 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-exec</artifactId>
-            <version>${commons-exec.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -118,7 +104,6 @@
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
-            <version>${jgit.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -126,7 +111,6 @@
         <dependency>
             <groupId>org.tmatesoft.svnkit</groupId>
             <artifactId>svnkit</artifactId>
-            <version>${svnkit.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -134,7 +118,6 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -142,7 +125,6 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
             <optional>true</optional>
         </dependency>
 
@@ -150,14 +132,12 @@
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
-            <version>${byte-buddy.version}</version>
             <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus</artifactId>
-            <version>${mybatis-plus.version}</version>
             <optional>true</optional>
         </dependency>
     </dependencies>
