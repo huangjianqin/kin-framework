@@ -35,7 +35,7 @@ public class ExecutionContext implements ScheduledExecutorService {
     public ExecutionContext(ExecutorService worker, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         this.worker = worker;
         if (scheduleParallelism > 0) {
-            ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(scheduleParallelism, scheduleThreadFactory);
+            ScheduledThreadPoolExecutor scheduledExecutor = ThreadPoolUtils.scheduledThreadPoolBuilder().coreThreads(scheduleParallelism).threadFactory(scheduleThreadFactory).build();
             //默认future cancel时移除task queue, 稍微加大cpu消耗以及阻塞, 以减少堆内存消耗
             scheduledExecutor.setRemoveOnCancelPolicy(true);
             this.scheduleExecutor = scheduledExecutor;
@@ -100,7 +100,13 @@ public class ExecutionContext implements ScheduledExecutorService {
 
     public static ExecutionContext cache(int coreParallelism, int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         return new ExecutionContext(
-                new ThreadPoolExecutor(coreParallelism, maxParallelism, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), workerThreadFactory),
+                ThreadPoolUtils.threadPoolBuilder()
+                        .coreThreads(coreParallelism)
+                        .maximumThreads(maxParallelism)
+                        .keepAlive(60L, TimeUnit.SECONDS)
+                        .workQueue(new SynchronousQueue<>())
+                        .threadFactory(workerThreadFactory)
+                        .build(),
                 scheduleParallelism, scheduleThreadFactory);
     }
 
@@ -119,7 +125,13 @@ public class ExecutionContext implements ScheduledExecutorService {
 
     public static ExecutionContext fix(int parallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         return new ExecutionContext(
-                new ThreadPoolExecutor(parallelism, parallelism, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), workerThreadFactory),
+                ThreadPoolUtils.threadPoolBuilder()
+                        .coreThreads(parallelism)
+                        .maximumThreads(parallelism)
+                        .keepAlive(60L, TimeUnit.SECONDS)
+                        .workQueue(new LinkedBlockingQueue<>())
+                        .threadFactory(workerThreadFactory)
+                        .build(),
                 scheduleParallelism, scheduleThreadFactory);
     }
 
@@ -137,7 +149,12 @@ public class ExecutionContext implements ScheduledExecutorService {
      */
     public static ExecutionContext elastic(int coreParallelism, int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         return new ExecutionContext(
-                EagerThreadPoolExecutor.create(coreParallelism, maxParallelism, 60L, TimeUnit.SECONDS, workerThreadFactory),
+                ThreadPoolUtils.eagerThreadPoolBuilder()
+                        .coreThreads(coreParallelism)
+                        .maximumThreads(maxParallelism)
+                        .keepAlive(60L, TimeUnit.SECONDS)
+                        .threadFactory(workerThreadFactory)
+                        .build(),
                 scheduleParallelism, scheduleThreadFactory);
     }
     //--------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author huangjianqin
  * @date 2021/4/19
  */
-public final class EagerThreadPoolExecutor extends ThreadPoolExecutor {
+public class EagerThreadPoolExecutor extends ThreadPoolExecutor {
     /** 统计task count */
     private final AtomicInteger submittedTaskCount = new AtomicInteger(0);
 
@@ -99,11 +99,11 @@ public final class EagerThreadPoolExecutor extends ThreadPoolExecutor {
         return executor;
     }
 
-    private EagerThreadPoolExecutor(int corePoolSize,
-                                    int maximumPoolSize,
-                                    long keepAliveTime,
-                                    TimeUnit unit,
-                                    EagerTaskQueue<Runnable> workQueue) {
+    protected EagerThreadPoolExecutor(int corePoolSize,
+                                      int maximumPoolSize,
+                                      long keepAliveTime,
+                                      TimeUnit unit,
+                                      EagerTaskQueue<Runnable> workQueue) {
         super(corePoolSize,
                 maximumPoolSize,
                 keepAliveTime,
@@ -111,12 +111,12 @@ public final class EagerThreadPoolExecutor extends ThreadPoolExecutor {
                 workQueue);
     }
 
-    private EagerThreadPoolExecutor(int corePoolSize,
-                                    int maximumPoolSize,
-                                    long keepAliveTime,
-                                    TimeUnit unit,
-                                    EagerTaskQueue<Runnable> workQueue,
-                                    RejectedExecutionHandler handler) {
+    protected EagerThreadPoolExecutor(int corePoolSize,
+                                      int maximumPoolSize,
+                                      long keepAliveTime,
+                                      TimeUnit unit,
+                                      EagerTaskQueue<Runnable> workQueue,
+                                      RejectedExecutionHandler handler) {
         super(corePoolSize,
                 maximumPoolSize,
                 keepAliveTime,
@@ -125,12 +125,12 @@ public final class EagerThreadPoolExecutor extends ThreadPoolExecutor {
                 handler);
     }
 
-    private EagerThreadPoolExecutor(int corePoolSize,
-                                    int maximumPoolSize,
-                                    long keepAliveTime,
-                                    TimeUnit unit,
-                                    EagerTaskQueue<Runnable> workQueue,
-                                    ThreadFactory threadFactory) {
+    protected EagerThreadPoolExecutor(int corePoolSize,
+                                      int maximumPoolSize,
+                                      long keepAliveTime,
+                                      TimeUnit unit,
+                                      EagerTaskQueue<Runnable> workQueue,
+                                      ThreadFactory threadFactory) {
         super(corePoolSize,
                 maximumPoolSize,
                 keepAliveTime,
@@ -139,13 +139,13 @@ public final class EagerThreadPoolExecutor extends ThreadPoolExecutor {
                 threadFactory);
     }
 
-    private EagerThreadPoolExecutor(int corePoolSize,
-                                    int maximumPoolSize,
-                                    long keepAliveTime,
-                                    TimeUnit unit,
-                                    EagerTaskQueue<Runnable> workQueue,
-                                    ThreadFactory threadFactory,
-                                    RejectedExecutionHandler handler) {
+    protected EagerThreadPoolExecutor(int corePoolSize,
+                                      int maximumPoolSize,
+                                      long keepAliveTime,
+                                      TimeUnit unit,
+                                      EagerTaskQueue<Runnable> workQueue,
+                                      ThreadFactory threadFactory,
+                                      RejectedExecutionHandler handler) {
         super(corePoolSize,
                 maximumPoolSize,
                 keepAliveTime,

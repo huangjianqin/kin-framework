@@ -75,4 +75,17 @@ public class SimpleThreadFactory implements ThreadFactory {
         return new Thread(threadGroup, r, prefix + count);
     }
 
+    //getter
+
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public boolean isDaemon() {
+        return daemon;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
 }

@@ -37,6 +37,7 @@
         <javaparser.version>3.20.2</javaparser.version>
         <classgraph.version>4.8.98</classgraph.version>
         <eclipse-collections.version>10.4.0</eclipse-collections.version>
+        <micrometer.version>1.7.3</micrometer.version>
     </properties>
 
     <dependencyManagement>
@@ -233,6 +234,13 @@
                 <groupId>org.codehaus.groovy</groupId>
                 <artifactId>groovy</artifactId>
                 <version>${groovy.version}</version>
+            </dependency>
+
+            <!-- metrics -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-core</artifactId>
+                <version>${micrometer.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
