@@ -11,7 +11,7 @@ import java.util.concurrent.*;
  * @date 2021/10/15
  */
 public class EagerThreadPoolExecutorWithLog extends EagerThreadPoolExecutor {
-    private static final Logger log = LoggerFactory.getLogger(ThreadPoolExecutorWithLog.class);
+    private static final Logger log = LoggerFactory.getLogger(EagerThreadPoolExecutorWithLog.class);
     private final String name;
 
     public static EagerThreadPoolExecutorWithLog create(String name,
@@ -110,6 +110,7 @@ public class EagerThreadPoolExecutorWithLog extends EagerThreadPoolExecutor {
                                              long keepAliveTime, TimeUnit unit,
                                              EagerTaskQueue<Runnable> workQueue, String name) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, null);
         this.name = name;
     }
 
@@ -118,6 +119,7 @@ public class EagerThreadPoolExecutorWithLog extends EagerThreadPoolExecutor {
                                              EagerTaskQueue<Runnable> workQueue, RejectedExecutionHandler handler,
                                              String name) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, null);
         this.name = name;
     }
 
@@ -126,6 +128,7 @@ public class EagerThreadPoolExecutorWithLog extends EagerThreadPoolExecutor {
                                              EagerTaskQueue<Runnable> workQueue, ThreadFactory threadFactory,
                                              String name) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, threadFactory);
         this.name = name;
     }
 
@@ -134,6 +137,7 @@ public class EagerThreadPoolExecutorWithLog extends EagerThreadPoolExecutor {
                                              EagerTaskQueue<Runnable> workQueue, ThreadFactory threadFactory,
                                              RejectedExecutionHandler handler, String name) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, threadFactory);
         this.name = name;
     }
 

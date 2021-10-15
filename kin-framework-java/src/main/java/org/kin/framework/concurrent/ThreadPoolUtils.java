@@ -1,8 +1,9 @@
 package org.kin.framework.concurrent;
 
-import com.google.common.base.Preconditions;
+import org.kin.framework.utils.StringUtils;
 import org.kin.framework.utils.SysUtils;
 
+import java.util.Objects;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.*;
 
@@ -19,12 +20,12 @@ public final class ThreadPoolUtils {
     private ThreadPoolUtils() {
     }
 
-    public static TheadPoolBuilder threadPoolBuilder() {
-        return new TheadPoolBuilder();
+    public static ThreadPoolBuilder threadPoolBuilder() {
+        return new ThreadPoolBuilder();
     }
 
-    public static TheadPoolBuilder eagerThreadPoolBuilder() {
-        return new TheadPoolBuilder().eager();
+    public static ForkJoinThreadPoolBuilder forkJoinThreadPoolBuilder() {
+        return new ForkJoinThreadPoolBuilder();
     }
 
     public static ScheduledThreadPoolBuilder scheduledThreadPoolBuilder() {
@@ -55,27 +56,42 @@ public final class ThreadPoolUtils {
         }
     }
 
-    public static ThreadPoolExecutor newEagerThreadPool(String poolName, boolean enableMetric,
-                                                        int coreThreads, int maximumThreads,
-                                                        long keepAliveTime, TimeUnit unit,
-                                                        int queueSize,
-                                                        ThreadFactory threadFactory) {
+    public static EagerThreadPoolExecutor newEagerThreadPool(String poolName, boolean enableMetric,
+                                                             int coreThreads, int maximumThreads,
+                                                             long keepAliveTime, TimeUnit unit,
+                                                             int queueSize,
+                                                             ThreadFactory threadFactory) {
         return newEagerThreadPool(poolName, enableMetric, coreThreads, maximumThreads,
                 keepAliveTime, unit, queueSize, threadFactory, DEFAULT_REJECTED_EXECUTION_HANDLER);
     }
 
-    public static ThreadPoolExecutor newEagerThreadPool(String poolName, boolean enableMetric,
-                                                        int coreThreads, int maximumThreads,
-                                                        long keepAliveTime, TimeUnit unit,
-                                                        int queueSize,
-                                                        ThreadFactory threadFactory,
-                                                        java.util.concurrent.RejectedExecutionHandler rejectedHandler) {
+    public static EagerThreadPoolExecutor newEagerThreadPool(String poolName, boolean enableMetric,
+                                                             int coreThreads, int maximumThreads,
+                                                             long keepAliveTime, TimeUnit unit,
+                                                             int queueSize,
+                                                             ThreadFactory threadFactory,
+                                                             java.util.concurrent.RejectedExecutionHandler rejectedHandler) {
         if (enableMetric) {
             return EagerThreadPoolExecutorWithMetric.create(poolName, coreThreads, maximumThreads, keepAliveTime, unit, queueSize,
                     threadFactory, rejectedHandler);
         } else {
             return EagerThreadPoolExecutorWithLog.create(poolName, coreThreads, maximumThreads, keepAliveTime, unit, queueSize,
                     threadFactory, rejectedHandler);
+        }
+    }
+
+    public static ForkJoinPool newForkJoinPool(String poolName, boolean enableMetric,
+                                               int parallelism, Thread.UncaughtExceptionHandler handler, boolean asyncMode) {
+        return newForkJoinPool(poolName, enableMetric, parallelism, ForkJoinPool.defaultForkJoinWorkerThreadFactory, handler, asyncMode);
+    }
+
+    public static ForkJoinPool newForkJoinPool(String poolName, boolean enableMetric,
+                                               int parallelism, ForkJoinPool.ForkJoinWorkerThreadFactory factory,
+                                               Thread.UncaughtExceptionHandler handler, boolean asyncMode) {
+        if (enableMetric) {
+            return new ForkJoinPoolWithMetric(parallelism, factory, handler, asyncMode, poolName);
+        } else {
+            return new ForkJoinPoolWithLog(parallelism, factory, handler, asyncMode, poolName);
         }
     }
 
@@ -96,9 +112,28 @@ public final class ThreadPoolUtils {
         }
     }
 
+    /**
+     * 如果没有设置pool name, 则尝试从{@link ThreadFactory}获取, 否则undefined
+     */
+    static String applyPoolNameIfBlank(String name, ThreadFactory threadFactory) {
+        if (StringUtils.isNotBlank(name)) {
+            return name;
+        }
+
+        if (Objects.nonNull(threadFactory)) {
+            //尝试从SimpleThreadFactory获取pool name
+            if (threadFactory instanceof SimpleThreadFactory) {
+                SimpleThreadFactory simpleThreadFactory = (SimpleThreadFactory) threadFactory;
+                return simpleThreadFactory.getPrefix();
+            }
+        }
+
+        return "undefined";
+    }
+
     //------------------------------------------------------------------------------------
-    public static final class TheadPoolBuilder {
-        private String poolName = "undefined";
+    public static final class ThreadPoolBuilder {
+        private String poolName;
         private boolean enableMetric;
         private int coreThreads = SysUtils.getSuitableThreadNum();
         private int maximumThreads = Integer.MAX_VALUE;
@@ -107,95 +142,73 @@ public final class ThreadPoolUtils {
         private BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>();
         private ThreadFactory threadFactory = Executors.defaultThreadFactory();
         private java.util.concurrent.RejectedExecutionHandler handler = ThreadPoolUtils.DEFAULT_REJECTED_EXECUTION_HANDLER;
-        /** 是否使用{@link EagerThreadPoolExecutor} */
-        private boolean eager;
-        /** eager=true下有效, eager队列大小, 0表示不限制 */
-        private int queueSize;
 
-        private TheadPoolBuilder() {
+        private ThreadPoolBuilder() {
         }
 
-        public TheadPoolBuilder poolName(String poolName) {
+        public ThreadPoolBuilder poolName(String poolName) {
             this.poolName = poolName;
             return this;
         }
 
-        public TheadPoolBuilder metric() {
+        public ThreadPoolBuilder metric() {
             this.enableMetric = true;
             return this;
         }
 
-        public TheadPoolBuilder coreThreads(int coreThreads) {
+        public ThreadPoolBuilder coreThreads(int coreThreads) {
             this.coreThreads = coreThreads;
             return this;
         }
 
-        public TheadPoolBuilder maximumThreads(int maximumThreads) {
+        public ThreadPoolBuilder maximumThreads(int maximumThreads) {
             this.maximumThreads = maximumThreads;
             return this;
         }
 
-        public TheadPoolBuilder keepAliveSeconds(long keepAliveSeconds) {
+        public ThreadPoolBuilder keepAliveSeconds(long keepAliveSeconds) {
             return keepAlive(keepAliveSeconds, TimeUnit.SECONDS);
         }
 
-        public TheadPoolBuilder keepAlive(long keepAliveTime, TimeUnit unit) {
+        public ThreadPoolBuilder keepAlive(long keepAliveTime, TimeUnit unit) {
             this.keepAliveTime = keepAliveTime;
             this.unit = unit;
             return this;
         }
 
-        public TheadPoolBuilder workQueue(BlockingQueue<Runnable> workQueue) {
+        public ThreadPoolBuilder workQueue(BlockingQueue<Runnable> workQueue) {
             this.workQueue = workQueue;
             return this;
         }
 
-        public TheadPoolBuilder threadFactory(ThreadFactory threadFactory) {
+        public ThreadPoolBuilder threadFactory(ThreadFactory threadFactory) {
             this.threadFactory = threadFactory;
-            if (threadFactory instanceof SimpleThreadFactory) {
-                SimpleThreadFactory simpleThreadFactory = (SimpleThreadFactory) threadFactory;
-                this.poolName = simpleThreadFactory.getPrefix();
-            }
             return this;
         }
 
-        public TheadPoolBuilder rejectedHandler(java.util.concurrent.RejectedExecutionHandler handler) {
+        public ThreadPoolBuilder rejectedHandler(java.util.concurrent.RejectedExecutionHandler handler) {
             this.handler = handler;
             return this;
         }
 
-        public TheadPoolBuilder eager() {
-            this.eager = true;
-            return this;
+        //---------------------------------------------build
+        public ThreadPoolExecutor common() {
+            return ThreadPoolUtils.newThreadPool(this.poolName, this.enableMetric, this.coreThreads,
+                    this.maximumThreads, this.keepAliveTime, this.unit, this.workQueue, this.threadFactory, this.handler);
         }
 
-        public TheadPoolBuilder eager(int queueSize) {
-            this.eager = true;
-            this.queueSize = queueSize;
-            return this;
+        public EagerThreadPoolExecutor eager() {
+            return eager(0);
         }
 
-        public ThreadPoolExecutor build() {
-            Preconditions.checkNotNull(this.coreThreads, "coreThreads");
-            Preconditions.checkNotNull(this.maximumThreads, "maximumThreads");
-            Preconditions.checkNotNull(this.keepAliveTime, "keepAliveTime");
-            Preconditions.checkNotNull(this.unit, "timeunit");
-            Preconditions.checkNotNull(this.workQueue, "workQueue");
-            Preconditions.checkNotNull(this.threadFactory, "threadFactory");
-            Preconditions.checkNotNull(this.handler, "handler");
-
-            if (eager) {
-                return ThreadPoolUtils.newEagerThreadPool(this.poolName, this.enableMetric, this.coreThreads,
-                        this.maximumThreads, this.keepAliveTime, this.unit, this.queueSize, this.threadFactory, this.handler);
-            } else {
-                return ThreadPoolUtils.newThreadPool(this.poolName, this.enableMetric, this.coreThreads,
-                        this.maximumThreads, this.keepAliveTime, this.unit, this.workQueue, this.threadFactory, this.handler);
-            }
+        public EagerThreadPoolExecutor eager(int queueSize) {
+            return ThreadPoolUtils.newEagerThreadPool(this.poolName, this.enableMetric, this.coreThreads,
+                    this.maximumThreads, this.keepAliveTime, this.unit, queueSize, this.threadFactory, this.handler);
         }
     }
 
     public static final class ScheduledThreadPoolBuilder {
-        private String poolName = "undefined";
+        private String poolName;
         private boolean enableMetric;
         private int coreThreads = SysUtils.getSuitableThreadNum();
         private ThreadFactory threadFactory = Executors.defaultThreadFactory();
@@ -221,10 +234,6 @@ public final class ThreadPoolUtils {
 
         public ScheduledThreadPoolBuilder threadFactory(ThreadFactory threadFactory) {
             this.threadFactory = threadFactory;
-            if (threadFactory instanceof SimpleThreadFactory) {
-                SimpleThreadFactory simpleThreadFactory = (SimpleThreadFactory) threadFactory;
-                this.poolName = simpleThreadFactory.getPrefix();
-            }
             return this;
         }
 
@@ -234,12 +243,52 @@ public final class ThreadPoolUtils {
         }
 
         public ScheduledThreadPoolExecutor build() {
-            Preconditions.checkNotNull(this.coreThreads, "coreThreads");
-            Preconditions.checkNotNull(this.threadFactory, "threadFactory");
-            Preconditions.checkNotNull(this.handler, "handler");
-
             return ThreadPoolUtils.newScheduledThreadPool(this.poolName, this.enableMetric, this.coreThreads,
                     this.threadFactory, this.handler);
+        }
+    }
+
+    public static final class ForkJoinThreadPoolBuilder {
+        private String poolName;
+        private boolean enableMetric;
+        private int parallelism = SysUtils.CPU_NUM;
+        private ForkJoinPool.ForkJoinWorkerThreadFactory factory = ForkJoinPool.defaultForkJoinWorkerThreadFactory;
+        private Thread.UncaughtExceptionHandler handler;
+        private boolean asyncMode;
+
+        public ForkJoinThreadPoolBuilder poolName(String poolName) {
+            this.poolName = poolName;
+            return this;
+        }
+
+        public ForkJoinThreadPoolBuilder metric() {
+            this.enableMetric = true;
+            return this;
+        }
+
+        public ForkJoinThreadPoolBuilder parallelism(int parallelism) {
+            this.parallelism = parallelism;
+            return this;
+        }
+
+        public ForkJoinThreadPoolBuilder threadFactory(ForkJoinPool.ForkJoinWorkerThreadFactory factory) {
+            this.factory = factory;
+            return this;
+        }
+
+        public ForkJoinThreadPoolBuilder uncaughtExceptionHandler(Thread.UncaughtExceptionHandler handler) {
+            this.handler = handler;
+            return this;
+        }
+
+        public ForkJoinThreadPoolBuilder async() {
+            this.asyncMode = true;
+            return this;
+        }
+
+        public ForkJoinPool build() {
+            return ThreadPoolUtils.newForkJoinPool(this.poolName, this.enableMetric, this.parallelism,
+                    this.factory, this.handler, this.asyncMode);
         }
     }
 }

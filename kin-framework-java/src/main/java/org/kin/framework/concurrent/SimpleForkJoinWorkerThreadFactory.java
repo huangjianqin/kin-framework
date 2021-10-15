@@ -8,20 +8,25 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author huangjianqin
  * @date 2020-03-16
  */
-public class SimpleForkJoinWorkerThradFactory implements ForkJoinPool.ForkJoinWorkerThreadFactory {
+public class SimpleForkJoinWorkerThreadFactory implements ForkJoinPool.ForkJoinWorkerThreadFactory {
     private final AtomicInteger counter;
     private final String namePrefix;
 
 
-    public SimpleForkJoinWorkerThradFactory(String namePrefix) {
-        this.namePrefix = namePrefix + "--thread-";
+    public SimpleForkJoinWorkerThreadFactory(String namePrefix) {
+        this.namePrefix = namePrefix;
         this.counter = new AtomicInteger(1);
     }
 
     @Override
     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
         ForkJoinWorkerThread workerThread = new SimpleForkJoinWorkerThread(pool);
-        workerThread.setName(this.namePrefix + counter.getAndIncrement());
+        workerThread.setName(this.namePrefix + "--thread-" + counter.getAndIncrement());
         return workerThread;
+    }
+
+    //getter
+    public String getNamePrefix() {
+        return namePrefix;
     }
 }

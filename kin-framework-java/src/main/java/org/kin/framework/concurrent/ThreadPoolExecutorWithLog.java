@@ -18,18 +18,21 @@ public class ThreadPoolExecutorWithLog extends ThreadPoolExecutor {
     public ThreadPoolExecutorWithLog(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
                                      BlockingQueue<Runnable> workQueue, String name) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, null);
         this.name = name;
     }
 
     public ThreadPoolExecutorWithLog(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
                                      BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, String name) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, threadFactory);
         this.name = name;
     }
 
     public ThreadPoolExecutorWithLog(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
                                      BlockingQueue<Runnable> workQueue, java.util.concurrent.RejectedExecutionHandler handler, String name) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, null);
         this.name = name;
     }
 
@@ -37,6 +40,7 @@ public class ThreadPoolExecutorWithLog extends ThreadPoolExecutor {
                                      BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory,
                                      RejectedExecutionHandler handler, String name) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, threadFactory);
         this.name = name;
     }
 

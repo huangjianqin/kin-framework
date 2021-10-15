@@ -43,7 +43,7 @@ public class SimpleThreadFactory implements ThreadFactory {
                     "priority: " + priority + " (expected: Thread.MIN_PRIORITY <= priority <= Thread.MAX_PRIORITY)");
         }
 
-        this.prefix = prefix + "--threads-";
+        this.prefix = prefix;
         this.daemon = daemon;
         this.priority = priority;
         this.threadGroup = threadGroup;
@@ -52,7 +52,7 @@ public class SimpleThreadFactory implements ThreadFactory {
     @Override
     @NonNull
     public final Thread newThread(Runnable r) {
-        Thread thread = newThread(threadGroup, r, prefix, counter.getAndIncrement());
+        Thread thread = newThread(threadGroup, r, prefix + "--threads-", counter.getAndIncrement());
         if (thread.isDaemon()) {
             if (!daemon) {
                 thread.setDaemon(false);
@@ -76,7 +76,6 @@ public class SimpleThreadFactory implements ThreadFactory {
     }
 
     //getter
-
     public String getPrefix() {
         return prefix;
     }

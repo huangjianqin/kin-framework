@@ -17,21 +17,25 @@ public class ScheduledThreadPoolExecutorWithLog extends ScheduledThreadPoolExecu
 
     public ScheduledThreadPoolExecutorWithLog(int corePoolSize, String name) {
         super(corePoolSize);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, null);
         this.name = name;
     }
 
     public ScheduledThreadPoolExecutorWithLog(int corePoolSize, ThreadFactory threadFactory, String name) {
         super(corePoolSize, threadFactory);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, threadFactory);
         this.name = name;
     }
 
     public ScheduledThreadPoolExecutorWithLog(int corePoolSize, RejectedExecutionHandler handler, String name) {
         super(corePoolSize, handler);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, null);
         this.name = name;
     }
 
     public ScheduledThreadPoolExecutorWithLog(int corePoolSize, ThreadFactory threadFactory, RejectedExecutionHandler handler, String name) {
         super(corePoolSize, threadFactory, handler);
+        name = ThreadPoolUtils.applyPoolNameIfBlank(name, threadFactory);
         this.name = name;
     }
 

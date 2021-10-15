@@ -53,7 +53,12 @@ public class ExecutionContext implements ScheduledExecutorService {
 
     public static ExecutionContext forkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
                                             int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return forkjoin(new ForkJoinPool(parallelism, new SimpleForkJoinWorkerThradFactory(workerNamePrefix), handler, false),
+        return forkjoin(ThreadPoolUtils.forkJoinThreadPoolBuilder()
+                        .poolName(workerNamePrefix)
+                        .parallelism(parallelism)
+                        .threadFactory(new SimpleForkJoinWorkerThreadFactory(workerNamePrefix))
+                        .uncaughtExceptionHandler(handler)
+                        .build(),
                 scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
@@ -67,7 +72,13 @@ public class ExecutionContext implements ScheduledExecutorService {
 
     public static ExecutionContext asyncForkjoin(int parallelism, String workerNamePrefix, Thread.UncaughtExceptionHandler handler,
                                                  int scheduleParallelism, String scheduleThreadNamePrefix) {
-        return forkjoin(new ForkJoinPool(parallelism, new SimpleForkJoinWorkerThradFactory(workerNamePrefix), handler, true),
+        return forkjoin(ThreadPoolUtils.forkJoinThreadPoolBuilder()
+                        .poolName(workerNamePrefix)
+                        .parallelism(parallelism)
+                        .threadFactory(new SimpleForkJoinWorkerThreadFactory(workerNamePrefix))
+                        .uncaughtExceptionHandler(handler)
+                        .async()
+                        .build(),
                 scheduleParallelism, StringUtils.isBlank(scheduleThreadNamePrefix) ? null : new SimpleThreadFactory(scheduleThreadNamePrefix));
     }
 
@@ -106,7 +117,7 @@ public class ExecutionContext implements ScheduledExecutorService {
                         .keepAlive(60L, TimeUnit.SECONDS)
                         .workQueue(new SynchronousQueue<>())
                         .threadFactory(workerThreadFactory)
-                        .build(),
+                        .common(),
                 scheduleParallelism, scheduleThreadFactory);
     }
 
@@ -131,7 +142,7 @@ public class ExecutionContext implements ScheduledExecutorService {
                         .keepAlive(60L, TimeUnit.SECONDS)
                         .workQueue(new LinkedBlockingQueue<>())
                         .threadFactory(workerThreadFactory)
-                        .build(),
+                        .common(),
                 scheduleParallelism, scheduleThreadFactory);
     }
 
@@ -149,12 +160,12 @@ public class ExecutionContext implements ScheduledExecutorService {
      */
     public static ExecutionContext elastic(int coreParallelism, int maxParallelism, ThreadFactory workerThreadFactory, int scheduleParallelism, ThreadFactory scheduleThreadFactory) {
         return new ExecutionContext(
-                ThreadPoolUtils.eagerThreadPoolBuilder()
+                ThreadPoolUtils.threadPoolBuilder()
                         .coreThreads(coreParallelism)
                         .maximumThreads(maxParallelism)
                         .keepAlive(60L, TimeUnit.SECONDS)
                         .threadFactory(workerThreadFactory)
-                        .build(),
+                        .eager(),
                 scheduleParallelism, scheduleThreadFactory);
     }
     //--------------------------------------------------------------------------------------------
