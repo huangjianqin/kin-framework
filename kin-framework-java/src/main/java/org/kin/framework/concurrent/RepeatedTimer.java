@@ -43,7 +43,7 @@ public abstract class RepeatedTimer {
     /** 计时器名字 */
     private final String name;
     /** 计时时间(ms) */
-    private volatile int timeoutMs;
+    private volatile long timeoutMs;
     /** 切换状态时加锁 */
     private final Lock lock = new ReentrantLock();
     /** 计时器 */
@@ -55,11 +55,11 @@ public abstract class RepeatedTimer {
     /** 是否invoking */
     private volatile boolean invoking;
 
-    protected RepeatedTimer(String name, int timeoutMs) {
+    protected RepeatedTimer(String name, long timeoutMs) {
         this(name, timeoutMs, new HashedWheelTimer(new SimpleThreadFactory(name, true), 1, TimeUnit.MILLISECONDS, 2048));
     }
 
-    protected RepeatedTimer(String name, int timeoutMs, Timer timer) {
+    protected RepeatedTimer(String name, long timeoutMs, Timer timer) {
         super();
         this.name = name;
         this.timeoutMs = timeoutMs;
@@ -147,7 +147,7 @@ public abstract class RepeatedTimer {
     /**
      * 重置计时时间
      */
-    public final void reset(int timeoutMs) {
+    public final void reset(long timeoutMs) {
         lock.lock();
         this.timeoutMs = timeoutMs;
         try {
@@ -234,7 +234,7 @@ public abstract class RepeatedTimer {
      * @param timeoutMs timeout millis
      * @return timeout millis
      */
-    protected int adjustTimeout(int timeoutMs) {
+    protected long adjustTimeout(long timeoutMs) {
         //默认=设置计时时间, 支持重写
         return timeoutMs;
     }
@@ -272,7 +272,7 @@ public abstract class RepeatedTimer {
     }
 
     //getter
-    public int getTimeoutMs() {
+    public long getTimeoutMs() {
         return this.timeoutMs;
     }
 
