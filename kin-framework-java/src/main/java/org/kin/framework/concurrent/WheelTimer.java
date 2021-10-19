@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 时间轮
- * 类似于调度, 但并没有那么准
+ * 类似于调度, slot数量设置越多, 精度越大
  * 设定数据处理逻辑{@link SlotDataHandler}, 然后push未来某时刻需要处理的数据, 当轮转到该数据时, 进行数据处理
  *
  * @author huangjianqin
