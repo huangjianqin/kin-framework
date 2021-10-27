@@ -1,10 +1,8 @@
 package org.kin.framework.utils;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -12,13 +10,8 @@ import java.util.concurrent.TimeUnit;
  * @date 2018/2/2
  */
 public class TimeUtils {
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    private static final DateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    static {
-        DATE_FORMAT.setLenient(false);
-        DATETIME_FORMAT.setLenient(false);
-    }
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     //-------------------------------------------------------get------------------------------------------------------
 
@@ -33,19 +26,15 @@ public class TimeUtils {
 
     /**
      * 返回 代表'年月日' 的 DateFormat
-     *
-     * @return DateFormat实例
      */
-    public static DateFormat getDateFormat() {
+    public static DateTimeFormatter getDateFormat() {
         return DATE_FORMAT;
     }
 
     /**
      * 返回 代表'年月日时分秒' 的 DateFormat
-     *
-     * @return DateFormat实例
      */
-    public static DateFormat getDatetimeFormat() {
+    public static DateTimeFormatter getDateTimeFormat() {
         return DATETIME_FORMAT;
     }
 
@@ -57,7 +46,7 @@ public class TimeUtils {
      * @return 时间字符串(年月日)
      */
     public static String formatDate() {
-        return formatDate(new Date());
+        return formatDate(LocalDate.now());
     }
 
     /**
@@ -66,8 +55,8 @@ public class TimeUtils {
      * @param date 时间
      * @return 时间字符串(年月日)
      */
-    public static String formatDate(Date date) {
-        return getDateFormat().format(date);
+    public static String formatDate(LocalDate date) {
+        return date.format(getDateFormat());
     }
 
     /**
@@ -76,17 +65,17 @@ public class TimeUtils {
      * @return 时间字符串(年月日时分秒)
      */
     public static String formatDateTime() {
-        return formatDateTime(new Date());
+        return formatDateTime(LocalDateTime.now());
     }
 
     /**
      * 格式化时间
      *
-     * @param date 时间
+     * @param dateTime 时间
      * @return 时间字符串(年月日时分秒)
      */
-    public static String formatDateTime(Date date) {
-        return getDatetimeFormat().format(date);
+    public static String formatDateTime(LocalDateTime dateTime) {
+        return dateTime.format(getDateTimeFormat());
     }
 
     /**
@@ -95,86 +84,28 @@ public class TimeUtils {
      * @param dateString 时间字符串
      * @return 时间
      */
-    public static Date parseDate(String dateString) {
+    public static LocalDateTime parseDate(String dateString) {
         return parse(dateString, getDateFormat());
     }
 
     /**
      * 解析时间(年月日时分秒)
      *
-     * @param dateString 时间字符串
+     * @param dateTimeString 时间字符串
      * @return 时间
      */
-    public static Date parseDateTime(String dateString) {
-        return parse(dateString, getDatetimeFormat());
+    public static LocalDateTime parseDateTime(String dateTimeString) {
+        return parse(dateTimeString, getDateTimeFormat());
     }
 
     /**
      * 解析时间字符串
      *
-     * @param dateString 时间字符串
-     * @param dateFormat 时间格式
+     * @param str       时间字符串
+     * @param formatter 时间格式
      * @return 时间
      */
-    public static Date parse(String dateString, DateFormat dateFormat) {
-        try {
-            Date date = dateFormat.parse(dateString);
-            return date;
-        } catch (ParseException e) {
-            throw new IllegalArgumentException(String.format("parse date error, dateString = %s, dateFormat=%s; errorMsg = %s", dateString, dateFormat, e.getMessage()));
-        }
-    }
-
-    //-------------------------------------------------------change data-------------------------------------------------------
-
-    /**
-     * 增加日数
-     *
-     * @param date 时间
-     * @param days 日数
-     * @return 时间
-     */
-    public static Date addDays(Date date, int days) {
-        return add(date, Calendar.DAY_OF_MONTH, days);
-    }
-
-    /**
-     * 增加年数
-     *
-     * @param date  时间
-     * @param years 年数
-     * @return 时间
-     */
-    public static Date addYears(Date date, int years) {
-        return add(date, Calendar.YEAR, years);
-    }
-
-    /**
-     * 增加月数
-     *
-     * @param date   时间
-     * @param months 月数
-     * @return 时间
-     */
-    public static Date addMonths(Date date, int months) {
-        return add(date, Calendar.MONTH, months);
-    }
-
-    /**
-     * 增加Calendar某个字段值
-     *
-     * @param date          时间
-     * @param calendarField Calendar字段
-     * @param value         值
-     * @return 时间
-     */
-    private static Date add(Date date, int calendarField, int value) {
-        if (date == null) {
-            return null;
-        }
-        Calendar c = Calendar.getInstance();
-        c.setTime(date);
-        c.add(calendarField, value);
-        return c.getTime();
+    public static LocalDateTime parse(String str, DateTimeFormatter formatter) {
+        return LocalDateTime.parse(str, formatter);
     }
 }
