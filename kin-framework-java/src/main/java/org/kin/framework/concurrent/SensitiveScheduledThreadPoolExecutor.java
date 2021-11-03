@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
- * 支持事件敏感的调度器
+ * 支持时间敏感的调度器
  *
  * @author huangjianqin
  * @date 2021/6/5
