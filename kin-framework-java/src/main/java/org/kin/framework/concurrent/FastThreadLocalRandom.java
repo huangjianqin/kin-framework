@@ -56,6 +56,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>
  * //since 1.7
  * //author Doug Lea
+ *
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  */
 @SuppressWarnings("all")
 final class FastThreadLocalRandom extends Random {

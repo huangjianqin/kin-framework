@@ -40,6 +40,8 @@ import java.util.Set;
  * {@link ThreadLocal}.
  * </p>
  *
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
+ *
  * @param <V> the type of the thread-local variable
  * @see ThreadLocal
  */

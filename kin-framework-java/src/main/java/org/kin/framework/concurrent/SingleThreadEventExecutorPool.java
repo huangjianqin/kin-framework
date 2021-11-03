@@ -4,6 +4,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 
 /**
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
+ *
  * @author huangjianqin
  * @date 2021/1/26
  */

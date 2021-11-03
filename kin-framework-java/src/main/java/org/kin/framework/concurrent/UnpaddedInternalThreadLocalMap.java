@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The internal data structure that stores the thread-local variables for Netty and all {@link FastThreadLocal}s.
  * Note that this class is for internal use only and is subject to change at any time.  Use {@link FastThreadLocal}
  * unless you know what you are doing.
+ * <p>
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  */
 class UnpaddedInternalThreadLocalMap {
     /** 支持回退至获取java原生支持的ThreadLocal */

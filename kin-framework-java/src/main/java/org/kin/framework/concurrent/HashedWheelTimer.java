@@ -70,6 +70,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * and Hierarchical Timing Wheels: data structures to efficiently implement a
  * timer facility'</a>.  More comprehensive slides are located
  * <a href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt">here</a>.
+ *
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  */
 public class HashedWheelTimer implements Timer {
     private static final Logger log = LoggerFactory.getLogger(HashedWheelTimer.class);

@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * A task which is executed after the delay specified with
  * {@link Timer#newTimeout(TimerTask, long, TimeUnit)}.
+ * <p>
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  */
 @FunctionalInterface
 public interface TimerTask {

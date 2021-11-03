@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Schedules {@link TimerTask}s for one-time future execution in a background
  * thread.
+ * <p>
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  */
 public interface Timer {
 

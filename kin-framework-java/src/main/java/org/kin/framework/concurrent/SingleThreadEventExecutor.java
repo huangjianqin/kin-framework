@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 /**
  * 拥有调度能力的单线程Executor
  * 所有消息, 包括调度都在同一Executor(线程)处理
+ * <p>
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  *
  * @author huangjianqin
  * @date 2020/11/23

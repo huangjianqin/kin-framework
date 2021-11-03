@@ -21,6 +21,8 @@ import java.util.Arrays;
  * The internal data structure that stores the thread-local variables for Netty and all {@link FastThreadLocal}s.
  * Note that this class is for internal use only and is subject to change at any time.  Use {@link FastThreadLocal}
  * unless you know what you are doing.
+ * <p>
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  */
 final class InternalThreadLocalMap extends UnpaddedInternalThreadLocalMap {
     /** 数组空占位 */

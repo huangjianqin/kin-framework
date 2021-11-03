@@ -19,6 +19,8 @@ package org.kin.framework.concurrent;
  * netty的ThreadLocal方案, 可以获得更高性能
  * <p>
  * A special {@link Thread} that provides fast access to {@link FastThreadLocal} variables.
+ * <p>
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  */
 public class FastThreadLocalThread extends Thread {
 
