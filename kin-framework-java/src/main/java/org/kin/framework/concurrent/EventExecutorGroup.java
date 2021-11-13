@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
+ * Forked from <a href="https://github.com/netty/netty">Netty</a>.
+ *
  * @author huangjianqin
  * @date 2021/3/10
  */

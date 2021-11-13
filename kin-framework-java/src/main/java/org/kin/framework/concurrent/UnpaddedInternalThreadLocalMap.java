@@ -37,6 +37,11 @@ class UnpaddedInternalThreadLocalMap {
     /** thread local random */
     FastThreadLocalRandom random;
 
+    /**
+     * 防止{@link EventExecutor}内不断触发{@link Promise}导致{@link StackOverflowError}
+     */
+    int promiseListenerStackDepth;
+
     UnpaddedInternalThreadLocalMap(Object[] indexedVariables) {
         this.indexedVariables = indexedVariables;
     }
