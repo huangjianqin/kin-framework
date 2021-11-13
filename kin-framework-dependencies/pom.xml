@@ -38,6 +38,7 @@
         <classgraph.version>4.8.98</classgraph.version>
         <eclipse-collections.version>10.4.0</eclipse-collections.version>
         <micrometer.version>1.7.3</micrometer.version>
+        <jsr305.version>3.0.2</jsr305.version>
     </properties>
 
     <dependencyManagement>
@@ -241,6 +242,13 @@
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-core</artifactId>
                 <version>${micrometer.version}</version>
+            </dependency>
+
+            <!-- 供idea代码检查 -->
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
