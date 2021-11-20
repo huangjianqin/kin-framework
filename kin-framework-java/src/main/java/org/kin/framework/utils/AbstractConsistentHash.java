@@ -1,5 +1,8 @@
 package org.kin.framework.utils;
 
+import com.google.common.base.Preconditions;
+
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -11,13 +14,21 @@ import java.util.function.Function;
 public abstract class AbstractConsistentHash<T> {
     /** 自定义hash算法 */
     protected final Function<Object, Integer> hashFunc;
-    /**
-     * 虚拟节点数量, 用于节点分布更加均匀, 负载更加均衡
-     */
+    /** 自定义{@code T}对象映射逻辑, 映射function返回的结果会用于hash */
+    protected final Function<T, String> mapper;
+    /** 虚拟节点数量, 用于节点分布更加均匀, 负载更加均衡 */
     protected final int replicaNum;
 
-    public AbstractConsistentHash(Function<Object, Integer> hashFunc, int replicaNum) {
+    public AbstractConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
+        Preconditions.checkArgument(replicaNum > 0);
+        if (Objects.isNull(hashFunc)) {
+            hashFunc = Object::hashCode;
+        }
+        if (Objects.isNull(mapper)) {
+            mapper = Object::toString;
+        }
         this.hashFunc = hashFunc;
+        this.mapper = mapper;
         this.replicaNum = replicaNum;
     }
 
@@ -27,22 +38,22 @@ public abstract class AbstractConsistentHash<T> {
      * <p>
      * 使用hash(toString()+i)来定义节点的slot位置
      */
-    public abstract void add(T node);
+    public abstract void add(T obj);
 
-    protected final void add(TreeMap<Integer, T> circle, T node) {
+    protected final void add(TreeMap<Integer, T> circle, T obj) {
         for (int i = 0; i < replicaNum; i++) {
-            circle.put(hashFunc.apply(node.toString() + i), node);
+            circle.put(hashFunc.apply(mapper.apply(obj) + i), obj);
         }
     }
 
     /**
      * 移除节点, 同时移除相应的虚拟节点
      */
-    public abstract void remove(T node);
+    public abstract void remove(T obj);
 
-    protected final void remove(TreeMap<Integer, T> circle, T node) {
+    protected final void remove(TreeMap<Integer, T> circle, T obj) {
         for (int i = 0; i < replicaNum; i++) {
-            circle.remove(hashFunc.apply(node.toString() + i));
+            circle.remove(hashFunc.apply(mapper.apply(obj) + i));
         }
     }
 

@@ -1,7 +1,7 @@
 package org.kin.framework.utils;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Function;
 
@@ -17,33 +17,41 @@ public class ConsistentHash<T> extends AbstractConsistentHash<T> {
     private final TreeMap<Integer, T> circle = new TreeMap<>();
 
     public ConsistentHash() {
-        this(Collections.emptyList());
+        this(1);
     }
 
-    public ConsistentHash(Collection<T> nodes) {
-        this(1, nodes);
+    public ConsistentHash(int replicaNum) {
+        this(Object::hashCode, Objects::toString, replicaNum);
     }
 
-    public ConsistentHash(int replicaNum, Collection<T> nodes) {
-        this(Object::hashCode, replicaNum, nodes);
+    public ConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
+        super(hashFunc, mapper, replicaNum);
     }
 
-    public ConsistentHash(Function<Object, Integer> hashFunc, int replicaNum, Collection<T> nodes) {
-        super(hashFunc, replicaNum);
+    public ConsistentHash(Collection<T> objs) {
+        this(1, objs);
+    }
+
+    public ConsistentHash(int replicaNum, Collection<T> objs) {
+        this(Object::hashCode, Objects::toString, replicaNum, objs);
+    }
+
+    public ConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum, Collection<T> objs) {
+        super(hashFunc, mapper, replicaNum);
         //初始化节点
-        for (T node : nodes) {
-            add(node);
+        for (T obj : objs) {
+            add(obj);
         }
     }
 
     @Override
-    public void add(T node) {
-        add(circle, node);
+    public void add(T obj) {
+        add(circle, obj);
     }
 
     @Override
-    public void remove(T node) {
-        remove(circle, node);
+    public void remove(T obj) {
+        remove(circle, obj);
     }
 
     @Override

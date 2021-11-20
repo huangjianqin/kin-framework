@@ -1,7 +1,7 @@
 package org.kin.framework.utils;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Function;
 
@@ -18,36 +18,44 @@ public class ConcurrentConsistentHash<T> extends AbstractConsistentHash<T> {
     private volatile TreeMap<Integer, T> circle = new TreeMap<>();
 
     public ConcurrentConsistentHash() {
-        this(Collections.emptyList());
+        this(1);
     }
 
-    public ConcurrentConsistentHash(Collection<T> nodes) {
-        this(1, nodes);
+    public ConcurrentConsistentHash(int replicaNum) {
+        this(Object::hashCode, Objects::toString, replicaNum);
     }
 
-    public ConcurrentConsistentHash(int replicaNum, Collection<T> nodes) {
-        this(Object::hashCode, replicaNum, nodes);
+    public ConcurrentConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
+        super(hashFunc, mapper, replicaNum);
     }
 
-    public ConcurrentConsistentHash(Function<Object, Integer> hashFunc, int replicaNum, Collection<T> nodes) {
-        super(hashFunc, replicaNum);
+    public ConcurrentConsistentHash(Collection<T> objs) {
+        this(1, objs);
+    }
+
+    public ConcurrentConsistentHash(int replicaNum, Collection<T> objs) {
+        this(Object::hashCode, Objects::toString, replicaNum, objs);
+    }
+
+    public ConcurrentConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum, Collection<T> objs) {
+        super(hashFunc, mapper, replicaNum);
         //初始化节点
-        for (T node : nodes) {
-            add(circle, node);
+        for (T obj : objs) {
+            add(circle, obj);
         }
     }
 
     @Override
-    public synchronized void add(T node) {
+    public synchronized void add(T obj) {
         TreeMap<Integer, T> circle = new TreeMap<>(this.circle);
-        add(circle, node);
+        add(circle, obj);
         this.circle = circle;
     }
 
     @Override
-    public synchronized void remove(T node) {
+    public synchronized void remove(T obj) {
         TreeMap<Integer, T> circle = new TreeMap<>(this.circle);
-        remove(circle, node);
+        remove(circle, obj);
         this.circle = circle;
     }
 
