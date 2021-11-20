@@ -50,7 +50,9 @@ public abstract class AbstractConsistentHash<T> {
         Preconditions.checkNotNull(obj);
         Preconditions.checkArgument(weight > 0, "weight must be greater than 0");
 
-        for (int i = 0; i < replicaNum * weight; i++) {
+        int finalNum = replicaNum * weight;
+        Preconditions.checkArgument(finalNum > 0, "replicaNum * weight must be greater than 0");
+        for (int i = 0; i < finalNum; i++) {
             circle.put(hashFunc.apply(mapper.apply(obj) + i), obj);
         }
     }
@@ -70,7 +72,9 @@ public abstract class AbstractConsistentHash<T> {
         Preconditions.checkNotNull(obj);
         Preconditions.checkArgument(weight > 0, "weight must be greater than 0");
 
-        for (int i = 0; i < replicaNum * weight; i++) {
+        int finalNum = replicaNum * weight;
+        Preconditions.checkArgument(finalNum > 0, "replicaNum * weight must be greater than 0");
+        for (int i = 0; i < finalNum; i++) {
             circle.remove(hashFunc.apply(mapper.apply(obj) + i));
         }
     }
