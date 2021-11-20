@@ -1,6 +1,5 @@
 package org.kin.framework.utils;
 
-import java.util.Collection;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.function.Function;
@@ -17,45 +16,29 @@ public class ConcurrentConsistentHash<T> extends AbstractConsistentHash<T> {
     /** hash环 */
     private volatile TreeMap<Integer, T> circle = new TreeMap<>();
 
-    public ConcurrentConsistentHash() {
+    ConcurrentConsistentHash() {
         this(1);
     }
 
-    public ConcurrentConsistentHash(int replicaNum) {
+    ConcurrentConsistentHash(int replicaNum) {
         this(Object::hashCode, Objects::toString, replicaNum);
     }
 
-    public ConcurrentConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
+    ConcurrentConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
         super(hashFunc, mapper, replicaNum);
-    }
-
-    public ConcurrentConsistentHash(Collection<T> objs) {
-        this(1, objs);
-    }
-
-    public ConcurrentConsistentHash(int replicaNum, Collection<T> objs) {
-        this(Object::hashCode, Objects::toString, replicaNum, objs);
-    }
-
-    public ConcurrentConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum, Collection<T> objs) {
-        super(hashFunc, mapper, replicaNum);
-        //初始化节点
-        for (T obj : objs) {
-            add(circle, obj);
-        }
     }
 
     @Override
-    public synchronized void add(T obj) {
+    public synchronized void add(T obj, int weight) {
         TreeMap<Integer, T> circle = new TreeMap<>(this.circle);
-        add(circle, obj);
+        add(circle, obj, weight);
         this.circle = circle;
     }
 
     @Override
-    public synchronized void remove(T obj) {
+    public synchronized void remove(T obj, int weight) {
         TreeMap<Integer, T> circle = new TreeMap<>(this.circle);
-        remove(circle, obj);
+        remove(circle, obj, weight);
         this.circle = circle;
     }
 

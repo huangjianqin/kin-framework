@@ -19,8 +19,8 @@ public abstract class AbstractConsistentHash<T> {
     /** 虚拟节点数量, 用于节点分布更加均匀, 负载更加均衡 */
     protected final int replicaNum;
 
-    public AbstractConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
-        Preconditions.checkArgument(replicaNum > 0);
+    protected AbstractConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
+        Preconditions.checkArgument(replicaNum > 0, "replicaNum must be greater than 0");
         if (Objects.isNull(hashFunc)) {
             hashFunc = Object::hashCode;
         }
@@ -32,27 +32,45 @@ public abstract class AbstractConsistentHash<T> {
         this.replicaNum = replicaNum;
     }
 
+    public void add(T obj) {
+        add(obj, 1);
+    }
+
     /**
      * 增加节点
      * 每增加一个节点，都会在闭环上增加给定数量的虚拟节点
      * <p>
      * 使用hash(toString()+i)来定义节点的slot位置
+     *
+     * @param weight 权重, 用于外部干预默认虚拟节点数量
      */
-    public abstract void add(T obj);
+    public abstract void add(T obj, int weight);
 
-    protected final void add(TreeMap<Integer, T> circle, T obj) {
-        for (int i = 0; i < replicaNum; i++) {
+    protected final void add(TreeMap<Integer, T> circle, T obj, int weight) {
+        Preconditions.checkNotNull(obj);
+        Preconditions.checkArgument(weight > 0, "weight must be greater than 0");
+
+        for (int i = 0; i < replicaNum * weight; i++) {
             circle.put(hashFunc.apply(mapper.apply(obj) + i), obj);
         }
     }
 
+    public void remove(T obj) {
+        remove(obj, 1);
+    }
+
     /**
      * 移除节点, 同时移除相应的虚拟节点
+     *
+     * @param weight 权重, 用于外部干预默认虚拟节点数量
      */
-    public abstract void remove(T obj);
+    public abstract void remove(T obj, int weight);
 
-    protected final void remove(TreeMap<Integer, T> circle, T obj) {
-        for (int i = 0; i < replicaNum; i++) {
+    protected final void remove(TreeMap<Integer, T> circle, T obj, int weight) {
+        Preconditions.checkNotNull(obj);
+        Preconditions.checkArgument(weight > 0, "weight must be greater than 0");
+
+        for (int i = 0; i < replicaNum * weight; i++) {
             circle.remove(hashFunc.apply(mapper.apply(obj) + i));
         }
     }

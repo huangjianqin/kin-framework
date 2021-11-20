@@ -6,7 +6,7 @@ package org.kin.framework.utils;
  */
 public class ConsistentHashTest {
     public static void main(String[] args) {
-        ConsistentHash<String> consistentHash = new ConsistentHash<>();
+        ConsistentHash<String> consistentHash = ConsistentHashBuilder.<String>builder().common();
         consistentHash.add("127.0.0.1:9000");
         consistentHash.add("127.0.0.1:9001");
         consistentHash.add("127.0.0.1:9002");
