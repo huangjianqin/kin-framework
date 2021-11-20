@@ -15,15 +15,15 @@ public class ConsistentHash<T> extends AbstractConsistentHash<T> {
     /** hash环 */
     private final TreeMap<Integer, T> circle = new TreeMap<>();
 
-    ConsistentHash() {
+    protected ConsistentHash() {
         this(1);
     }
 
-    ConsistentHash(int replicaNum) {
+    protected ConsistentHash(int replicaNum) {
         this(Object::hashCode, Objects::toString, replicaNum);
     }
 
-    ConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
+    protected ConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
         super(hashFunc, mapper, replicaNum);
     }
 

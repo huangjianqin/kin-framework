@@ -16,15 +16,15 @@ public class ConcurrentConsistentHash<T> extends AbstractConsistentHash<T> {
     /** hash环 */
     private volatile TreeMap<Integer, T> circle = new TreeMap<>();
 
-    ConcurrentConsistentHash() {
+    protected ConcurrentConsistentHash() {
         this(1);
     }
 
-    ConcurrentConsistentHash(int replicaNum) {
+    protected ConcurrentConsistentHash(int replicaNum) {
         this(Object::hashCode, Objects::toString, replicaNum);
     }
 
-    ConcurrentConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
+    protected ConcurrentConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
         super(hashFunc, mapper, replicaNum);
     }
 
