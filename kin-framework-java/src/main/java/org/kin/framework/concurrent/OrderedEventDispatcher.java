@@ -49,7 +49,7 @@ public final class OrderedEventDispatcher<KEY, MSG> extends AbstractDispatcher<K
         //保证receiver 先进行start, 后stop
         synchronized (this) {
             if (Objects.nonNull(receivers.putIfAbsent(key, new InternalReceiver<>(receiver)))) {
-                throw new IllegalArgumentException(String.format("%s has registried", key));
+                throw new IllegalArgumentException(String.format("%s has registered", key));
             }
 
             receivers.get(key).onStart();

@@ -1,7 +1,6 @@
 package org.kin.framework.counter;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -23,13 +22,7 @@ public class CounterGroup {
      * @return 指定counter, 不存在, 则创建新的
      */
     public Counter counter(String uuid) {
-        Counter counter = new Counter(uuid);
-        Counter old = counters.putIfAbsent(uuid, counter);
-        if (Objects.isNull(old)) {
-            return counter;
-        } else {
-            return old;
-        }
+        return counters.computeIfAbsent(uuid, k -> new Counter(uuid));
     }
 
     /**

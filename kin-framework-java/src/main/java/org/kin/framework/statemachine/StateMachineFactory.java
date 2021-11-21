@@ -114,7 +114,7 @@ public class StateMachineFactory<OPERAND, STATE extends Enum<STATE>, EVENTTYPE e
             Map<EVENTTYPE, Transition<OPERAND, STATE, EVENTTYPE, EVENT>> transitionMap = subject.stateMachineTable.get(pre);
             if (transitionMap == null) {
                 //用HashMap性能更好
-                transitionMap = subject.stateMachineTable.putIfAbsent(pre, Maps.newHashMap());
+                transitionMap = subject.stateMachineTable.computeIfAbsent(pre, k -> Maps.newHashMap());
             }
             transitionMap.put(eventType, transition);
         }

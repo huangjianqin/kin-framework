@@ -1,7 +1,6 @@
 package org.kin.framework.counter;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -18,13 +17,7 @@ public class Counters {
      * @return 指定counter group, 不存在, 则创建新的
      */
     public static CounterGroup counterGroup(String group) {
-        CounterGroup counterGroup = new CounterGroup(group);
-        CounterGroup old = counterGroups.putIfAbsent(group, counterGroup);
-        if (Objects.isNull(old)) {
-            return counterGroup;
-        } else {
-            return old;
-        }
+        return counterGroups.computeIfAbsent(group, k -> new CounterGroup(group));
     }
 
     /**

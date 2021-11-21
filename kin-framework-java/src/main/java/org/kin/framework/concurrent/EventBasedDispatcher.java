@@ -51,7 +51,7 @@ public final class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY
         }
 
         if (Objects.nonNull(receiverDatas.putIfAbsent(key, new ReceiverData<>(receiver, enableConcurrent)))) {
-            throw new IllegalArgumentException(String.format("%s has registried", key));
+            throw new IllegalArgumentException(String.format("%s has registered", key));
         }
 
         ReceiverData<MSG> data = receiverDatas.get(key);
