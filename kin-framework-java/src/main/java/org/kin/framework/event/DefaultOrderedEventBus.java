@@ -4,7 +4,6 @@ import org.kin.framework.concurrent.DefaultPartitionExecutor;
 import org.kin.framework.concurrent.EfficientHashPartitioner;
 import org.kin.framework.concurrent.HashedWheelTimer;
 import org.kin.framework.concurrent.Timeout;
-import org.kin.framework.utils.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +48,7 @@ public class DefaultOrderedEventBus extends DefaultEventBus implements Scheduled
         Class<?> eventClass = event.getClass();
         EventMerge eventMerge = eventClass.getAnnotation(EventMerge.class);
         if (Objects.nonNull(eventMerge)) {
-            EventMergeContext eventMergeContext = CollectionUtils.putIfAbsent(mergeContexts, eventClass, new EventMergeContext(eventClass, eventMerge));
+            EventMergeContext eventMergeContext = mergeContexts.computeIfAbsent(eventClass, k -> new EventMergeContext(eventClass, eventMerge));
             eventMergeContext.mergeEvent(eventContext);
         } else {
             doPost(eventContext);

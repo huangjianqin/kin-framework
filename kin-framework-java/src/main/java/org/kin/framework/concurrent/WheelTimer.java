@@ -66,7 +66,7 @@ public final class WheelTimer<D> implements KeeperAction {
      */
     public void push(long time, D data) {
         int ringSlot = (int) ((time / unit) % slot);
-        List<D> ringItemData = CollectionUtils.putIfAbsent(ringData, ringSlot, new ArrayList<>());
+        List<D> ringItemData = ringData.computeIfAbsent(ringSlot, k -> new ArrayList<>());
         ringItemData.add(data);
     }
 
