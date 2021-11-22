@@ -47,7 +47,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
     /** 执行线程 */
     private volatile Thread thread;
     /** 线程锁, 用于关闭时阻塞 */
-    private final CountDownLatch threadLock = new CountDownLatch(1);
+    private final CountDownLatch terminationLatch = new CountDownLatch(1);
 
     /** task reject逻辑实现 */
     private final RejectedExecutionHandler rejectedExecutionHandler;
@@ -149,7 +149,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                     return false;
                 }
 
-                threadLock.await(timeout, unit);
+                terminationLatch.await(timeout, unit);
             }
         }
     }
@@ -806,7 +806,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
                     //清理资源
                 } finally {
                     STATE_UPDATER.set(SingleThreadEventExecutor.this, ST_TERMINATED);
-                    threadLock.countDown();
+                    terminationLatch.countDown();
                 }
             }
         }
