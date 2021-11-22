@@ -8,6 +8,10 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
+ * 一致性hash算法
+ * 解决扩容, 机器增加减少时, 只会影响附近一个机器的流量, 而不是全部洗牌, 或者减少节点间数据的复制
+ * 适合有状态服务场景
+ *
  * @author huangjianqin
  * @date 2021/11/19
  */
