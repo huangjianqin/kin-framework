@@ -1,5 +1,6 @@
 package org.kin.framework.concurrent;
 
+import org.kin.framework.utils.Maths;
 import org.kin.framework.utils.StringUtils;
 
 import java.util.concurrent.ExecutorService;
@@ -41,7 +42,7 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
     private final EventExecutor[] eventExecutors;
 
     public AbstractEventExecutorPool(int coreSize) {
-        this(coreSize, new GenericEventExecutorChooser(),
+        this(coreSize, getDefaultChooser(coreSize),
                 StringUtils.firstLowerCase("EventExecutorPool"));
     }
 
@@ -58,15 +59,15 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
     }
 
     public AbstractEventExecutorPool(int coreSize, String workerNamePrefix) {
-        this(coreSize, new GenericEventExecutorChooser(), ExecutionContext.fix(coreSize, new FastThreadLocalThreadFactory(workerNamePrefix)));
+        this(coreSize, getDefaultChooser(coreSize), ExecutionContext.fix(coreSize, new FastThreadLocalThreadFactory(workerNamePrefix)));
     }
 
     public AbstractEventExecutorPool(int coreSize, ThreadFactory threadFactory) {
-        this(coreSize, new GenericEventExecutorChooser(), ExecutionContext.fix(coreSize, threadFactory));
+        this(coreSize, getDefaultChooser(coreSize), ExecutionContext.fix(coreSize, threadFactory));
     }
 
     public AbstractEventExecutorPool(int coreSize, ExecutorService executor) {
-        this(coreSize, new GenericEventExecutorChooser(), executor);
+        this(coreSize, getDefaultChooser(coreSize), executor);
     }
 
     public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser, ExecutorService executor) {
@@ -75,6 +76,17 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
         this.eventExecutors = new EventExecutor[coreSize];
         for (int i = 0; i < coreSize; i++) {
             eventExecutors[i] = newEventExecutor(this.executor);
+        }
+    }
+
+    /**
+     * 获取默认的{@link EventExecutorChooser}实现
+     */
+    private static EventExecutorChooser getDefaultChooser(int coreSize) {
+        if (Maths.isPowerOfTwo(coreSize)) {
+            return new PowerOfTwoEventExecutorChooser();
+        } else {
+            return new GenericEventExecutorChooser();
         }
     }
 
