@@ -10,5 +10,7 @@ public class MathsTest {
         System.out.println(Maths.log2(1025));
         System.out.println(Maths.log2(1024));
         System.out.println(Maths.log2(1023));
+        System.out.println(Maths.log(5, 1));
+        System.out.println(Maths.log(5, 25));
     }
 }

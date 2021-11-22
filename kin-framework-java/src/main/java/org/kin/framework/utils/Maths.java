@@ -9,10 +9,17 @@ public final class Maths {
     }
 
     /**
-     * 计算r=log2(n)
+     * 计算r=log2(M)
      */
-    public static double log2(double n) {
-        return Math.log(n) / Math.log(2);
+    public static double log2(double m) {
+        return log(m, 2);
+    }
+
+    /**
+     * 计算r=logN(M)
+     */
+    public static double log(double n, double m) {
+        return Math.log(m) / Math.log(n);
     }
 
     /**
