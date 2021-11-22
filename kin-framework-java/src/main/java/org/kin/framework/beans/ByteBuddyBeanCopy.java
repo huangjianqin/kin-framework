@@ -38,13 +38,10 @@ public class ByteBuddyBeanCopy extends BaseCopy {
     private static final int TARGET_ARG_INDEX = 1;
     /** {@link ByteBuddyBeanCopy#selfCopyBridge(Object)}方法, 用于深复制 */
     private static final Method SELF_COPY_BRIDGE_METHOD;
-    /** {@link Copy#copyProperties(Object, Object)}方法 */
-    private static final Method COPY_PROPERTIES_METHOD;
 
     static {
         try {
             SELF_COPY_BRIDGE_METHOD = ByteBuddyBeanCopy.class.getMethod("selfCopyBridge", Object.class);
-            COPY_PROPERTIES_METHOD = Copy.class.getMethod("copyProperties", Object.class, Object.class);
         } catch (NoSuchMethodException e) {
             throw new IllegalStateException(e);
         }
@@ -127,10 +124,11 @@ public class ByteBuddyBeanCopy extends BaseCopy {
         }
 
         Class<?> copyImplClass = new ByteBuddy(ClassFileVersion.JAVA_V8)
-                .subclass(Object.class)
-                .implement(Copy.class)
+                .subclass(Copy.class)
                 .name(copyClassName(sourceC, targetC))
-                .method(ElementMatchers.anyOf(COPY_PROPERTIES_METHOD))
+                .method(ElementMatchers.isDeclaredBy(Copy.class)
+                        .and(ElementMatchers.not(ElementMatchers.isDefaultMethod())
+                                .and(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class)))))
                 .intercept(definition)
                 .make()
                 .load(ByteBuddyBeanCopy.class.getClassLoader())

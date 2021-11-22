@@ -59,8 +59,7 @@ public class ByteBuddyFactory implements ProxyFactory {
                     , generic, genericArgDefinitions).build();
 
             return (ProxyInvoker<T>) new ByteBuddy(ClassFileVersion.ofThisVm(ClassFileVersion.JAVA_V8))
-                    .subclass(Object.class)
-                    .implement(proxyType)
+                    .subclass(proxyType)
                     .name(className)
                     //定义field
                     .defineField(DEFAULT_SERVICE_FIELD_NAME, serviceClass, Modifier.PRIVATE + Modifier.FINAL)
@@ -134,8 +133,18 @@ public class ByteBuddyFactory implements ProxyFactory {
                             .andThen(FieldAccessor.ofField(DEFAULT_SERVICE_FIELD_NAME).setsArgumentAt(0)));
 
             for (Method method : interfaceClass.getMethods()) {
-                if (javassist.Modifier.isFinal(method.getModifiers())) {
+                if (Modifier.isFinal(method.getModifiers())) {
                     //跳过final 方法
+                    continue;
+                }
+
+                if (method.getDeclaringClass().equals(Object.class)) {
+                    //跳过Object方法
+                    continue;
+                }
+
+                if (method.isDefault()) {
+                    //跳过default
                     continue;
                 }
 
