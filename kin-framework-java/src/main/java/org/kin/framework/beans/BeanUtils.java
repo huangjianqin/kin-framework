@@ -1,7 +1,7 @@
 package org.kin.framework.beans;
 
 import org.kin.framework.utils.ClassUtils;
-import org.kin.framework.utils.KinServiceLoader;
+import org.kin.framework.utils.ExtensionLoader;
 import org.kin.framework.utils.SysUtils;
 
 import java.util.Arrays;
@@ -49,7 +49,7 @@ public final class BeanUtils {
         BEAN_INFO_FACTORIES.addAll(Arrays.asList(beanInfoFactories));
     }
 
-    public static void registerBeanInfoFactory(KinServiceLoader loader) {
+    public static void registerBeanInfoFactory(ExtensionLoader loader) {
         BEAN_INFO_FACTORIES.addAll(loader.getExtensions(BeanInfoFactory.class));
     }
 

@@ -103,12 +103,17 @@ public class ClassUtils {
         if (claxx == null) {
             return null;
         }
+
+        if (CollectionUtils.isEmpty(args)) {
+            return instance(claxx);
+        }
+
         try {
-            List<Class<?>> argClasses = new ArrayList<>();
-            for (Object arg : args) {
-                argClasses.add(arg.getClass());
+            Class<?>[] argClasses = new Class<?>[args.length];
+            for (int i = 0; i < args.length; i++) {
+                argClasses[i] = args[i].getClass();
             }
-            Constructor<T> constructor = claxx.getDeclaredConstructor(argClasses.toArray(new Class[1]));
+            Constructor<T> constructor = claxx.getDeclaredConstructor(argClasses);
             return constructor.newInstance(args);
         } catch (InstantiationException | IllegalAccessException |
                 NoSuchMethodException | InvocationTargetException e) {

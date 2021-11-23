@@ -3,7 +3,7 @@ package org.kin.framework.utils;
 import java.lang.annotation.*;
 
 /**
- * 标识该接口支持SPI机制扩展
+ * 标识接口支持SPI扩展机制
  *
  * @author huangjianqin
  * @date 2020/9/27
@@ -14,12 +14,27 @@ import java.lang.annotation.*;
 @Inherited
 public @interface SPI {
     /**
-     * 默认扩展service class name | service simple class name | 前缀 + service simple class name
+     * 默认扩展名
+     * 例如, extension class name | extension simple class name | 前缀 + extension simple class name | {@link Extension#value()
      */
     String value() default "";
 
     /**
-     * 配置文件的key
+     * extension class别名, 默认使用{@link Class#getCanonicalName()}
      */
-    String key() default "";
+    String alias() default "";
+
+    /**
+     * extension class是否需要编码，默认不需要, 相当于定义另外一个key, 可以类型是int, code -> extension instance
+     *
+     * @return 是否需要编码
+     */
+    boolean coded() default false;
+
+    /**
+     * extension class是否使用单例，默认使用
+     *
+     * @return 是否使用单例
+     */
+    boolean singleton() default true;
 }

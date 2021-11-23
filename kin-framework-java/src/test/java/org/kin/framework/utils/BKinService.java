@@ -4,5 +4,6 @@ package org.kin.framework.utils;
  * @author huangjianqin
  * @date 2021/5/28
  */
-public class KinServiceD implements KinService {
+@Extension(code = 2, value = "B")
+public class BKinService implements KinService {
 }
