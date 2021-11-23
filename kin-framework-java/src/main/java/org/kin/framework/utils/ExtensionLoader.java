@@ -254,6 +254,7 @@ public class ExtensionLoader {
 
     /**
      * 根据extension class name | extension simple class name | {@link Extension#value()}获取extension实现类实例
+     * 忽略大小写
      */
     public <S> S getExtension(Class<S> spiClass, String name) {
         SpiMetaData<S> spiMetaData = getSpiMetaData(spiClass);
@@ -269,6 +270,7 @@ public class ExtensionLoader {
 
     /**
      * 根据extension class name | extension simple class name | {@link Extension#value()}获取extension实现类实例
+     * 忽略大小写
      */
     public <S> S getExtension(Class<S> spiClass, String name, Object[] args) {
         SpiMetaData<S> spiMetaData = getSpiMetaData(spiClass);
@@ -284,6 +286,7 @@ public class ExtensionLoader {
 
     /**
      * 根据extension class name | extension simple class name | {@link Extension#value()}获取extension实现类实例
+     * 忽略大小写
      * 如果找不到, 则返回default extension实现类
      */
     public <S> S getExtensionOrDefault(Class<S> spiClass, String name) {
@@ -300,6 +303,7 @@ public class ExtensionLoader {
 
     /**
      * 根据extension class name | extension simple class name | {@link Extension#value()}获取extension实现类实例
+     * 忽略大小写
      * 如果找不到, 则返回default extension实现类
      */
     public <S> S getExtensionOrDefault(Class<S> spiClass, String name, Object[] args) {
@@ -459,13 +463,13 @@ public class ExtensionLoader {
                 //{@link Extension#value()}
                 String extensionAlias = extensionMetaData.getAlias();
                 if (StringUtils.isNotBlank(extensionAlias)) {
-                    names.add(extensionAlias);
+                    names.add(extensionAlias.toLowerCase());
                 }
                 //extension simple class name
-                names.add(extensionClass.getSimpleName());
+                names.add(extensionClass.getSimpleName().toLowerCase());
                 //extension class name
-                names.add(extensionClass.getCanonicalName());
-                names.add(extensionClass.getName());
+                names.add(extensionClass.getCanonicalName().toLowerCase());
+                names.add(extensionClass.getName().toLowerCase());
 
                 for (String name : names) {
                     ExtensionMetaData<E> oldExtensionMetaData = name2ExtensionMetaData.put(name, extensionMetaData);
@@ -506,18 +510,26 @@ public class ExtensionLoader {
          */
         @Nullable
         public ExtensionMetaData<E> getDefaultExtension() {
-            Set<String> names = new HashSet<>(3);
-            String defaultExtensionName = getDefaultExtensionName();
+            return getByName(getDefaultExtensionName());
+        }
+
+        /**
+         * 根据extension class name | extension simple class name | {@link Extension#value()}获取extension实现类元数据
+         * 忽略大小写
+         */
+        @Nullable
+        public ExtensionMetaData<E> getByName(String name) {
+            Set<String> availableNames = new HashSet<>(3);
             //{@link Extension#value()}
             //默认认为是简称
-            names.add(defaultExtensionName);
+            availableNames.add(name.toLowerCase());
             //extension simple class name
-            names.add(spiClass.getPackage().getName().concat(".").concat(defaultExtensionName));
+            availableNames.add(spiClass.getPackage().getName().concat(".").concat(name).toLowerCase());
             //extension class name
-            names.add(spiClass.getPackage().getName().concat(".").concat(defaultExtensionName).concat(spiClass.getSimpleName()));
+            availableNames.add(spiClass.getPackage().getName().concat(".").concat(name).concat(spiClass.getSimpleName()).toLowerCase());
 
-            for (String name : names) {
-                ExtensionMetaData<E> defaultExtensionMetaData = name2ExtensionMetaData.get(name);
+            for (String availableName : availableNames) {
+                ExtensionMetaData<E> defaultExtensionMetaData = name2ExtensionMetaData.get(availableName);
                 if (Objects.nonNull(defaultExtensionMetaData)) {
                     return defaultExtensionMetaData;
                 }
@@ -528,19 +540,12 @@ public class ExtensionLoader {
 
         /**
          * 根据extension class name | extension simple class name | {@link Extension#value()}获取extension实现类元数据
-         */
-        @Nullable
-        public ExtensionMetaData<E> getByName(String name) {
-            return name2ExtensionMetaData.get(name);
-        }
-
-        /**
-         * 根据extension class name | extension simple class name | {@link Extension#value()}获取extension实现类元数据
+         * 忽略大小写
          * 如果找不到, 则返回default extension实现类
          */
         @Nullable
         public ExtensionMetaData<E> getByNameOrDefault(String name) {
-            ExtensionMetaData<E> extensionMetaData = name2ExtensionMetaData.get(name);
+            ExtensionMetaData<E> extensionMetaData = getByName(name);
             if (Objects.isNull(extensionMetaData)) {
                 extensionMetaData = getDefaultExtension();
             }
