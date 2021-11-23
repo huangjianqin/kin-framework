@@ -83,7 +83,7 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
      * 获取默认的{@link EventExecutorChooser}实现
      */
     private static EventExecutorChooser getDefaultChooser(int coreSize) {
-        if (Maths.isPowerOfTwo(coreSize)) {
+        if (Maths.isPower2(coreSize)) {
             return new PowerOfTwoEventExecutorChooser();
         } else {
             return new GenericEventExecutorChooser();

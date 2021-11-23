@@ -6,7 +6,7 @@ package org.kin.framework.utils;
  */
 public class MathsTest {
     public static void main(String[] args) {
-        System.out.println(Maths.isPowerOfTwo(4));
+        System.out.println(Maths.isPower2(4));
         System.out.println(Maths.log2(1025));
         System.out.println(Maths.log2(1024));
         System.out.println(Maths.log2(1023));
