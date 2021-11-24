@@ -32,7 +32,7 @@ public final class Maths {
     /**
      * 最接近的2的n次方值
      */
-    public static int roundToPowerOfTwo(int val) {
+    public static int round2Power2(int val) {
         if (val > 1073741824) {
             throw new IllegalArgumentException("There is no larger power of 2 int for val:" + val + " since it exceeds 2^31.");
         } else if (val < 0) {
