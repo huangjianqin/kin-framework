@@ -180,6 +180,13 @@ public class SysUtils {
     }
 
     /**
+     * Sets the value of the Java system property with the specified {@code key}
+     */
+    public static Object setProperty(String key, String value) {
+        return System.getProperties().setProperty(key, value);
+    }
+
+    /**
      * @return os名称
      */
     public static String getOsName() {
