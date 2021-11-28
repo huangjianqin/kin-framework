@@ -6,6 +6,12 @@ import java.nio.ByteBuffer;
 
 /**
  * 变长整形工具类
+ * <p>
+ * 值越小的数字, 占用的字节越少
+ * 通过减少表示数字的字节数, 从而进行数据压缩
+ * 每个字节的最高位都是一个标志:
+ * 如果是1: 表示后续的字节也是该数字的一部分
+ * 如果是0: 表示这是最后一个字节, 剩余7位都是用来表示数字
  *
  * @author huangjianqin
  * @date 2021/7/31
@@ -22,7 +28,21 @@ public final class VarIntUtils {
      * @see ByteBufferUtils#toReadMode(ByteBuffer)
      */
     public static int readRawVarInt32(ByteBuffer byteBuffer) {
-        return decodeZigZag32(_readRawVarInt32(byteBuffer));
+        return readRawVarInt32(byteBuffer, true);
+    }
+
+    /**
+     * 必须保证{@param byteBuffer}是可读状态
+     *
+     * @see ByteBufferUtils#toReadMode(ByteBuffer)
+     */
+    public static int readRawVarInt32(ByteBuffer byteBuffer, boolean zigzag) {
+        int rawVarInt32 = _readRawVarInt32(byteBuffer);
+        if (zigzag) {
+            return decodeZigZag32(rawVarInt32);
+        } else {
+            return rawVarInt32;
+        }
     }
 
     /**
@@ -34,7 +54,7 @@ public final class VarIntUtils {
      *          unsigned support.
      * @return A signed 32-bit integer.
      */
-    private static int decodeZigZag32(int n) {
+    public static int decodeZigZag32(int n) {
         return (n >>> 1) ^ -(n & 1);
     }
 
@@ -79,10 +99,10 @@ public final class VarIntUtils {
             }
             return x;
         }
-        return (int) readRawVarint64SlowPath(byteBuffer);
+        return (int) readRawVarInt64SlowPath(byteBuffer);
     }
 
-    private static long readRawVarint64SlowPath(ByteBuffer byteBuffer) {
+    private static long readRawVarInt64SlowPath(ByteBuffer byteBuffer) {
         long result = 0;
         for (int shift = 0; shift < 64; shift += 7) {
             final byte b = readRawByte(byteBuffer);
@@ -100,7 +120,21 @@ public final class VarIntUtils {
      * @see ByteBufferUtils#toReadMode(ByteBuffer)
      */
     public static long readRawVarLong64(ByteBuffer byteBuffer) {
-        return decodeZigZag64(_readRawVarLong64(byteBuffer));
+        return readRawVarLong64(byteBuffer, true);
+    }
+
+    /**
+     * 必须保证{@param byteBuffer}是可读状态
+     *
+     * @see ByteBufferUtils#toReadMode(ByteBuffer)
+     */
+    public static long readRawVarLong64(ByteBuffer byteBuffer, boolean zigzag) {
+        long rawVarLong64 = _readRawVarLong64(byteBuffer);
+        if (zigzag) {
+            return decodeZigZag64(rawVarLong64);
+        } else {
+            return rawVarLong64;
+        }
     }
 
     /**
@@ -112,7 +146,7 @@ public final class VarIntUtils {
      *          unsigned support.
      * @return A signed 64-bit integer.
      */
-    private static long decodeZigZag64(long n) {
+    public static long decodeZigZag64(long n) {
         return (n >>> 1) ^ -(n & 1);
     }
 
@@ -189,7 +223,7 @@ public final class VarIntUtils {
             }
             return x;
         }
-        return readRawVarint64SlowPath(byteBuffer);
+        return readRawVarInt64SlowPath(byteBuffer);
     }
 
     private static byte readRawByte(ByteBuffer byteBuffer) {
@@ -210,7 +244,19 @@ public final class VarIntUtils {
      * @see ByteBufferUtils#toWriteMode(ByteBuffer)
      */
     public static void writeRawVarInt32(ByteBuffer byteBuffer, int value) {
-        _writeRawVarInt32(byteBuffer, encodeZigZag32(value));
+        writeRawVarInt32(byteBuffer, value, true);
+    }
+
+    /**
+     * 必须保证{@param byteBuffer}是可写状态
+     *
+     * @see ByteBufferUtils#toWriteMode(ByteBuffer)
+     */
+    public static void writeRawVarInt32(ByteBuffer byteBuffer, int value, boolean zigzag) {
+        if (zigzag) {
+            value = encodeZigZag32(value);
+        }
+        _writeRawVarInt32(byteBuffer, value);
     }
 
     /**
@@ -222,7 +268,7 @@ public final class VarIntUtils {
      * @return An unsigned 32-bit integer, stored in a signed int because Java has no explicit
      * unsigned support.
      */
-    private static int encodeZigZag32(int n) {
+    public static int encodeZigZag32(int n) {
         // Note:  the right-shift must be arithmetic
         return (n << 1) ^ (n >> 31);
     }
@@ -251,8 +297,20 @@ public final class VarIntUtils {
      *
      * @see ByteBufferUtils#toWriteMode(ByteBuffer)
      */
-    public static void writeRawVarlong64(ByteBuffer byteBuffer, long value) {
-        _writRawVarLong64(byteBuffer, encodeZigZag64(value));
+    public static void writeRawVarLong64(ByteBuffer byteBuffer, long value) {
+        writeRawVarLong64(byteBuffer, value, true);
+    }
+
+    /**
+     * 必须保证{@param byteBuffer}是可写状态
+     *
+     * @see ByteBufferUtils#toWriteMode(ByteBuffer)
+     */
+    public static void writeRawVarLong64(ByteBuffer byteBuffer, long value, boolean zigzag) {
+        if (zigzag) {
+            value = encodeZigZag64(value);
+        }
+        _writRawVarLong64(byteBuffer, value);
     }
 
     /**
@@ -264,7 +322,7 @@ public final class VarIntUtils {
      * @return An unsigned 64-bit integer, stored in a signed int because Java has no explicit
      * unsigned support.
      */
-    private static long encodeZigZag64(long n) {
+    public static long encodeZigZag64(long n) {
         // Note:  the right-shift must be arithmetic
         return (n << 1) ^ (n >> 63);
     }
