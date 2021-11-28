@@ -6,7 +6,10 @@ import java.nio.ByteBuffer;
  * @author huangjianqin
  * @date 2020/9/28
  */
-public class ByteBufferUtils {
+public final class ByteBufferUtils {
+    private ByteBufferUtils() {
+    }
+
     /**
      * @return 是否是读模式
      */
@@ -74,5 +77,38 @@ public class ByteBufferUtils {
      */
     public static int getMaxWritableBytes(ByteBuffer target) {
         return target.capacity() - target.position();
+    }
+
+    /**
+     * 将{@link ByteBuffer}转换为bytes
+     */
+    public static byte[] toBytes(ByteBuffer target) {
+        int readableBytes = getReadableBytes(target);
+        byte[] bytes = new byte[readableBytes];
+        target.get(bytes);
+        return bytes;
+    }
+
+    /**
+     * 保证指定{@link ByteBuffer}实例拥有指定可写字节数{@code writableBytes}, 不足则会扩容
+     */
+    public static ByteBuffer ensureWritableBytes(ByteBuffer source, int writableBytes) {
+        int maxWritableBytes = getMaxWritableBytes(source);
+        if (maxWritableBytes >= writableBytes) {
+            return source;
+        }
+
+        int capacity = source.capacity();
+        int position = source.position();
+        int newCapacity = capacity + writableBytes - maxWritableBytes;
+        ByteBuffer ret = source.isDirect() ? ByteBuffer.allocateDirect(newCapacity) :
+                ByteBuffer.allocate(newCapacity);
+
+        source.position(0).limit(capacity);
+        ret.position(0);
+        ret.put(source);
+        ret.position(position);
+        ret.order(source.order());
+        return ret;
     }
 }

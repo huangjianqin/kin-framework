@@ -5,7 +5,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /**
- * 写 {@link java.nio.ByteBuffer} 的 output stream
+ * 写入{@link ByteBuffer}的{@link OutputStream}实现
+ * 但{@link ByteBuffer}只会触发{@link #flush()}, 使用者自定义刷入外部存储空间逻辑
  *
  * @author huangjianqin
  * @date 2020/9/27
@@ -24,23 +25,23 @@ public class ByteBufferOutputStream extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        if (!this.sink.hasRemaining()) {
-            this.flush();
+        if (!sink.hasRemaining()) {
+            flush();
         }
 
-        this.sink.put((byte) b);
+        sink.put((byte) b);
     }
 
     @Override
     public void write(byte[] bytes, int offset, int length) throws IOException {
-        if (this.sink.remaining() < length) {
-            this.flush();
+        if (sink.remaining() < length) {
+            flush();
         }
 
-        this.sink.put(bytes, offset, length);
+        sink.put(bytes, offset, length);
     }
 
     public ByteBuffer getSink() {
-        return this.sink;
+        return sink;
     }
 }
