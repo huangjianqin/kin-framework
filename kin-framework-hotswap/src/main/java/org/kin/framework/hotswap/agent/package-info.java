@@ -23,7 +23,7 @@ package org.kin.framework.hotswap.agent;
 
     不适用的情况:
         1.方法签名修改(增删方法, 参数数量或类型改变)
-        2.lambda里面增加lambda
+        2.lambda里面增加lambda, 或者使用LambdaMetafactory, 性能比反射快, 接近直接调用
 
     适用情况(特殊):
         1.import原本没有的类, 并实例化

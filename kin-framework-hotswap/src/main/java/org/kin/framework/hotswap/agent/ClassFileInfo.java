@@ -5,7 +5,6 @@ import org.kin.framework.utils.ExceptionUtils;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 /**
  * @author huangjianqin
@@ -14,22 +13,20 @@ import java.util.Arrays;
 public class ClassFileInfo {
     private final String filePath;
     private final String className;
-    private final byte[] bytes;
     private final long lastModifyTime;
     private final String md5;
 
     public ClassFileInfo(String filePath, String className, byte[] bytes, long lastModifyTime) {
         this.filePath = filePath;
         this.className = className;
-        this.bytes = bytes;
         this.lastModifyTime = lastModifyTime;
-        this.md5 = this.md5();
+        this.md5 = this.md5(bytes);
     }
 
-    private String md5() {
+    private String md5(byte[] bytes) {
         try {
             MessageDigest me = MessageDigest.getInstance("MD5");
-            me.update(this.bytes);
+            me.update(bytes);
             BigInteger bi = new BigInteger(1, me.digest());
             return bi.toString(16).toUpperCase();
         } catch (NoSuchAlgorithmException e) {
@@ -40,7 +37,6 @@ public class ClassFileInfo {
     }
 
     //getter
-
     public String getFilePath() {
         return filePath;
     }
@@ -49,12 +45,12 @@ public class ClassFileInfo {
         return className;
     }
 
-    public byte[] getBytes() {
-        return bytes;
-    }
-
     public long getLastModifyTime() {
         return lastModifyTime;
+    }
+
+    public String getMd5() {
+        return md5;
     }
 
     @Override
@@ -62,7 +58,6 @@ public class ClassFileInfo {
         return "ClassFileInfo{" +
                 "filePath='" + filePath + '\'' +
                 ", className='" + className + '\'' +
-                ", bytes=" + Arrays.toString(bytes) +
                 ", lastModifyTime=" + lastModifyTime +
                 ", md5='" + md5 + '\'' +
                 '}';

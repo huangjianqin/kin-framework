@@ -8,7 +8,7 @@ import java.util.List;
  */
 public interface JavaAgentHotswapMBean {
     /**
-     * JMX监控
+     * 用于JMX监控
      *
      * @return 返回类信息
      */

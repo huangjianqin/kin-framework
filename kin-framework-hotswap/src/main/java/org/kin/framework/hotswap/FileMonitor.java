@@ -5,6 +5,7 @@ import org.kin.framework.concurrent.ExecutionContext;
 import org.kin.framework.hotswap.agent.JavaAgentHotswap;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.ExtensionLoader;
 import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,10 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -31,12 +29,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class FileMonitor extends Thread implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(FileMonitor.class);
+    /** 文件变化监听服务, 基于文件系统事件触发 */
     private WatchService watchService;
     /** hash(file name) -> Reloadable 实例 */
     private Map<Integer, AbstractFileReloadable> monitorItems;
-    /** 异步热加载文件 执行线程 */
+    /** 异步热加载文件以及类热更新执行线程 */
     private ExecutionContext executionContext;
     private volatile boolean isStopped = false;
+    /** 热更新listeners */
+    private final List<HotswapListener> listeners = ExtensionLoader.common().getExtensions(HotswapListener.class);
 
     public FileMonitor() {
         this("hotSwapFileMonitor", null);
@@ -65,7 +66,7 @@ public class FileMonitor extends Thread implements Closeable {
         }
 
         //监听热更class存储目录
-        Path classesPath = Paths.get(JavaAgentHotswap.getClasspath());
+        Path classesPath = Paths.get(JavaAgentHotswap.CLASSPATH);
         classesPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
 
         monitorJVMClose();
@@ -97,7 +98,7 @@ public class FileMonitor extends Thread implements Closeable {
                     int hashKey = itemName.hashCode();
                     //真实路径
                     Path childPath = Paths.get(parentPath.toString(), itemName);
-                    log.debug("'{}' changed", childPath.toString());
+                    log.debug("'{}' changed", childPath);
                     if (!Files.isDirectory(childPath)) {
                         //非文件夹
                         if (itemName.endsWith(ClassUtils.CLASS_SUFFIX)) {
@@ -114,7 +115,7 @@ public class FileMonitor extends Thread implements Closeable {
                                             fileReloadable.reload(is);
                                         }
                                         long endTime = System.currentTimeMillis();
-                                        log.info("hotswap file '{}' finished, time cost {} ms", childPath.toString(), endTime - startTime);
+                                        log.info("hotswap file '{}' finished, time cost {} ms", childPath, endTime - startTime);
                                     } catch (IOException e) {
                                         log.error("", e);
                                     }
@@ -126,13 +127,28 @@ public class FileMonitor extends Thread implements Closeable {
                 //重置状态，让key等待事件
                 key.reset();
             } catch (InterruptedException e) {
-
+                //do nothing
             }
 
             if (changedClasses.size() > 0) {
                 //类热更新
-                executionContext.execute(() -> JavaAgentHotswap.instance().hotswap(changedClasses));
-                HotFix.instance().fix();
+                executionContext.execute(() -> {
+                    if (JavaAgentHotswap.instance().hotswap(changedClasses)) {
+                        //延迟5s执行
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                for (HotswapListener listener : listeners) {
+                                    try {
+                                        listener.afterHotswap();
+                                    } catch (Exception e) {
+                                        log.error("encounter error, when trigger HotswapListener", e);
+                                    }
+                                }
+                            }
+                        }, 5 * 1000);
+                    }
+                });
             }
         }
         log.info("file monitor end");
@@ -149,7 +165,6 @@ public class FileMonitor extends Thread implements Closeable {
             executionContext.shutdown();
             //help GC
             monitorItems = null;
-            executionContext = null;
 
             //中断监控线程, 让本线程退出
             interrupt();

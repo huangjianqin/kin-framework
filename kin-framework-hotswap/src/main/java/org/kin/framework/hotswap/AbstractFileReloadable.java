@@ -9,8 +9,10 @@ import java.io.InputStream;
  * @date 2018/2/1
  */
 public abstract class AbstractFileReloadable implements Reloadable {
+    /** 文件路径 */
     private final String filePath;
-    private FileMonitor fileMonitor;
+    /** 文件监听实例 */
+    private final FileMonitor fileMonitor;
 
     public AbstractFileReloadable(String filePath, FileMonitor fileMonitor) {
         this.filePath = filePath;

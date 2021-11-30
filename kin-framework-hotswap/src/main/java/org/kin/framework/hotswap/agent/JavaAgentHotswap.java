@@ -7,6 +7,7 @@ import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.classfile.ClassFile;
 import com.sun.tools.classfile.ConstantPoolException;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,10 +24,7 @@ import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 单例模式
@@ -36,39 +34,44 @@ import java.util.Map;
  */
 public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
     private static final Logger log = LoggerFactory.getLogger(JavaAgentHotswap.class);
+    /** jar包后缀 */
     private static final String JAR_SUFFIX = ".jar";
     /**
      * 热更class文件放另外一个目录
      * 开发者指定, 也可以走配置
      */
-    private static final String CLASSPATH = "hotswap/classes";
-    private static final String JAR_PATH = "hotswap/KinJavaAgent.jar";
+    public static final String CLASSPATH;
+    /**
+     * java agent jar路径
+     */
+    public static final String AGENT_PATH;
     private volatile boolean isInit;
-    private volatile Map<String, ClassFileInfo> filePath2ClassFileInfo = new HashMap<>();
+    private final Map<String, ClassFileInfo> filePath2ClassFileInfo = new HashMap<>();
 
     static {
-//        CLASSPATH = JavaAgentHotswap.class.getClassLoader().getResource("").getPath();
+        CLASSPATH = SysUtils.getSysProperty("kin.hotswap.classpath", "hotswap/classes");
         log.info("java agent:classpath:{}", CLASSPATH);
 
-//        JAR_PATH = getJarPath();
-        log.info("java agent:jarPath:{}", JAR_PATH);
+        AGENT_PATH = SysUtils.getSysProperty("kin.hotswap.agent.dir", "hotswap/").concat("KinJavaAgent.jar");
+        log.info("java agent:jarPath:{}", AGENT_PATH);
     }
 
-    private static final JavaAgentHotswap HOTSWAP_FACTORY = new JavaAgentHotswap();
+    private static JavaAgentHotswap INSTANCE;
 
     public static JavaAgentHotswap instance() {
-        if (!HOTSWAP_FACTORY.isInit) {
-            HOTSWAP_FACTORY.init();
-            HOTSWAP_FACTORY.isInit = true;
+        if (Objects.isNull(INSTANCE)) {
+            synchronized (JavaAgentHotswap.class) {
+                if (Objects.nonNull(INSTANCE)) {
+                    return INSTANCE;
+                }
+                INSTANCE = new JavaAgentHotswap();
+            }
         }
-        return HOTSWAP_FACTORY;
+        return INSTANCE;
     }
 
     private JavaAgentHotswap() {
-    }
-
-    public static String getClasspath() {
-        return CLASSPATH;
+        init();
     }
 
     private void init() {
@@ -84,7 +87,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
     /**
      * 获取jar包路径
      */
-    private static String getJarPath() {
+    private static String getAgentPath() {
         //JavaDynamicAgent是jar文件内容,也就是说jar必须包含JavaDynamicAgent
         URL url = JavaDynamicAgent.class.getProtectionDomain().getCodeSource().getLocation();
         String filePath;
@@ -93,6 +96,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
             filePath = URLDecoder.decode(url.getPath(), "utf-8");
         } catch (Exception e) {
             ExceptionUtils.throwExt(e);
+            //理论上不会到这里
             throw new IllegalStateException("encounter unknown error");
         }
         // 可执行jar包运行的结果里包含".jar"
@@ -107,11 +111,15 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
         return filePath;
     }
 
-    public synchronized void hotswap(List<Path> changedPaths) {
+    /**
+     * 热更逻辑
+     */
+    public synchronized boolean hotswap(List<Path> changedPaths) {
         long startTime = System.currentTimeMillis();
         log.info("开始热更类...");
         try {
-            List<ClassDefinition> classDefList = new ArrayList<>();
+            Map<String, ClassFileInfo> newFilePath2ClassFileInfo = new HashMap<>(changedPaths.size());
+            List<ClassDefinition> classDefList = new ArrayList<>(changedPaths.size());
             for (Path changedPath : changedPaths) {
                 String classFilePath = changedPath.toString();
                 ClassFileInfo old = filePath2ClassFileInfo.get(classFilePath);
@@ -136,7 +144,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                     if (old == null || old.getClassName().equals(cfi.getClassName())) {
                         log.info("文件'{}' 类'{}'检查成功", classFilePath, className);
                         checkClassName = true;
-                        filePath2ClassFileInfo.put(classFilePath, cfi);
+                        newFilePath2ClassFileInfo.put(classFilePath, cfi);
                     }
 
                     if (checkClassName) {
@@ -150,7 +158,6 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                 }
             }
 
-
             // 当前进程pid
             String name = ManagementFactory.getRuntimeMXBean().getName();
             String pid = name.split("@")[0];
@@ -162,10 +169,13 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                 vm = VirtualMachine.attach(pid);
                 //JavaDynamicAgent所在的jar包
                 //app jar包与agent jar包同一路径
-                vm.loadAgent(JAR_PATH);
+                vm.loadAgent(AGENT_PATH);
 
                 //重新定义类
                 JavaDynamicAgent.getInstrumentation().redefineClasses(classDefList.toArray(new ClassDefinition[0]));
+
+                //更新元数据
+                filePath2ClassFileInfo.putAll(newFilePath2ClassFileInfo);
 
                 //删除热更类文件
                 Path rootPath = Paths.get(CLASSPATH);
@@ -176,8 +186,9 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                         ExceptionUtils.throwExt(e);
                     }
                 });
+                return true;
             } catch (AttachNotSupportedException | AgentLoadException | AgentInitializationException | IOException e) {
-                ExceptionUtils.throwExt(e);
+                log.error("热更失败", e);
             } finally {
                 if (vm != null) {
                     try {
@@ -193,6 +204,8 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
             long endTime = System.currentTimeMillis();
             log.info("...热更类结束, 耗时 {} ms", endTime - startTime);
         }
+
+        return false;
     }
 
     @Override
