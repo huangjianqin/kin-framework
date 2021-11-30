@@ -6,7 +6,7 @@ package org.kin.framework.proxy;
  * @author huangjianqin
  * @date 2020/12/23
  */
-interface ProxyFactory {
+public interface ProxyFactory {
     /**
      * 增强代理方法
      */

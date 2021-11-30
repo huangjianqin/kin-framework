@@ -17,13 +17,13 @@ public class JavassistFactoryTest {
             System.out.println("--------------");
         }
 
-        JavassistFactory javassistFactory = Proxys.javassist();
+        ProxyFactory proxyFactory = Proxys.javassist();
 
         AddService addService = new AddService();
 
         Method targetMethod = AddService.class.getMethods()[0];
         System.out.println(targetMethod);
-        ProxyInvoker<AddService> proxyInvoker = javassistFactory.enhanceMethod(new MethodDefinition<>(addService, targetMethod));
+        ProxyInvoker<AddService> proxyInvoker = proxyFactory.enhanceMethod(new MethodDefinition<>(addService, targetMethod));
         try {
             System.out.println(proxyInvoker.invoke(1, 1));
         } catch (Exception e) {
@@ -31,7 +31,7 @@ public class JavassistFactoryTest {
         }
 
         System.out.println("--------------");
-        AddService addServiceProxy = javassistFactory.enhanceClass(new ClassDefinition<>(addService));
+        AddService addServiceProxy = proxyFactory.enhanceClass(new ClassDefinition<>(addService));
         System.out.println(addServiceProxy.add(1, 1));
         System.out.println(addService);
         System.out.println(addServiceProxy.equals(addService));

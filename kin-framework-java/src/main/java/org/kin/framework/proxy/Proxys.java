@@ -15,21 +15,21 @@ public class Proxys {
     /**
      * @return javassist 工厂类
      */
-    public static JavassistFactory javassist() {
+    public static ProxyFactory javassist() {
         return JavassistFactory.INSTANCE;
     }
 
     /**
      * @return byteBuddy 工厂类
      */
-    public static ByteBuddyFactory byteBuddy() {
+    public static ProxyFactory byteBuddy() {
         return ByteBuddyFactory.INSTANCE;
     }
 
     /**
      * @return jdk 工厂类
      */
-    public static ReflectionProxyFactory reflection() {
+    public static ProxyFactory reflection() {
         return ReflectionProxyFactory.INSTANCE;
     }
 

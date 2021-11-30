@@ -1,7 +1,6 @@
 package org.kin.framework.event;
 
 import com.google.common.base.Preconditions;
-import org.kin.framework.proxy.Javassists;
 import org.kin.framework.proxy.MethodDefinition;
 import org.kin.framework.proxy.ProxyInvoker;
 import org.kin.framework.proxy.Proxys;
@@ -240,10 +239,6 @@ public class DefaultEventBus implements EventBus, DirectEventBus {
                 }
             } catch (Exception e) {
                 log.error("", e);
-            }
-
-            for (Class<?> enhanceClass : enhanceClasses) {
-                Javassists.detach(enhanceClass.getName());
             }
         }
 
