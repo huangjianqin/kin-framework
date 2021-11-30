@@ -43,6 +43,9 @@ public class ExtensionLoader {
     /** 默认java spi加载目录 */
     private static final String DEFAULT_JAVA_DIR_NAME = META_INF.concat("services");
 
+    /** 自带默认的loader, lazy init */
+    private static ExtensionLoader common;
+
     /** The class loader used to locate, load, and instantiate providers */
     private final ClassLoader classLoader;
     /** The access control context taken when the ServiceLoader is created */
@@ -53,18 +56,13 @@ public class ExtensionLoader {
      */
     private volatile Multimap<String, String> extension2ImplClasses = LinkedListMultimap.create();
     /** key -> spi class, value -> extension implement instance */
-    private Map<Class<?>, SpiMetaData<?>> spi2MetaData = new ConcurrentHashMap<>();
+    private final Map<Class<?>, SpiMetaData<?>> spi2MetaData = new ConcurrentHashMap<>();
 
     private ExtensionLoader(ClassLoader cl) {
         //取默认的class loader
         classLoader = (cl == null) ? ClassLoader.getSystemClassLoader() : cl;
         //获取security manager
         acc = (System.getSecurityManager() != null) ? AccessController.getContext() : null;
-
-        //加载默认支持的文件或目录
-        load(META_INF.concat(DEFAULT_FILE_NAME));
-        load(DEFAULT_DIR_NAME);
-        load(DEFAULT_JAVA_DIR_NAME);
     }
 
     //-------------------------------------------------------------------------------------------------------------------
@@ -96,6 +94,22 @@ public class ExtensionLoader {
             loader.load(fileName);
         }
         return loader;
+    }
+
+    /** 获取默认的loader */
+    public static ExtensionLoader common() {
+        if (Objects.isNull(common)) {
+            synchronized (ExtensionLoader.class) {
+                if (Objects.nonNull(common)) {
+                    return common;
+                }
+
+                common = load();
+                common.loadDefault();
+            }
+        }
+
+        return common;
     }
     //-------------------------------------------------------------------------------------------------------------------
 
@@ -154,6 +168,15 @@ public class ExtensionLoader {
         } catch (Exception e) {
             ExceptionUtils.throwExt(e);
         }
+    }
+
+    /**
+     * 加载默认支持的文件或目录
+     */
+    public synchronized void loadDefault() {
+        load(META_INF.concat(DEFAULT_FILE_NAME));
+        load(DEFAULT_DIR_NAME);
+        load(DEFAULT_JAVA_DIR_NAME);
     }
 
     /**
@@ -519,6 +542,10 @@ public class ExtensionLoader {
          */
         @Nullable
         public ExtensionMetaData<E> getByName(String name) {
+            if (StringUtils.isBlank(name)) {
+                return null;
+            }
+
             Set<String> availableNames = new HashSet<>(3);
             //{@link Extension#value()}
             //默认认为是简称
@@ -545,7 +572,10 @@ public class ExtensionLoader {
          */
         @Nullable
         public ExtensionMetaData<E> getByNameOrDefault(String name) {
-            ExtensionMetaData<E> extensionMetaData = getByName(name);
+            ExtensionMetaData<E> extensionMetaData = null;
+            if (StringUtils.isNotBlank(name)) {
+                extensionMetaData = getByName(name);
+            }
             if (Objects.isNull(extensionMetaData)) {
                 extensionMetaData = getDefaultExtension();
             }
