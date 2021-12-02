@@ -406,6 +406,27 @@ public class ClassUtils {
         return fields;
     }
 
+    public static List<Method> getAllMethods(Class<?> claxx) {
+        return getMethods(claxx, Object.class);
+    }
+
+    /**
+     * 获取claxx -> parent的所有method
+     * method顺序, 子类 -> 父类 -> 父父类
+     */
+    public static List<Method> getMethods(Class<?> claxx, Class<?> parent) {
+        if (claxx == null || parent == null) {
+            return Collections.emptyList();
+        }
+
+        List<Method> methods = new ArrayList<>();
+        while (!claxx.equals(parent)) {
+            Collections.addAll(methods, claxx.getDeclaredMethods());
+            claxx = claxx.getSuperclass();
+        }
+        return methods;
+    }
+
     public static List<Class<?>> getAllClasses(Class<?> claxx) {
         return getClasses(claxx, Object.class);
     }
