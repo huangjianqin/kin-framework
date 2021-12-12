@@ -8,14 +8,14 @@ import java.nio.ByteBuffer;
  * @author huangjianqin
  * @date 2021/8/29
  */
-public class VarIntUtilsTest {
+public class VarIntByteBufferTest {
     public static void main(String[] args) {
         int a = Integer.MIN_VALUE;
         int b = Integer.MIN_VALUE / 2;
         int c = 0;
         int d = Integer.MAX_VALUE / 2;
         int e = Integer.MAX_VALUE;
-        ByteBuffer byteBuffer = ByteBuffer.allocate(256);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(512);
         ByteBufferUtils.toWriteMode(byteBuffer);
         VarIntUtils.writeRawVarInt32(byteBuffer, a);
         VarIntUtils.writeRawVarInt32(byteBuffer, b);
@@ -39,17 +39,17 @@ public class VarIntUtilsTest {
         long e1 = Long.MAX_VALUE;
         ByteBuffer byteBuffer1 = ByteBuffer.allocate(256);
         ByteBufferUtils.toWriteMode(byteBuffer1);
-        VarIntUtils.writeRawVarInt32(byteBuffer1, a);
-        VarIntUtils.writeRawVarInt32(byteBuffer1, b);
-        VarIntUtils.writeRawVarInt32(byteBuffer1, c);
-        VarIntUtils.writeRawVarInt32(byteBuffer1, d);
-        VarIntUtils.writeRawVarInt32(byteBuffer1, e);
+        VarIntUtils.writeRawVarLong64(byteBuffer1, a1);
+        VarIntUtils.writeRawVarLong64(byteBuffer1, b1);
+        VarIntUtils.writeRawVarLong64(byteBuffer1, c1);
+        VarIntUtils.writeRawVarLong64(byteBuffer1, d1);
+        VarIntUtils.writeRawVarLong64(byteBuffer1, e1);
 
         ByteBufferUtils.toReadMode(byteBuffer1);
-        System.out.println(VarIntUtils.readRawVarInt32(byteBuffer1));
-        System.out.println(VarIntUtils.readRawVarInt32(byteBuffer1));
-        System.out.println(VarIntUtils.readRawVarInt32(byteBuffer1));
-        System.out.println(VarIntUtils.readRawVarInt32(byteBuffer1));
-        System.out.println(VarIntUtils.readRawVarInt32(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
     }
 }
