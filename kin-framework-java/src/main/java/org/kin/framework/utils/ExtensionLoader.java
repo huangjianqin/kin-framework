@@ -295,7 +295,7 @@ public class ExtensionLoader {
      * 根据extension class name | extension simple class name | {@link Extension#value()}获取extension实现类实例
      * 忽略大小写
      */
-    public <S> S getExtension(Class<S> spiClass, String name, Object[] args) {
+    public <S> S getExtension(Class<S> spiClass, String name, Object... args) {
         SpiMetaData<S> spiMetaData = getSpiMetaData(spiClass);
         if (Objects.isNull(spiMetaData)) {
             return null;
@@ -329,7 +329,7 @@ public class ExtensionLoader {
      * 忽略大小写
      * 如果找不到, 则返回default extension实现类
      */
-    public <S> S getExtensionOrDefault(Class<S> spiClass, String name, Object[] args) {
+    public <S> S getExtensionOrDefault(Class<S> spiClass, String name, Object... args) {
         SpiMetaData<S> spiMetaData = getSpiMetaData(spiClass);
         if (Objects.isNull(spiMetaData)) {
             return null;
@@ -359,7 +359,7 @@ public class ExtensionLoader {
     /**
      * 根据{@link Extension#code()}获取extension实现类实例
      */
-    public <S> S getExtension(Class<S> spiClass, int code, Object[] args) {
+    public <S> S getExtension(Class<S> spiClass, int code, Object... args) {
         SpiMetaData<S> spiMetaData = getSpiMetaData(spiClass);
         if (Objects.isNull(spiMetaData)) {
             return null;
@@ -391,7 +391,7 @@ public class ExtensionLoader {
      * 根据{@link Extension#code()}获取extension实现类实例
      * 如果找不到, 则返回default extension实现类
      */
-    public <S> S getExtensionOrDefault(Class<S> spiClass, int code, Object[] args) {
+    public <S> S getExtensionOrDefault(Class<S> spiClass, int code, Object... args) {
         SpiMetaData<S> spiMetaData = getSpiMetaData(spiClass);
         if (Objects.isNull(spiMetaData)) {
             return null;
