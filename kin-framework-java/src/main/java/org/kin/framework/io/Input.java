@@ -1,12 +1,12 @@
-package org.kin.framework.utils;
+package org.kin.framework.io;
 
 /**
- * 变长整形input抽象
+ * bytes reader
  *
  * @author huangjianqin
  * @date 2021/12/12
  */
-public interface VarIntInput {
+public interface Input {
     /** 读取一个字节 */
     byte readByte();
 

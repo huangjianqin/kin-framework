@@ -38,18 +38,18 @@ public class VarIntStreamTest {
         long d1 = Long.MAX_VALUE / 2;
         long e1 = Long.MAX_VALUE;
         ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
-        VarIntUtils.writeRawVarLong64(baos2, a1);
-        VarIntUtils.writeRawVarLong64(baos2, b1);
-        VarIntUtils.writeRawVarLong64(baos2, c1);
-        VarIntUtils.writeRawVarLong64(baos2, d1);
-        VarIntUtils.writeRawVarLong64(baos2, e1);
+        VarIntUtils.writeRawVarInt64(baos2, a1);
+        VarIntUtils.writeRawVarInt64(baos2, b1);
+        VarIntUtils.writeRawVarInt64(baos2, c1);
+        VarIntUtils.writeRawVarInt64(baos2, d1);
+        VarIntUtils.writeRawVarInt64(baos2, e1);
         baos2.close();
 
         ByteArrayInputStream bais2 = new ByteArrayInputStream(baos1.toByteArray());
-        System.out.println(VarIntUtils.readRawVarLong64(bais2));
-        System.out.println(VarIntUtils.readRawVarLong64(bais2));
-        System.out.println(VarIntUtils.readRawVarLong64(bais2));
-        System.out.println(VarIntUtils.readRawVarLong64(bais2));
-        System.out.println(VarIntUtils.readRawVarLong64(bais2));
+        System.out.println(VarIntUtils.readRawVarInt64(bais2));
+        System.out.println(VarIntUtils.readRawVarInt64(bais2));
+        System.out.println(VarIntUtils.readRawVarInt64(bais2));
+        System.out.println(VarIntUtils.readRawVarInt64(bais2));
+        System.out.println(VarIntUtils.readRawVarInt64(bais2));
     }
 }

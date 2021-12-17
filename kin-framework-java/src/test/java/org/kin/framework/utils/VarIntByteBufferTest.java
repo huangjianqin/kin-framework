@@ -39,17 +39,17 @@ public class VarIntByteBufferTest {
         long e1 = Long.MAX_VALUE;
         ByteBuffer byteBuffer1 = ByteBuffer.allocate(256);
         ByteBufferUtils.toWriteMode(byteBuffer1);
-        VarIntUtils.writeRawVarLong64(byteBuffer1, a1);
-        VarIntUtils.writeRawVarLong64(byteBuffer1, b1);
-        VarIntUtils.writeRawVarLong64(byteBuffer1, c1);
-        VarIntUtils.writeRawVarLong64(byteBuffer1, d1);
-        VarIntUtils.writeRawVarLong64(byteBuffer1, e1);
+        VarIntUtils.writeRawVarInt64(byteBuffer1, a1);
+        VarIntUtils.writeRawVarInt64(byteBuffer1, b1);
+        VarIntUtils.writeRawVarInt64(byteBuffer1, c1);
+        VarIntUtils.writeRawVarInt64(byteBuffer1, d1);
+        VarIntUtils.writeRawVarInt64(byteBuffer1, e1);
 
         ByteBufferUtils.toReadMode(byteBuffer1);
-        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
-        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
-        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
-        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
-        System.out.println(VarIntUtils.readRawVarLong64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarInt64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarInt64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarInt64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarInt64(byteBuffer1));
+        System.out.println(VarIntUtils.readRawVarInt64(byteBuffer1));
     }
 }

@@ -38,7 +38,7 @@ public final class ByteBufferUtils {
     }
 
     /**
-     * 切换为写模式
+     * 切换为写模式, 以当前limit开始写数据, 直至达到capacity
      */
     public static void toWriteMode(ByteBuffer target) {
         if (!isWriteMode(target)) {
@@ -75,7 +75,7 @@ public final class ByteBufferUtils {
     /**
      * 获取{@link ByteBuffer}最大可写字节数
      */
-    public static int getMaxWritableBytes(ByteBuffer target) {
+    public static int getWritableBytes(ByteBuffer target) {
         return target.capacity() - target.position();
     }
 
@@ -93,7 +93,7 @@ public final class ByteBufferUtils {
      * 保证指定{@link ByteBuffer}实例拥有指定可写字节数{@code writableBytes}, 不足则会扩容
      */
     public static ByteBuffer ensureWritableBytes(ByteBuffer source, int writableBytes) {
-        int maxWritableBytes = getMaxWritableBytes(source);
+        int maxWritableBytes = getWritableBytes(source);
         if (maxWritableBytes >= writableBytes) {
             return source;
         }

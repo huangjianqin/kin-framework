@@ -1,8 +1,7 @@
 package org.kin.framework.utils;
 
-import org.kin.framework.io.ByteBufferUtils;
+import org.kin.framework.io.*;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -57,44 +56,44 @@ public final class VarIntUtils {
         writeRawVarInt32(new StreamOutput(outputStream), value, zigzag);
     }
 
-    public static long readRawVarLong64(ByteBuffer byteBuffer) {
-        return readRawVarLong64(byteBuffer, true);
+    public static long readRawVarInt64(ByteBuffer byteBuffer) {
+        return readRawVarInt64(byteBuffer, true);
     }
 
-    public static long readRawVarLong64(ByteBuffer byteBuffer, boolean zigzag) {
-        return readRawVarLong64(new ByteBufferInput(byteBuffer), zigzag);
+    public static long readRawVarInt64(ByteBuffer byteBuffer, boolean zigzag) {
+        return readRawVarInt64(new ByteBufferInput(byteBuffer), zigzag);
     }
 
-    public static long readRawVarLong64(InputStream inputStream) {
-        return readRawVarLong64(inputStream, true);
+    public static long readRawVarInt64(InputStream inputStream) {
+        return readRawVarInt64(inputStream, true);
     }
 
-    public static long readRawVarLong64(InputStream inputStream, boolean zigzag) {
-        return readRawVarLong64(new StreamInput(inputStream), zigzag);
+    public static long readRawVarInt64(InputStream inputStream, boolean zigzag) {
+        return readRawVarInt64(new StreamInput(inputStream), zigzag);
     }
 
-    public static void writeRawVarLong64(ByteBuffer byteBuffer, long value) {
-        writeRawVarLong64(byteBuffer, value, true);
+    public static void writeRawVarInt64(ByteBuffer byteBuffer, long value) {
+        writeRawVarInt64(byteBuffer, value, true);
     }
 
-    public static void writeRawVarLong64(ByteBuffer byteBuffer, long value, boolean zigzag) {
-        writeRawVarLong64(new ByteBufferOutput(byteBuffer), value, zigzag);
+    public static void writeRawVarInt64(ByteBuffer byteBuffer, long value, boolean zigzag) {
+        writeRawVarInt64(new ByteBufferOutput(byteBuffer), value, zigzag);
     }
 
-    public static void writeRawVarLong64(OutputStream outputStream, long value) {
-        writeRawVarLong64(outputStream, value, true);
+    public static void writeRawVarInt64(OutputStream outputStream, long value) {
+        writeRawVarInt64(outputStream, value, true);
     }
 
-    public static void writeRawVarLong64(OutputStream outputStream, long value, boolean zigzag) {
-        writeRawVarLong64(new StreamOutput(outputStream), value, zigzag);
+    public static void writeRawVarInt64(OutputStream outputStream, long value, boolean zigzag) {
+        writeRawVarInt64(new StreamOutput(outputStream), value, zigzag);
     }
 
     //------------------------------------------var int/long reader 算法来自于protocolbuf------------------------------------------
-    public static int readRawVarInt32(VarIntInput input) {
+    public static int readRawVarInt32(Input input) {
         return readRawVarInt32(input, true);
     }
 
-    public static int readRawVarInt32(VarIntInput input, boolean zigzag) {
+    public static int readRawVarInt32(Input input, boolean zigzag) {
         int rawVarInt32 = _readRawVarInt32(input);
         if (zigzag) {
             return decodeZigZag32(rawVarInt32);
@@ -119,7 +118,7 @@ public final class VarIntUtils {
     /**
      * read 变长 32位int
      */
-    private static int _readRawVarInt32(VarIntInput input) {
+    private static int _readRawVarInt32(Input input) {
         if (!input.readerIndexSupported()) {
             return (int) readRawVarInt64SlowPath(input);
         }
@@ -165,7 +164,7 @@ public final class VarIntUtils {
         return (int) readRawVarInt64SlowPath(input);
     }
 
-    private static long readRawVarInt64SlowPath(VarIntInput input) {
+    private static long readRawVarInt64SlowPath(Input input) {
         long result = 0;
         for (int shift = 0; shift < 64; shift += 7) {
             final byte b = readRawByte(input);
@@ -177,16 +176,16 @@ public final class VarIntUtils {
         throw new IllegalArgumentException("encountered a malformed var int");
     }
 
-    public static long readRawVarLong64(VarIntInput input) {
-        return readRawVarLong64(input, true);
+    public static long readRawVarInt64(Input input) {
+        return readRawVarInt64(input, true);
     }
 
-    public static long readRawVarLong64(VarIntInput input, boolean zigzag) {
-        long rawVarLong64 = _readRawVarLong64(input);
+    public static long readRawVarInt64(Input input, boolean zigzag) {
+        long rawVarInt64 = _readRawVarInt64(input);
         if (zigzag) {
-            return decodeZigZag64(rawVarLong64);
+            return decodeZigZag64(rawVarInt64);
         } else {
-            return rawVarLong64;
+            return rawVarInt64;
         }
     }
 
@@ -206,7 +205,7 @@ public final class VarIntUtils {
     /**
      * read 变长 64位long
      */
-    private static long _readRawVarLong64(VarIntInput input) {
+    private static long _readRawVarInt64(Input input) {
         if (!input.readerIndexSupported()) {
             return readRawVarInt64SlowPath(input);
         }
@@ -284,7 +283,7 @@ public final class VarIntUtils {
         return readRawVarInt64SlowPath(input);
     }
 
-    private static byte readRawByte(VarIntInput input) {
+    private static byte readRawByte(Input input) {
         if (input.readableBytes() <= 0) {
             throw new IllegalArgumentException("unexpect readable bytes");
         }
@@ -293,11 +292,11 @@ public final class VarIntUtils {
 
     //------------------------------------------var int/long writer 算法来自于protocolbuf------------------------------------------
 
-    public static void writeRawVarInt32(VarIntOutput output, int value) {
+    public static void writeRawVarInt32(Output output, int value) {
         writeRawVarInt32(output, value, true);
     }
 
-    public static void writeRawVarInt32(VarIntOutput output, int value, boolean zigzag) {
+    public static void writeRawVarInt32(Output output, int value, boolean zigzag) {
         if (zigzag) {
             value = encodeZigZag32(value);
         }
@@ -318,7 +317,7 @@ public final class VarIntUtils {
         return (n << 1) ^ (n >> 31);
     }
 
-    private static void _writeRawVarInt32(VarIntOutput output, int value) {
+    private static void _writeRawVarInt32(Output output, int value) {
         //最大可写字节数
         int writableBytes = output.writableBytes();
         if (writableBytes < 5) {
@@ -337,15 +336,15 @@ public final class VarIntUtils {
         }
     }
 
-    public static void writeRawVarLong64(VarIntOutput output, long value) {
-        writeRawVarLong64(output, value, true);
+    public static void writeRawVarInt64(Output output, long value) {
+        writeRawVarInt64(output, value, true);
     }
 
-    public static void writeRawVarLong64(VarIntOutput output, long value, boolean zigzag) {
+    public static void writeRawVarInt64(Output output, long value, boolean zigzag) {
         if (zigzag) {
             value = encodeZigZag64(value);
         }
-        _writRawVarLong64(output, value);
+        _writRawVarInt64(output, value);
     }
 
     /**
@@ -362,7 +361,7 @@ public final class VarIntUtils {
         return (n << 1) ^ (n >> 63);
     }
 
-    private static void _writRawVarLong64(VarIntOutput output, long value) {
+    private static void _writRawVarInt64(Output output, long value) {
         //最大可写字节数
         int writableBytes = output.writableBytes();
         if (writableBytes < 9) {
@@ -433,121 +432,11 @@ public final class VarIntUtils {
 
     //----------------------------------------------------------------------------------------------------------------
 
-    /**
-     * 基于{@link ByteBuffer}的{@link VarIntInput}实现
-     */
-    private static class ByteBufferInput implements VarIntInput {
-        private final ByteBuffer byteBuffer;
 
-        ByteBufferInput(ByteBuffer byteBuffer) {
-            this.byteBuffer = byteBuffer;
-        }
 
-        @Override
-        public byte readByte() {
-            return byteBuffer.get();
-        }
 
-        @Override
-        public int readerIndex() {
-            return byteBuffer.position();
-        }
 
-        @Override
-        public void readerIndex(int readerIndex) {
-            byteBuffer.position(readerIndex);
-        }
 
-        @Override
-        public boolean readerIndexSupported() {
-            return true;
-        }
 
-        @Override
-        public int readableBytes() {
-            return ByteBufferUtils.getReadableBytes(byteBuffer);
-        }
-    }
 
-    /**
-     * 基于{@link ByteBuffer}的{@link VarIntOutput}实现
-     */
-    private static class ByteBufferOutput implements VarIntOutput {
-        private final ByteBuffer byteBuffer;
-
-        public ByteBufferOutput(ByteBuffer byteBuffer) {
-            this.byteBuffer = byteBuffer;
-        }
-
-        @Override
-        public void writeByte(int value) {
-            byteBuffer.put((byte) value);
-        }
-
-        @Override
-        public int writableBytes() {
-            return ByteBufferUtils.getMaxWritableBytes(byteBuffer);
-        }
-    }
-
-    /**
-     * 基于{@link InputStream}的{@link VarIntInput}实现
-     */
-    private static class StreamInput implements VarIntInput {
-        private final InputStream inputStream;
-
-        public StreamInput(InputStream inputStream) {
-            this.inputStream = inputStream;
-        }
-
-        @Override
-        public byte readByte() {
-            try {
-                return (byte) inputStream.read();
-            } catch (IOException e) {
-                ExceptionUtils.throwExt(e);
-            }
-
-            //理论上不会到这里
-            return 0;
-        }
-
-        @Override
-        public int readableBytes() {
-            try {
-                return inputStream.available();
-            } catch (IOException e) {
-                ExceptionUtils.throwExt(e);
-            }
-
-            //理论上不会到这里
-            return 0;
-        }
-    }
-
-    /**
-     * 基于{@link OutputStream}的{@link VarIntOutput}实现
-     */
-    private static class StreamOutput implements VarIntOutput {
-        private final OutputStream outputStream;
-
-        public StreamOutput(OutputStream outputStream) {
-            this.outputStream = outputStream;
-        }
-
-        @Override
-        public void writeByte(int value) {
-            try {
-                outputStream.write(value);
-            } catch (IOException e) {
-                ExceptionUtils.throwExt(e);
-            }
-        }
-
-        @Override
-        public int writableBytes() {
-            //认为是可无限写入
-            return Integer.MAX_VALUE;
-        }
-    }
 }
