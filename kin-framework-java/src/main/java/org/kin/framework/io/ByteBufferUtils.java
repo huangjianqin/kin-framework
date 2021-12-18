@@ -11,40 +11,22 @@ public final class ByteBufferUtils {
     }
 
     /**
-     * @return 是否是读模式
-     */
-    public static boolean isReadMode(ByteBuffer target) {
-        return !isWriteMode(target);
-    }
-
-    /**
-     * @return 是否是写模式
-     */
-    public static boolean isWriteMode(ByteBuffer target) {
-        return target.position() != 0 || target.limit() == target.capacity();
-    }
-
-    /**
      * 切换为读模式
      * <p>
      * {@param target}本身要处于write mode, 不然存在数据丢失
      * 比如read了一点点数据, 再调用该方法, buffer本身只能再读之前读过的数据
      */
     public static void toReadMode(ByteBuffer target) {
-        if (!isReadMode(target)) {
-            //change read
-            target.flip();
-        }
+        //change read
+        target.flip();
     }
 
     /**
      * 切换为写模式, 以当前limit开始写数据, 直至达到capacity
      */
     public static void toWriteMode(ByteBuffer target) {
-        if (!isWriteMode(target)) {
-            target.position(target.limit());
-            target.limit(target.capacity());
-        }
+        target.position(target.limit());
+        target.limit(target.capacity());
     }
 
     /**
