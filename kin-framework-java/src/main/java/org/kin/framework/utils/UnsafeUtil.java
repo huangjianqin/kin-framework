@@ -88,6 +88,23 @@ public final class UnsafeUtil {
         UNSAFE_ACCESSOR.putByte(target, offset, value);
     }
 
+    public static int getChar(Object target, long offset) {
+        return UNSAFE_ACCESSOR.getChar(target, offset);
+    }
+
+    public static void putChar(Object target, long offset, char value) {
+        UNSAFE_ACCESSOR.putChar(target, offset, value);
+    }
+
+    public static int getShort(Object target, long offset) {
+        return UNSAFE_ACCESSOR.getShort(target, offset);
+    }
+
+    public static void putShort(Object target, long offset, short value) {
+        UNSAFE_ACCESSOR.putShort(target, offset, value);
+    }
+
+
     public static int getInt(Object target, long offset) {
         return UNSAFE_ACCESSOR.getInt(target, offset);
     }
@@ -432,6 +449,14 @@ public final class UnsafeUtil {
 
         public void putByte(Object target, long offset, byte value) {
             this.unsafe.putByte(target, offset, value);
+        }
+
+        public char getChar(Object target, long offset) {
+            return this.unsafe.getChar(target, offset);
+        }
+
+        public void putChar(Object target, long offset, char value) {
+            this.unsafe.putChar(target, offset, value);
         }
 
         public short getShort(Object target, long offset) {
