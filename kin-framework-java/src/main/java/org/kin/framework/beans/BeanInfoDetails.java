@@ -12,7 +12,7 @@ import java.util.Map;
  * @author huangjianqin
  * @date 2021/9/8
  */
-final class BeanInfoDetails implements BeanInfo {
+public final class BeanInfoDetails implements BeanInfo {
     /** 真正的{@link BeanInfo} */
     private final BeanInfo beanInfo;
     /** key -> field name, value -> {@link PropertyDescriptor}实例 */

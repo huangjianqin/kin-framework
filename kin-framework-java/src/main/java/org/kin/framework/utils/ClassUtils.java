@@ -362,27 +362,41 @@ public class ClassUtils {
      * 获取getter方法
      */
     public static Method getterMethod(Class<?> target, Field field) {
-        byte[] items = field.getName().getBytes();
-        items[0] = (byte) ((char) items[0] - 'a' + 'A');
         try {
+            String s = StringUtils.firstUpperCase(field.getName());
             if (isBoolean(field.getType())) {
                 //如果是boolean, 先尝试is开头的getter方法, 找不到再尝试get开头
-                return target.getMethod("is" + new String(items));
+                return target.getMethod("is".concat(s));
             }
-            return target.getMethod("get" + new String(items));
+            return target.getMethod("get".concat(s));
         } catch (NoSuchMethodException e) {
             return null;
         }
     }
 
+    /**
+     * 获取getter方法
+     */
+    public static Method getterMethod(Field field) {
+        return getterMethod(field.getDeclaringClass(), field);
+    }
+
+    /**
+     * 获取setter方法
+     */
     public static Method setterMethod(Class<?> target, Field field) {
-        byte[] items = field.getName().getBytes();
-        items[0] = (byte) ((char) items[0] - 'a' + 'A');
         try {
-            return target.getMethod("set" + new String(items), field.getType());
+            return target.getMethod("set".concat(StringUtils.firstUpperCase(field.getName())), field.getType());
         } catch (NoSuchMethodException e) {
             return null;
         }
+    }
+
+    /**
+     * 获取setter方法
+     */
+    public static Method setterMethod(Field field) {
+        return setterMethod(field.getDeclaringClass(), field);
     }
 
     public static List<Field> getAllFields(Class<?> claxx) {

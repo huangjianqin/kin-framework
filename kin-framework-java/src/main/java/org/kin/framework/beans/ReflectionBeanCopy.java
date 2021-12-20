@@ -21,8 +21,8 @@ class ReflectionBeanCopy extends BaseCopy {
 
     @Override
     public void copyProperties(Object source, Object target) {
-        BeanInfoDetails sourceBid = BeanInfoCache.INSTANCE.get(source.getClass());
-        BeanInfoDetails targetBid = BeanInfoCache.INSTANCE.get(target.getClass());
+        BeanInfoDetails sourceBid = BeanUtils.getBeanInfo(source.getClass());
+        BeanInfoDetails targetBid = BeanUtils.getBeanInfo(target.getClass());
 
         for (PropertyDescriptor targetPd : targetBid.getPropertyDescriptors()) {
             Method writeMethod = targetPd.getWriteMethod();

@@ -89,8 +89,8 @@ public class ByteBuddyBeanCopy extends BaseCopy {
      * 基于ByteBuddy生成{@link Copy}实现类
      */
     private Copy genCopy(Class<?> sourceC, Class<?> targetC) {
-        BeanInfoDetails sourceBid = BeanInfoCache.INSTANCE.get(sourceC);
-        BeanInfoDetails targetBid = BeanInfoCache.INSTANCE.get(targetC);
+        BeanInfoDetails sourceBid = BeanUtils.getBeanInfo(sourceC);
+        BeanInfoDetails targetBid = BeanUtils.getBeanInfo(targetC);
 
         Implementation.Composable definition = null;
         for (PropertyDescriptor targetPd : targetBid.getPropertyDescriptors()) {

@@ -1,13 +1,20 @@
 package org.kin.framework.beans;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExtensionLoader;
 import org.kin.framework.utils.SysUtils;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author huangjianqin
@@ -15,7 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public final class BeanUtils {
     /** 使用支持字节码增强 */
-    private static final boolean ENHANCE;
+    public static final boolean ENHANCE;
 
     static {
         Class<?> byteBuddyClass = null;
@@ -25,17 +32,22 @@ public final class BeanUtils {
             //ignore
         }
 
-        if (Objects.nonNull(byteBuddyClass)) {
-            ENHANCE = true;
-        } else {
-            ENHANCE = false;
-        }
+        ENHANCE = Objects.nonNull(byteBuddyClass);
     }
 
     /** 是否开启深复制, 从app jvm参数获取开关, -D开头 */
-    static final boolean DEEP = SysUtils.getBoolSysProperty("kin.beans.copy.deep", false);
+    public static final boolean DEEP = SysUtils.getBoolSysProperty("kin.beans.copy.deep", false);
+    /** {@link Introspector}是否忽略所有与指定class的有关联的{@link java.beans.BeanInfo}, 包括其父类 */
+    public static final boolean SHOULD_INTROSPECTOR_IGNORE_BEANINFO_CLASSES = SysUtils.getBoolSysProperty("kin.beans.should.introspector.ignoreBeanInfoClasses", false);
+
     /** 使用者自定义{@link BeanInfoFactory}实例 */
-    static final CopyOnWriteArrayList<BeanInfoFactory> BEAN_INFO_FACTORIES = new CopyOnWriteArrayList<>();
+    private static final CopyOnWriteArrayList<BeanInfoFactory> BEAN_INFO_FACTORIES = new CopyOnWriteArrayList<>();
+    /** soft reference && 30min ttl */
+    private static final Cache<Class<?>, BeanInfoDetails> BEAN_INFO_CACHE =
+            CacheBuilder.newBuilder()
+                    .softValues()
+                    .expireAfterAccess(1, TimeUnit.MINUTES)
+                    .build();
 
     private BeanUtils() {
     }
@@ -72,6 +84,33 @@ public final class BeanUtils {
     public static <T> T copyProperties(Object source, Class<T> targetClass) {
         T target = ClassUtils.instance(targetClass);
         copyProperties(source, target);
-        return (T) target;
+        return target;
+    }
+
+    /**
+     * 获取{@link BeanInfoDetails}
+     */
+    public static BeanInfoDetails getBeanInfo(Class<?> claxx) {
+        try {
+            return BEAN_INFO_CACHE.get(claxx, () -> new BeanInfoDetails(getBeanInfo0(claxx)));
+        } catch (ExecutionException e) {
+            throw new IllegalArgumentException(String.format("can't found bean info for class '%s', due to", claxx.getCanonicalName()), e);
+        }
+    }
+
+    /**
+     * 获取{@link BeanInfoDetails}
+     */
+    private static BeanInfo getBeanInfo0(Class<?> claxx) throws IntrospectionException {
+        for (BeanInfoFactory beanInfoFactory : BeanUtils.BEAN_INFO_FACTORIES) {
+            BeanInfo beanInfo = beanInfoFactory.getBeanInfo(claxx);
+            if (beanInfo != null) {
+                return beanInfo;
+            }
+        }
+
+        return (SHOULD_INTROSPECTOR_IGNORE_BEANINFO_CLASSES ?
+                Introspector.getBeanInfo(claxx, Introspector.IGNORE_ALL_BEANINFO) :
+                Introspector.getBeanInfo(claxx));
     }
 }
