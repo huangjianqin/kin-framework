@@ -10,6 +10,19 @@ public interface Input {
     /** 读取一个字节 */
     byte readByte();
 
+    /** 往{@code dst}写入指定长度({@code dst.length})的字节数据, 同时会改变{@link Input}的read index */
+    default Input readBytes(byte[] dst) {
+        readBytes(dst, 0, dst.length);
+        return this;
+    }
+
+    /**
+     * 往{@code dst}写入指定长度({@code length})的字节数据, 同时会改变{@link Input}的read index
+     *
+     * @param dstIndex {@code dst}开始写入的index
+     */
+    Input readBytes(byte[] dst, int dstIndex, int length);
+
     /**
      * 获取当前read index
      *
@@ -23,7 +36,7 @@ public interface Input {
     /**
      * 设置read index
      */
-    default void readerIndex(int readerIndex) {
+    default Input readerIndex(int readerIndex) {
         //默认不支持
         throw new UnsupportedOperationException();
     }

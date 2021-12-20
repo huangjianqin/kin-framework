@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -72,6 +73,23 @@ public final class ScalableByteArray implements Input, Output {
     }
 
     @Override
+    public Input readBytes(byte[] dst, int dstIndex, int length) {
+        if (Objects.isNull(dst)) {
+            throw new IllegalArgumentException("dst is null");
+        }
+        if (dstIndex < 0) {
+            throw new IndexOutOfBoundsException("dstIndex < 0");
+        }
+        if (readableBytes() < length) {
+            throw new IndexOutOfBoundsException("length is greater than readableBytes");
+        }
+        while (readableBytes() > 0) {
+            dst[dstIndex] = readByte();
+        }
+        return this;
+    }
+
+    @Override
     public int readableBytes() {
         //思路: 中间-最后可写+第一剩余未读
         return (writeArrOffset - readArrOffset) * allocSize - (allocSize - writeOffset) + (allocSize - readOffset);
@@ -83,7 +101,10 @@ public final class ScalableByteArray implements Input, Output {
     }
 
     @Override
-    public void readerIndex(int readerIndex) {
+    public Input readerIndex(int readerIndex) {
+        if (readerIndex < 0) {
+            throw new IndexOutOfBoundsException("readerIndex < 0");
+        }
         //重置reader index, 根据单个byte[]容量计算即可
         int readArrOffset = readerIndex / allocSize;
         int readOffset = readerIndex % allocSize;
@@ -92,6 +113,7 @@ public final class ScalableByteArray implements Input, Output {
         //校验成功, 则set
         this.readArrOffset = readArrOffset;
         this.readOffset = readOffset;
+        return this;
     }
 
     @Override
@@ -120,6 +142,15 @@ public final class ScalableByteArray implements Input, Output {
 
     @Override
     public void writeBytes(byte[] value, int startIdx, int len) {
+        if (Objects.isNull(value)) {
+            throw new IllegalArgumentException("value is null");
+        }
+        if (startIdx < 0) {
+            throw new IllegalArgumentException("startIdx is null");
+        }
+        if (len <= 0) {
+            throw new IllegalArgumentException("len is less than or equal to 0");
+        }
         do {
             byte[] bytes = byteArrays.get(writeArrOffset);
             int writableBytes = allocSize - writeOffset;

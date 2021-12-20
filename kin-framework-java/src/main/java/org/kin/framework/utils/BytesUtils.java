@@ -1,5 +1,8 @@
 package org.kin.framework.utils;
 
+import org.kin.framework.io.Input;
+import org.kin.framework.io.Output;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -169,6 +172,14 @@ public final class BytesUtils {
     }
 
     /**
+     * Read a 32-bit little-endian integer from input.
+     */
+    public static int readInt32LE(Input input) {
+        return readInt32LE(input.readByte(), input.readByte(),
+                input.readByte(), input.readByte());
+    }
+
+    /**
      * Read a 32-bit little-endian integer.
      */
     private static int readInt32LE(int b1, int b2, int b3, int b4) {
@@ -187,6 +198,27 @@ public final class BytesUtils {
     }
 
     /**
+     * Read a float from input stream.
+     */
+    public static float readFloatLE(InputStream inputStream) {
+        return Float.intBitsToFloat(readInt32LE(inputStream));
+    }
+
+    /**
+     * Read a float from internal buffer.
+     */
+    public static float readFloatLE(ByteBuffer byteBuffer) {
+        return Float.intBitsToFloat(readInt32LE(byteBuffer));
+    }
+
+    /**
+     * Read a float from input.
+     */
+    public static float readFloatLE(Input input) {
+        return Float.intBitsToFloat(readInt32LE(input));
+    }
+
+    /**
      * write a 32-bit little-endian integer to output stream.
      */
     public static void writeInt32LE(OutputStream outputStream, int value) {
@@ -198,6 +230,16 @@ public final class BytesUtils {
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
+    }
+
+    /**
+     * write a 32-bit little-endian integer to output.
+     */
+    public static void writeInt32LE(Output output, int value) {
+        output.writeByte((byte) value);
+        output.writeByte((byte) (value >>> 8));
+        output.writeByte((byte) (value >>> 16));
+        output.writeByte((byte) (value >>> 24));
     }
 
     /**
@@ -213,15 +255,22 @@ public final class BytesUtils {
     /**
      * write a float to output stream.
      */
-    public static void writeInt32LE(OutputStream outputStream, float value) {
+    public static void writeFloatLE(OutputStream outputStream, float value) {
         writeInt32LE(outputStream, Float.floatToRawIntBits(value));
     }
 
     /**
      * write a float to the internal buffer.
      */
-    public static void writeInt32LE(ByteBuffer byteBuffer, float value) {
+    public static void writeFloatLE(ByteBuffer byteBuffer, float value) {
         writeInt32LE(byteBuffer, Float.floatToRawIntBits(value));
+    }
+
+    /**
+     * write a float to the output.
+     */
+    public static void writeFloatLE(Output output, float value) {
+        writeInt32LE(output, Float.floatToRawIntBits(value));
     }
 
     /**
@@ -239,6 +288,16 @@ public final class BytesUtils {
 
         //理论上不会到这里
         return 0;
+    }
+
+    /**
+     * Read a 64-bit little-endian integer from input.
+     */
+    public static long readInt64LE(Input input) {
+        return readInt64LE(input.readByte(), input.readByte(),
+                input.readByte(), input.readByte(),
+                input.readByte(), input.readByte(),
+                input.readByte(), input.readByte());
     }
 
     /**
@@ -267,6 +326,27 @@ public final class BytesUtils {
     }
 
     /**
+     * Read a double from input stream.
+     */
+    public static double readDoubleLE(InputStream inputStream) {
+        return Double.longBitsToDouble(readInt64LE(inputStream));
+    }
+
+    /**
+     * Read a double from byte buffer.
+     */
+    public static double readDoubleLE(ByteBuffer byteBuffer) {
+        return Double.longBitsToDouble(readInt64LE(byteBuffer));
+    }
+
+    /**
+     * Read a double from input.
+     */
+    public static double readDoubleLE(Input input) {
+        return Double.longBitsToDouble(readInt64LE(input));
+    }
+
+    /**
      * write a 64-bit little-endian integer to output stream.
      */
     public static void writeInt64LE(OutputStream outputStream, long value) {
@@ -282,6 +362,20 @@ public final class BytesUtils {
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
+    }
+
+    /**
+     * write a 64-bit little-endian integer to output.
+     */
+    public static void writeInt64LE(Output output, long value) {
+        output.writeByte((byte) value);
+        output.writeByte((byte) (value >>> 8));
+        output.writeByte((byte) (value >>> 16));
+        output.writeByte((byte) (value >>> 24));
+        output.writeByte((byte) (value >>> 32));
+        output.writeByte((byte) (value >>> 40));
+        output.writeByte((byte) (value >>> 48));
+        output.writeByte((byte) (value >>> 56));
     }
 
     /**
@@ -301,14 +395,21 @@ public final class BytesUtils {
     /**
      * write a double to output stream.
      */
-    public static void writeInt64LE(OutputStream outputStream, double value) {
+    public static void writeDoubleLE(OutputStream outputStream, double value) {
         writeInt64LE(outputStream, Double.doubleToRawLongBits(value));
     }
 
     /**
      * write a double to the internal buffer.
      */
-    public static void writeInt64LE(ByteBuffer byteBuffer, double value) {
+    public static void writeDoubleLE(ByteBuffer byteBuffer, double value) {
         writeInt64LE(byteBuffer, Double.doubleToRawLongBits(value));
+    }
+
+    /**
+     * write a double to output.
+     */
+    public static void writeDoubleLE(Output output, double value) {
+        writeInt64LE(output, Double.doubleToRawLongBits(value));
     }
 }

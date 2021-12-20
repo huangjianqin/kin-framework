@@ -3,6 +3,7 @@ package org.kin.framework.io;
 import org.kin.framework.concurrent.FastThreadLocal;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 /**
  * 基于{@link ByteBuffer}的{@link Input}实现
@@ -37,13 +38,32 @@ public class ByteBufferInput implements Input {
     }
 
     @Override
+    public Input readBytes(byte[] dst, int dstIndex, int length) {
+        if (Objects.isNull(dst)) {
+            throw new IllegalArgumentException("dst is null");
+        }
+        if (dstIndex < 0) {
+            throw new IndexOutOfBoundsException("dstIndex < 0");
+        }
+        if (readableBytes() < length) {
+            throw new IndexOutOfBoundsException("length is greater than readableBytes");
+        }
+        byteBuffer.get(dst, dstIndex, length);
+        return this;
+    }
+
+    @Override
     public int readerIndex() {
         return byteBuffer.position();
     }
 
     @Override
-    public void readerIndex(int readerIndex) {
+    public Input readerIndex(int readerIndex) {
+        if (readerIndex < 0) {
+            throw new IndexOutOfBoundsException("readerIndex < 0");
+        }
         byteBuffer.position(readerIndex);
+        return this;
     }
 
     @Override

@@ -83,6 +83,23 @@ public final class ScalableByteBuffer implements Input, Output {
     }
 
     @Override
+    public Input readBytes(byte[] dst, int dstIndex, int length) {
+        if (Objects.isNull(dst)) {
+            throw new IllegalArgumentException("dst is null");
+        }
+        if (dstIndex < 0) {
+            throw new IndexOutOfBoundsException("dstIndex < 0");
+        }
+        if (readableBytes() < length) {
+            throw new IndexOutOfBoundsException("length is greater than readableBytes");
+        }
+        while (readableBytes() > 0) {
+            dst[dstIndex] = readByte();
+        }
+        return this;
+    }
+
+    @Override
     public int readableBytes() {
         int ret = 0;
         for (int i = offset; i <= limit; i++) {
@@ -102,7 +119,10 @@ public final class ScalableByteBuffer implements Input, Output {
     }
 
     @Override
-    public void readerIndex(int readerIndex) {
+    public Input readerIndex(int readerIndex) {
+        if (readerIndex < 0) {
+            throw new IndexOutOfBoundsException("readerIndex < 0");
+        }
         //重置reader index
         int offset = readerIndex / allocSize;
         int position = readerIndex % allocSize;
@@ -115,6 +135,7 @@ public final class ScalableByteBuffer implements Input, Output {
         //校验成功, 则set
         this.offset = offset;
         byteBufferList.get(offset).position(position);
+        return this;
     }
 
     @Override
@@ -145,6 +166,15 @@ public final class ScalableByteBuffer implements Input, Output {
 
     @Override
     public void writeBytes(byte[] value, int startIdx, int len) {
+        if (Objects.isNull(value)) {
+            throw new IllegalArgumentException("value is null");
+        }
+        if (startIdx < 0) {
+            throw new IllegalArgumentException("startIdx is null");
+        }
+        if (len <= 0) {
+            throw new IllegalArgumentException("len is less than or equal to 0");
+        }
         do {
             ByteBuffer byteBuffer = byteBufferList.get(limit);
             int writableBytes = ByteBufferUtils.getWritableBytes(byteBuffer);
