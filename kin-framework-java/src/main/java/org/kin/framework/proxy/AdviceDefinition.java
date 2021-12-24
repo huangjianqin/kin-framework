@@ -72,7 +72,7 @@ public final class AdviceDefinition {
         return this;
     }
 
-    public void check() {
+    void check() {
         Preconditions.checkArgument(CollectionUtils.isNonEmpty(includes), "includes can not be empty");
         Preconditions.checkArgument(!adviceClass2PointcutAnnotation.isEmpty(), "advice class to pointcut annotation mapper can not be empty");
     }

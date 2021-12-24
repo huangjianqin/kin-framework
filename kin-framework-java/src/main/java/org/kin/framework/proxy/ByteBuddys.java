@@ -32,6 +32,8 @@ public final class ByteBuddys {
      * 如果要与spring兼容, 需实现ApplicationListener<ApplicationEnvironmentPreparedEvent>, 在spring.factories且调用用{@link #installAdvices(AdviceDefinition)} ()}
      */
     public static synchronized void installAdvices(AdviceDefinition definition) {
+        definition.check();
+
         ElementMatcher.Junction<NamedElement> includePointcuts = null;
         for (String include : definition.getIncludes()) {
             if (Objects.isNull(includePointcuts)) {
@@ -80,7 +82,7 @@ public final class ByteBuddys {
                 .with(new AgentBuilder.Listener() {
                     @Override
                     public void onDiscovery(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-                        log.info("byte buddy advices discovery type {}", typeName);
+                        log.debug("byte buddy advices discovery type {}", typeName);
                     }
 
                     @Override
@@ -100,7 +102,7 @@ public final class ByteBuddys {
 
                     @Override
                     public void onComplete(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
-                        log.debug("byte buddy advices finish install advices on {}", typeName);
+                        log.info("byte buddy advices finish install advices on {}", typeName);
                     }
                 })
                 .installOnByteBuddyAgent();
