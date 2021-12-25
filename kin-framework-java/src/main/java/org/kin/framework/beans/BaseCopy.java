@@ -1,9 +1,13 @@
 package org.kin.framework.beans;
 
+import org.kin.framework.collection.CollectionFactories;
+import org.kin.framework.collection.MapFactories;
 import org.kin.framework.utils.ClassUtils;
 
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author huangjianqin
@@ -15,19 +19,18 @@ abstract class BaseCopy implements Copy {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected Object selfCopy(Object source) {
-        Class<?> sourceC = source.getClass();
-        if (sourceC.isPrimitive() ||
-                String.class.equals(sourceC) || Character.class.equals(sourceC) ||
-                Boolean.class.equals(sourceC) || Byte.class.equals(sourceC) ||
-                Short.class.equals(sourceC) || Integer.class.equals(sourceC) ||
-                Long.class.equals(sourceC) || Float.class.equals(sourceC) ||
-                Double.class.equals(sourceC)) {
+        Class<?> sourceType = source.getClass();
+        if (sourceType.isPrimitive() ||
+                String.class.equals(sourceType) || Character.class.equals(sourceType) ||
+                Boolean.class.equals(sourceType) || Byte.class.equals(sourceType) ||
+                Short.class.equals(sourceType) || Integer.class.equals(sourceType) ||
+                Long.class.equals(sourceType) || Float.class.equals(sourceType) ||
+                Double.class.equals(sourceType)) {
             //基础类型
             return source;
-        } else if (sourceC.isArray()) {
+        } else if (sourceType.isArray()) {
             //数组
-            //数组
-            Class<?> componentType = sourceC.getComponentType();
+            Class<?> componentType = sourceType.getComponentType();
             if (componentType.isPrimitive()) {
                 //如果数组元素是基础类型, 则直接使用通用接口
                 if (Byte.TYPE.equals(componentType)) {
@@ -66,33 +69,28 @@ abstract class BaseCopy implements Copy {
                 }
                 return newArr;
             }
-        } else if (List.class.isAssignableFrom(sourceC)) {
-            //list
-            List list = (List) source;
-            List newList = new ArrayList(list.size());
-            for (Object o : list) {
-                newList.add(selfCopy(o));
+        } else if (Collection.class.isAssignableFrom(sourceType)) {
+            //collection
+            Collection collection = (Collection) source;
+            Collection newCollection = CollectionFactories.instance().getFactory(sourceType).newCollection();
+            for (Object o : collection) {
+                newCollection.add(selfCopy(o));
             }
-            return newList;
-        } else if (Set.class.isAssignableFrom(sourceC)) {
-            //set
-            Set set = (Set) source;
-            Set newSet = new HashSet(set.size());
-            for (Object o : set) {
-                newSet.add(selfCopy(o));
-            }
-            return newSet;
-        } else if (Map.class.isAssignableFrom(sourceC)) {
+            return newCollection;
+        } else if (Map.class.isAssignableFrom(sourceType)) {
             //map
             Map<Object, Object> map = (Map<Object, Object>) source;
-            Map<Object, Object> newMap = new HashMap(map.size());
+            Map<Object, Object> newMap = (Map<Object, Object>) MapFactories.instance().getFactory(sourceType).newMap();
             for (Map.Entry entry : map.entrySet()) {
                 newMap.put(selfCopy(entry.getKey()), selfCopy(entry.getValue()));
             }
             return newMap;
+        } else if (sourceType.isEnum()) {
+            //enum
+            return source;
         } else {
-            //其他类型
-            Object target = ClassUtils.instance(sourceC);
+            //pojo
+            Object target = ClassUtils.instance(sourceType);
             copyProperties(source, target);
             return target;
         }

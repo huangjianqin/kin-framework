@@ -1,36 +1,51 @@
 package org.kin.framework.bean;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
  * @author huangjianqin
  * @date 2021/9/9
  */
-public class SourceParent {
-    protected byte a = Byte.MIN_VALUE;
-    protected short b = Short.MIN_VALUE;
-    protected int c = Integer.MIN_VALUE;
-    protected long d = Long.MIN_VALUE;
-    protected float e = Float.MIN_VALUE;
-    protected double f = Double.MIN_VALUE;
-    protected String g = "Hello Java Bean";
-    protected Byte h = Byte.MAX_VALUE;
-    protected Short i = Short.MAX_VALUE;
-    protected Integer j = Integer.MAX_VALUE;
-    protected Long k = Long.MAX_VALUE;
-    protected Float l = Float.MAX_VALUE;
-    protected Double m = Double.MAX_VALUE;
-
-    protected List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
-    protected Set<Integer> set = new HashSet<>(Arrays.asList(1, 2, 3, 4, 5));
+public class MessageParent extends AbstractMessage implements Serializable, Cloneable {
+    private static final long serialVersionUID = -16945821338186506L;
+    protected byte a;
+    protected short b;
+    protected int c;
+    protected long d;
+    protected float e;
+    protected double f;
+    protected String g;
+    protected Byte h;
+    protected Short i;
+    protected Integer j;
+    protected Long k;
+    protected Float l;
+    protected Double m;
+    protected List<Integer> list = new ArrayList<>();
+    protected Set<Integer> set = new HashSet<>();
     protected Map<Integer, Long> map = new HashMap<>();
 
-    {
-        map.put(1, 11L);
-        map.put(2, 22L);
-        map.put(3, 33L);
-        map.put(4, 44L);
-        map.put(5, 55L);
+    @Override
+    public MessageParent clone() {
+        MessageParent copy = new MessageParent();
+        copy.a = a;
+        copy.b = b;
+        copy.c = c;
+        copy.d = d;
+        copy.e = e;
+        copy.f = f;
+        copy.g = g;
+        copy.h = h;
+        copy.i = i;
+        copy.j = j;
+        copy.k = k;
+        copy.l = l;
+        copy.m = m;
+        copy.list = list;
+        copy.set = set;
+        copy.map = map;
+        return copy;
     }
 
     //setter && getter
@@ -164,10 +179,21 @@ public class SourceParent {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SourceParent sourceParent = (SourceParent) o;
-        return a == sourceParent.a && b == sourceParent.b && c == sourceParent.c && d == sourceParent.d && Float.compare(sourceParent.e, e) == 0 && Double.compare(sourceParent.f, f) == 0 && Objects.equals(g, sourceParent.g) && Objects.equals(h, sourceParent.h) && Objects.equals(i, sourceParent.i) && Objects.equals(j, sourceParent.j) && Objects.equals(k, sourceParent.k) && Objects.equals(l, sourceParent.l) && Objects.equals(m, sourceParent.m) && Objects.equals(list, sourceParent.list) && Objects.equals(set, sourceParent.set) && Objects.equals(map, sourceParent.map);
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        MessageParent messageParent = (MessageParent) o;
+        return a == messageParent.a && b == messageParent.b && c == messageParent.c &&
+                d == messageParent.d && Float.compare(messageParent.e, e) == 0 &&
+                Double.compare(messageParent.f, f) == 0 && Objects.equals(g, messageParent.g) &&
+                Objects.equals(h, messageParent.h) && Objects.equals(i, messageParent.i) &&
+                Objects.equals(j, messageParent.j) && Objects.equals(k, messageParent.k) &&
+                Objects.equals(l, messageParent.l) && Objects.equals(m, messageParent.m) &&
+                Objects.equals(list, messageParent.list) && Objects.equals(set, messageParent.set) &&
+                Objects.equals(map, messageParent.map);
     }
 
     @Override
