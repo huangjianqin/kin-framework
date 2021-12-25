@@ -11,15 +11,19 @@ import java.nio.ByteBuffer;
  * @author huangjianqin
  * @date 2021/11/28
  */
-public final class ExpandableByteBufferOutputStream extends OutputStream {
+public final class ScalableByteBufferOutputStream extends OutputStream {
     /** sink */
     private ByteBuffer sink;
 
-    public ExpandableByteBufferOutputStream(int bufferSize, boolean direct) {
+    public ScalableByteBufferOutputStream(int bufferSize) {
+        this(bufferSize, false);
+    }
+
+    public ScalableByteBufferOutputStream(int bufferSize, boolean direct) {
         this(direct ? ByteBuffer.allocateDirect(bufferSize) : ByteBuffer.allocate(bufferSize));
     }
 
-    public ExpandableByteBufferOutputStream(ByteBuffer sink) {
+    public ScalableByteBufferOutputStream(ByteBuffer sink) {
         this.sink = sink;
     }
 
