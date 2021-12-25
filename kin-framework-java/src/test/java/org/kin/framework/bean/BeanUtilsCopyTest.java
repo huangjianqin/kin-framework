@@ -1,8 +1,11 @@
 package org.kin.framework.bean;
 
+import com.google.common.base.Stopwatch;
 import org.kin.framework.beans.BeanUtils;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 /**
  * @author huangjianqin
@@ -137,12 +140,42 @@ public class BeanUtilsCopyTest {
         am7.add(am5);
         message.setAm7(am7);
 
-        Message target = new Message();
+        custom(message);
+        spring(message);
+    }
 
-        BeanUtils.copyProperties(message, target);
-        System.out.println(message);
-        System.out.println("-------------------------------------");
-        System.out.println(target);
-        System.out.println(message.equals(target));
+    /**
+     * copy测试核心逻辑
+     *
+     * @param func 包装copy逻辑
+     */
+    private static void copy(Message source, BiFunction<Message, Message, Void> func) {
+        Stopwatch watcher = Stopwatch.createStarted();
+        for (int i = 0; i < 100000; i++) {
+            Message target = new Message();
+            func.apply(source, target);
+            if (!source.equals(target)) {
+                throw new IllegalStateException("bean copy前后不一致");
+            }
+        }
+        watcher.stop();
+        long costMs = watcher.elapsed(TimeUnit.MILLISECONDS);
+        System.out.printf("耗时: %dms%n", costMs);
+    }
+
+    private static void custom(Message source) {
+        System.out.println("-------------------custom-------------------");
+        copy(source, (s, t) -> {
+            BeanUtils.copyProperties(s, t);
+            return null;
+        });
+    }
+
+    private static void spring(Message source) {
+        System.out.println("-------------------spring-------------------");
+        copy(source, (s, t) -> {
+            org.springframework.beans.BeanUtils.copyProperties(s, t);
+            return null;
+        });
     }
 }
