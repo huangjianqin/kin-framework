@@ -449,11 +449,11 @@ public class ClassUtils {
      * 获取claxx -> parent的所有class
      */
     public static List<Class<?>> getClasses(Class<?> claxx, Class<?> parent) {
-        if (parent.isAssignableFrom(claxx)) {
+        if (!parent.isAssignableFrom(claxx)) {
             throw new IllegalStateException(String.format("%s is not super class of %s", parent.getName(), claxx.getName()));
         }
         List<Class<?>> classes = new ArrayList<>();
-        while (!claxx.equals(parent)) {
+        while (Objects.nonNull(claxx) && !claxx.equals(parent)) {
             classes.add(claxx);
             claxx = claxx.getSuperclass();
         }
