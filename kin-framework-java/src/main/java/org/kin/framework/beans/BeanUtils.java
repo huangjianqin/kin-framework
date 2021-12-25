@@ -43,11 +43,11 @@ public final class BeanUtils {
 
     /** 使用者自定义{@link BeanInfoFactory}实例 */
     private static final CopyOnWriteArrayList<BeanInfoFactory> BEAN_INFO_FACTORIES = new CopyOnWriteArrayList<>();
-    /** soft reference && 30min ttl */
+    /** soft reference && 5 min ttl */
     private static final Cache<Class<?>, BeanInfoDetails> BEAN_INFO_CACHE =
             CacheBuilder.newBuilder()
                     .softValues()
-                    .expireAfterAccess(1, TimeUnit.MINUTES)
+                    .expireAfterAccess(5, TimeUnit.MINUTES)
                     .build();
 
     private BeanUtils() {

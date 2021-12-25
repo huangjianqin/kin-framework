@@ -15,7 +15,7 @@ import java.util.Map;
  */
 abstract class BaseCopy implements Copy {
     /**
-     * 实例自身深复制
+     * 指定实例自身深复制
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     protected Object selfCopy(Object source) {
@@ -94,5 +94,17 @@ abstract class BaseCopy implements Copy {
             copyProperties(source, target);
             return target;
         }
+    }
+
+    /**
+     * 获取{@link Copy}实例缓存唯一key
+     * 有些{@link Copy}实现需要缓存生成{@link Copy}实例, 用于下次快速实现bean copy
+     *
+     * @see ByteBuddyBeanCopy
+     * @see UnsafeBeanCopy
+     */
+    protected int cacheKey(Class<?> sourceClass, Class<?> targetClass) {
+        //使用hashcode, 节省内存
+        return sourceClass.getCanonicalName().concat("=>").concat(targetClass.getCanonicalName()).hashCode();
     }
 }

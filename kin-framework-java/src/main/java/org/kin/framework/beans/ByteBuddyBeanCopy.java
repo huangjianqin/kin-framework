@@ -26,11 +26,11 @@ import java.util.concurrent.TimeUnit;
 public class ByteBuddyBeanCopy extends BaseCopy {
     public static final ByteBuddyBeanCopy INSTANCE = new ByteBuddyBeanCopy();
 
-    /** soft reference && 30 min ttl */
+    /** soft reference && 5 min ttl */
     private static final Cache<Integer, Copy> COPY_CACHE =
             CacheBuilder.newBuilder()
                     .softValues()
-                    .expireAfterAccess(30, TimeUnit.MINUTES)
+                    .expireAfterAccess(5, TimeUnit.MINUTES)
                     .build();
     /** {@link Copy#copyProperties(Object, Object)}source参数下标 */
     private static final int SOURCE_ARG_INDEX = 0;
@@ -60,10 +60,10 @@ public class ByteBuddyBeanCopy extends BaseCopy {
     @Override
     public void copyProperties(Object source, Object target) {
         Copy copy = null;
-        Class<?> sourceC = source.getClass();
-        Class<?> targetC = target.getClass();
+        Class<?> sourceClass = source.getClass();
+        Class<?> targetClass = target.getClass();
         try {
-            copy = COPY_CACHE.get(cacheKey(sourceC, targetC), () -> genCopy(sourceC, targetC));
+            copy = COPY_CACHE.get(cacheKey(sourceClass, targetClass), () -> genCopy(sourceClass, targetClass));
         } catch (ExecutionException e) {
             ExceptionUtils.throwExt(e);
         }
@@ -71,18 +71,10 @@ public class ByteBuddyBeanCopy extends BaseCopy {
     }
 
     /**
-     * 获取缓存唯一key
-     */
-    private int cacheKey(Class<?> sourceC, Class<?> targetC) {
-        //使用hashcode, 节省内存
-        return sourceC.getCanonicalName().concat("=>").concat(targetC.getCanonicalName()).hashCode();
-    }
-
-    /**
      * 获取{@link Copy}实现类类名
      */
-    private String copyClassName(Class<?> sourceC, Class<?> targetC) {
-        return sourceC.getCanonicalName().concat("$").concat(targetC.getCanonicalName()).concat("$").concat(Copy.class.getSimpleName());
+    private String copyClassName(Class<?> sourceClass, Class<?> targetClass) {
+        return sourceClass.getCanonicalName().concat("$").concat(targetClass.getCanonicalName()).concat("$").concat(Copy.class.getSimpleName());
     }
 
     /**

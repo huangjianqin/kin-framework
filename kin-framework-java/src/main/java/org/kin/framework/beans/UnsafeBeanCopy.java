@@ -16,6 +16,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 基于{@link sun.misc.Unsafe}实现的bean copy
+ *
  * @author huangjianqin
  * @date 2021/12/25
  */
@@ -23,11 +25,11 @@ import java.util.concurrent.TimeUnit;
 class UnsafeBeanCopy extends BaseCopy {
     static final UnsafeBeanCopy INSTANCE = new UnsafeBeanCopy();
 
-    /** soft reference && 30 min ttl */
+    /** soft reference && 5 min ttl */
     private static final Cache<Integer, Copy> COPY_CACHE =
             CacheBuilder.newBuilder()
                     .softValues()
-                    .expireAfterAccess(30, TimeUnit.MINUTES)
+                    .expireAfterAccess(5, TimeUnit.MINUTES)
                     .build();
 
     private UnsafeBeanCopy() {
@@ -36,22 +38,14 @@ class UnsafeBeanCopy extends BaseCopy {
     @Override
     public void copyProperties(Object source, Object target) {
         Copy copy = null;
-        Class<?> sourceC = source.getClass();
-        Class<?> targetC = target.getClass();
+        Class<?> sourceClass = source.getClass();
+        Class<?> targetClass = target.getClass();
         try {
-            copy = COPY_CACHE.get(cacheKey(sourceC, targetC), () -> genCopy(sourceC, targetC));
+            copy = COPY_CACHE.get(cacheKey(sourceClass, targetClass), () -> genCopy(sourceClass, targetClass));
         } catch (ExecutionException e) {
             ExceptionUtils.throwExt(e);
         }
         copy.copyProperties(source, target);
-    }
-
-    /**
-     * 获取缓存唯一key
-     */
-    private int cacheKey(Class<?> sourceC, Class<?> targetC) {
-        //使用hashcode, 节省内存
-        return sourceC.getCanonicalName().concat("=>").concat(targetC.getCanonicalName()).hashCode();
     }
 
     /**
