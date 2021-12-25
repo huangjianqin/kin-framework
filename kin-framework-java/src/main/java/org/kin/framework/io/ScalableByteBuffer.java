@@ -190,11 +190,12 @@ public final class ScalableByteBuffer implements Input, Output {
 
     @Override
     public int writableBytes() {
-        int ret = 0;
-        for (int i = limit; i < byteBufferList.size(); i++) {
-            ret += ByteBufferUtils.getWritableBytes(byteBufferList.get(i));
-        }
-        return ret;
+//        int ret = 0;
+//        for (int i = limit; i < byteBufferList.size(); i++) {
+//            ret += ByteBufferUtils.getWritableBytes(byteBufferList.get(i));
+//        }
+//        return ret;
+        return Integer.MAX_VALUE;
     }
 
     /**

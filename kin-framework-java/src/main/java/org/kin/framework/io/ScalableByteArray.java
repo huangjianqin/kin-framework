@@ -169,7 +169,8 @@ public final class ScalableByteArray implements Input, Output {
     @Override
     public int writableBytes() {
         //思路: 前面+最后一个
-        return allocSize - writeOffset + (byteArrays.size() - writeArrOffset - 1) * allocSize;
+//        return allocSize - writeOffset + (byteArrays.size() - writeArrOffset - 1) * allocSize;
+        return Integer.MAX_VALUE;
     }
 
     /**
