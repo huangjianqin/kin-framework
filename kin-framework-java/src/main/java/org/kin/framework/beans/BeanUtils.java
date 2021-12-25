@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExtensionLoader;
 import org.kin.framework.utils.SysUtils;
+import org.kin.framework.utils.UnsafeUtil;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -74,7 +75,11 @@ public final class BeanUtils {
         if (ENHANCE) {
             ByteBuddyBeanCopy.INSTANCE.copyProperties(source, target);
         } else {
-            ReflectionBeanCopy.INSTANCE.copyProperties(source, target);
+            if (UnsafeUtil.hasUnsafe()) {
+                UnsafeBeanCopy.INSTANCE.copyProperties(source, target);
+            } else {
+                ReflectionBeanCopy.INSTANCE.copyProperties(source, target);
+            }
         }
     }
 

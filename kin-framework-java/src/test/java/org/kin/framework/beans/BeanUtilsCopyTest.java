@@ -1,7 +1,6 @@
-package org.kin.framework.bean;
+package org.kin.framework.beans;
 
 import com.google.common.base.Stopwatch;
-import org.kin.framework.beans.BeanUtils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -140,7 +139,10 @@ public class BeanUtilsCopyTest {
         am7.add(am5);
         message.setAm7(am7);
 
-        custom(message);
+        BeanUtils.getBeanInfo(Message.class);
+        reflection(message);
+        unsafe(message);
+        bytebuddy(message);
         spring(message);
     }
 
@@ -151,7 +153,7 @@ public class BeanUtilsCopyTest {
      */
     private static void copy(Message source, BiFunction<Message, Message, Void> func) {
         Stopwatch watcher = Stopwatch.createStarted();
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 100; i++) {
             Message target = new Message();
             func.apply(source, target);
             if (!source.equals(target)) {
@@ -163,14 +165,42 @@ public class BeanUtilsCopyTest {
         System.out.printf("耗时: %dms%n", costMs);
     }
 
-    private static void custom(Message source) {
-        System.out.println("-------------------custom-------------------");
+    /**
+     * 基于反射
+     */
+    private static void reflection(Message source) {
+        System.out.println("-------------------reflection-------------------");
         copy(source, (s, t) -> {
-            BeanUtils.copyProperties(s, t);
+            ReflectionBeanCopy.INSTANCE.copyProperties(s, t);
             return null;
         });
     }
 
+    /**
+     * 基于unsafe
+     */
+    private static void unsafe(Message source) {
+        System.out.println("-------------------unsafe-------------------");
+        copy(source, (s, t) -> {
+            UnsafeBeanCopy.INSTANCE.copyProperties(s, t);
+            return null;
+        });
+    }
+
+    /**
+     * 基于bytebuddy
+     */
+    private static void bytebuddy(Message source) {
+        System.out.println("-------------------bytebuddy-------------------");
+        copy(source, (s, t) -> {
+            ByteBuddyBeanCopy.INSTANCE.copyProperties(s, t);
+            return null;
+        });
+    }
+
+    /**
+     * spring bean copy
+     */
     private static void spring(Message source) {
         System.out.println("-------------------spring-------------------");
         copy(source, (s, t) -> {

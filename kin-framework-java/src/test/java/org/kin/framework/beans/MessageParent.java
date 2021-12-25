@@ -1,4 +1,4 @@
-package org.kin.framework.bean;
+package org.kin.framework.beans;
 
 import java.io.Serializable;
 import java.util.*;
