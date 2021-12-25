@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  * @date 2021/12/25
  */
 @SuppressWarnings("rawtypes")
-class UnsafeBeanCopy extends BaseCopy {
+final class UnsafeBeanCopy extends PolymorphicCopy {
     static final UnsafeBeanCopy INSTANCE = new UnsafeBeanCopy();
 
     /** soft reference && 5 min ttl */
@@ -121,7 +121,7 @@ class UnsafeBeanCopy extends BaseCopy {
     /**
      * 基于内存地址映射的bean field复制
      */
-    private static class FieldAddressCopy implements Copy {
+    private static class FieldAddressCopy implements Copy<Object, Object> {
         private final List<FieldAddressMapper> mappers;
 
         public FieldAddressCopy(List<FieldAddressMapper> mappers) {

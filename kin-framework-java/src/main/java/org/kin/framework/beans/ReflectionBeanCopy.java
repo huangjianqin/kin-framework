@@ -13,7 +13,7 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/9/8
  */
-class ReflectionBeanCopy extends BaseCopy {
+final class ReflectionBeanCopy extends PolymorphicCopy {
     static final ReflectionBeanCopy INSTANCE = new ReflectionBeanCopy();
 
     private ReflectionBeanCopy() {

@@ -139,6 +139,7 @@ public class BeanUtilsCopyTest {
         am7.add(am5);
         message.setAm7(am7);
 
+        //通过-Dkin.beans.copy.deep=true开启深复制
         BeanUtils.getBeanInfo(Message.class);
         reflection(message);
         unsafe(message);
@@ -153,7 +154,7 @@ public class BeanUtilsCopyTest {
      */
     private static void copy(Message source, BiFunction<Message, Message, Void> func) {
         Stopwatch watcher = Stopwatch.createStarted();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1000; i++) {
             Message target = new Message();
             func.apply(source, target);
             if (!source.equals(target)) {

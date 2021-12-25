@@ -23,7 +23,8 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2021/9/8
  */
-public class ByteBuddyBeanCopy extends BaseCopy {
+@SuppressWarnings({"unchecked", "rawtypes"})
+public final class ByteBuddyBeanCopy extends PolymorphicCopy {
     public static final ByteBuddyBeanCopy INSTANCE = new ByteBuddyBeanCopy();
 
     /** soft reference && 5 min ttl */

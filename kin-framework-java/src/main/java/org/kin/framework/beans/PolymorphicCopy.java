@@ -10,10 +10,12 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
+ * 对动态类型的bean copy抽象
+ *
  * @author huangjianqin
  * @date 2021/9/14
  */
-abstract class BaseCopy implements Copy {
+abstract class PolymorphicCopy implements Copy<Object, Object> {
     /**
      * 指定实例自身深复制
      */
