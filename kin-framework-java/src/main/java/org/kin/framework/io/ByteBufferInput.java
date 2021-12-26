@@ -26,7 +26,7 @@ public class ByteBufferInput implements Input {
         return byteBufferInput;
     }
 
-    private ByteBuffer byteBuffer;
+    protected ByteBuffer byteBuffer;
 
     public ByteBufferInput(ByteBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;

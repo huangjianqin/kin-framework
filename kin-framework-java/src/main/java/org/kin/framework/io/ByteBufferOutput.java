@@ -25,7 +25,7 @@ public class ByteBufferOutput implements Output {
         return byteBufferOutput;
     }
 
-    private ByteBuffer byteBuffer;
+    protected ByteBuffer byteBuffer;
 
     public ByteBufferOutput(ByteBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;
@@ -33,16 +33,22 @@ public class ByteBufferOutput implements Output {
 
     @Override
     public void writeByte(int value) {
+        byteBuffer = ByteBufferUtils.ensureWritableBytes(this.byteBuffer, 1);
         byteBuffer.put((byte) value);
     }
 
     @Override
     public void writeBytes(byte[] value, int startIdx, int len) {
+        byteBuffer = ByteBufferUtils.ensureWritableBytes(this.byteBuffer, len);
         byteBuffer.put(value, startIdx, len);
     }
 
     @Override
     public int writableBytes() {
         return ByteBufferUtils.getWritableBytes(byteBuffer);
+    }
+
+    public ByteBuffer getByteBuffer() {
+        return byteBuffer;
     }
 }
