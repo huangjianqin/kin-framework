@@ -1,7 +1,5 @@
 package org.kin.framework.io;
 
-import org.kin.framework.concurrent.FastThreadLocal;
-
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -12,21 +10,7 @@ import java.util.Objects;
  * @date 2021/12/13
  */
 public class ByteBufferInput implements Input {
-    /** 为了减少创建{@link ByteBufferInput}实例, 比如RPC序列化场景 */
-    private static final FastThreadLocal<ByteBufferInput> THREAD_LOCAL_BYTEBUFFER_INPUT = new FastThreadLocal<ByteBufferInput>() {
-        @Override
-        protected ByteBufferInput initialValue() {
-            return new ByteBufferInput(null);
-        }
-    };
-
-    public static ByteBufferInput current(ByteBuffer byteBuffer) {
-        ByteBufferInput byteBufferInput = THREAD_LOCAL_BYTEBUFFER_INPUT.get();
-        byteBufferInput.byteBuffer = byteBuffer;
-        return byteBufferInput;
-    }
-
-    protected ByteBuffer byteBuffer;
+    protected final ByteBuffer byteBuffer;
 
     public ByteBufferInput(ByteBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;

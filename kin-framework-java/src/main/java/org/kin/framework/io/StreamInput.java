@@ -1,6 +1,5 @@
 package org.kin.framework.io;
 
-import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.framework.utils.ExceptionUtils;
 
 import java.io.IOException;
@@ -14,21 +13,7 @@ import java.util.Objects;
  * @date 2021/12/13
  */
 public class StreamInput implements Input {
-    /** 为了减少创建{@link StreamInput}实例, 比如RPC序列化场景 */
-    private static final FastThreadLocal<StreamInput> THREAD_LOCAL_STREAM_INPUT = new FastThreadLocal<StreamInput>() {
-        @Override
-        protected StreamInput initialValue() {
-            return new StreamInput(null);
-        }
-    };
-
-    public static StreamInput current(InputStream inputStream) {
-        StreamInput streamInput = THREAD_LOCAL_STREAM_INPUT.get();
-        streamInput.inputStream = inputStream;
-        return streamInput;
-    }
-
-    private InputStream inputStream;
+    private final InputStream inputStream;
 
     public StreamInput(InputStream inputStream) {
         this.inputStream = inputStream;

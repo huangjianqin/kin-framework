@@ -1,6 +1,5 @@
 package org.kin.framework.io;
 
-import org.kin.framework.concurrent.FastThreadLocal;
 import org.kin.framework.utils.UnsafeDirectBufferUtil;
 import org.kin.framework.utils.UnsafeUtil;
 
@@ -12,20 +11,6 @@ import java.util.Objects;
  * @date 2021/12/26
  */
 public final class UnsafeByteBufferInput extends ByteBufferInput {
-    /** 为了减少创建{@link UnsafeByteBufferInput}实例, 比如RPC序列化场景 */
-    private static final FastThreadLocal<UnsafeByteBufferInput> THREAD_LOCAL_BYTEBUFFER_INPUT = new FastThreadLocal<UnsafeByteBufferInput>() {
-        @Override
-        protected UnsafeByteBufferInput initialValue() {
-            return new UnsafeByteBufferInput(null);
-        }
-    };
-
-    public static UnsafeByteBufferInput current(ByteBuffer byteBuffer) {
-        UnsafeByteBufferInput byteBufferInput = THREAD_LOCAL_BYTEBUFFER_INPUT.get();
-        byteBufferInput.byteBuffer = byteBuffer;
-        return byteBufferInput;
-    }
-
     /** buffer起始内存地址, 该buffer应该不可移动, 一般情况是off-heap */
     private final long memoryAddress;
 
