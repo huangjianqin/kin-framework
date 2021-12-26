@@ -25,7 +25,7 @@ public final class VarIntUtils {
     }
 
     public static int readRawVarInt32(ByteBuffer byteBuffer) {
-        return readRawVarInt32(byteBuffer, true);
+        return readRawVarInt32(byteBuffer, false);
     }
 
     public static int readRawVarInt32(ByteBuffer byteBuffer, boolean zigzag) {
@@ -33,7 +33,7 @@ public final class VarIntUtils {
     }
 
     public static int readRawVarInt32(InputStream inputStream) {
-        return readRawVarInt32(inputStream, true);
+        return readRawVarInt32(inputStream, false);
     }
 
     public static int readRawVarInt32(InputStream inputStream, boolean zigzag) {
@@ -41,7 +41,7 @@ public final class VarIntUtils {
     }
 
     public static void writeRawVarInt32(ByteBuffer byteBuffer, int value) {
-        writeRawVarInt32(byteBuffer, value, true);
+        writeRawVarInt32(byteBuffer, value, false);
     }
 
     public static void writeRawVarInt32(ByteBuffer byteBuffer, int value, boolean zigzag) {
@@ -49,7 +49,7 @@ public final class VarIntUtils {
     }
 
     public static void writeRawVarInt32(OutputStream outputStream, int value) {
-        writeRawVarInt32(outputStream, value, true);
+        writeRawVarInt32(outputStream, value, false);
     }
 
     public static void writeRawVarInt32(OutputStream outputStream, int value, boolean zigzag) {
@@ -57,7 +57,7 @@ public final class VarIntUtils {
     }
 
     public static long readRawVarInt64(ByteBuffer byteBuffer) {
-        return readRawVarInt64(byteBuffer, true);
+        return readRawVarInt64(byteBuffer, false);
     }
 
     public static long readRawVarInt64(ByteBuffer byteBuffer, boolean zigzag) {
@@ -65,7 +65,7 @@ public final class VarIntUtils {
     }
 
     public static long readRawVarInt64(InputStream inputStream) {
-        return readRawVarInt64(inputStream, true);
+        return readRawVarInt64(inputStream, false);
     }
 
     public static long readRawVarInt64(InputStream inputStream, boolean zigzag) {
@@ -73,7 +73,7 @@ public final class VarIntUtils {
     }
 
     public static void writeRawVarInt64(ByteBuffer byteBuffer, long value) {
-        writeRawVarInt64(byteBuffer, value, true);
+        writeRawVarInt64(byteBuffer, value, false);
     }
 
     public static void writeRawVarInt64(ByteBuffer byteBuffer, long value, boolean zigzag) {
@@ -81,7 +81,7 @@ public final class VarIntUtils {
     }
 
     public static void writeRawVarInt64(OutputStream outputStream, long value) {
-        writeRawVarInt64(outputStream, value, true);
+        writeRawVarInt64(outputStream, value, false);
     }
 
     public static void writeRawVarInt64(OutputStream outputStream, long value, boolean zigzag) {
@@ -90,7 +90,7 @@ public final class VarIntUtils {
 
     //------------------------------------------var int/long reader 算法来自于protocolbuf------------------------------------------
     public static int readRawVarInt32(Input input) {
-        return readRawVarInt32(input, true);
+        return readRawVarInt32(input, false);
     }
 
     public static int readRawVarInt32(Input input, boolean zigzag) {
@@ -154,7 +154,7 @@ public final class VarIntUtils {
     //------------------------------------------------------64------------------------------------------------------
 
     public static long readRawVarInt64(Input input) {
-        return readRawVarInt64(input, true);
+        return readRawVarInt64(input, false);
     }
 
     public static long readRawVarInt64(Input input, boolean zigzag) {
@@ -269,7 +269,7 @@ public final class VarIntUtils {
     //------------------------------------------var int/long writer 算法来自于protocolbuf------------------------------------------
 
     public static void writeRawVarInt32(Output output, int value) {
-        writeRawVarInt32(output, value, true);
+        writeRawVarInt32(output, value, false);
     }
 
     public static void writeRawVarInt32(Output output, int value, boolean zigzag) {
@@ -301,7 +301,7 @@ public final class VarIntUtils {
     //------------------------------------------------------64------------------------------------------------------
 
     public static void writeRawVarInt64(Output output, long value) {
-        writeRawVarInt64(output, value, true);
+        writeRawVarInt64(output, value, false);
     }
 
     public static void writeRawVarInt64(Output output, long value, boolean zigzag) {
