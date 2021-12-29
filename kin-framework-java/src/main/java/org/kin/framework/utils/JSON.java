@@ -9,6 +9,7 @@ import org.checkerframework.checker.units.qual.C;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -61,12 +62,12 @@ public class JSON {
     /**
      * 解析json
      *
-     * @param jsonStr json字符串
-     * @param clazz   类型
+     * @param json json字符串
+     * @param type 类型
      */
-    public static <T> T read(String jsonStr, Class<T> clazz) {
+    public static <T> T read(String json, Type type) {
         try {
-            return PARSER.readValue(jsonStr, clazz);
+            return PARSER.readValue(json, PARSER.constructType(type));
         } catch (JsonProcessingException e) {
             ExceptionUtils.throwExt(e);
         }
@@ -78,11 +79,11 @@ public class JSON {
      * 解析json
      *
      * @param bytes json bytes
-     * @param clazz 反序列化类型
+     * @param type 反序列化类型
      */
-    public static <T> T read(byte[] bytes, Class<T> clazz) {
+    public static <T> T read(byte[] bytes, Type type) {
         try {
-            return PARSER.readValue(bytes, clazz);
+            return PARSER.readValue(bytes, PARSER.constructType(type));
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
@@ -93,15 +94,15 @@ public class JSON {
     /**
      * 解析含范型参数类型的json
      *
-     * @param jsonStr          json字符串
+     * @param json          json字符串
      * @param parametrized     反序列化类
      * @param parameterClasses 范型参数类型
      * @param <T>              类型参数
      */
-    public static <T> T read(String jsonStr, Class<T> parametrized, Class<?>... parameterClasses) {
+    public static <T> T read(String json, Class<T> parametrized, Class<?>... parameterClasses) {
         try {
             JavaType javaType = PARSER.getTypeFactory().constructParametricType(parametrized, parameterClasses);
-            return PARSER.readValue(jsonStr, javaType);
+            return PARSER.readValue(json, javaType);
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
@@ -112,12 +113,12 @@ public class JSON {
     /**
      * 解析含范型参数类型的json
      *
-     * @param jsonStr       json字符串
+     * @param json       json字符串
      * @param typeReference 类型
      */
-    public static <T> T read(String jsonStr, TypeReference<T> typeReference) {
+    public static <T> T read(String json, TypeReference<T> typeReference) {
         try {
-            return PARSER.readValue(jsonStr, typeReference);
+            return PARSER.readValue(json, typeReference);
         } catch (IOException e) {
             ExceptionUtils.throwExt(e);
         }
@@ -128,36 +129,36 @@ public class JSON {
     /**
      * 解析list json
      *
-     * @param jsonStr   json字符串
+     * @param json   json字符串
      * @param itemClass 元素类型
      */
     @SuppressWarnings("unchecked")
-    public static <T> List<T> readList(String jsonStr, Class<T> itemClass) {
-        return readCollection(jsonStr, ArrayList.class, itemClass);
+    public static <T> List<T> readList(String json, Class<T> itemClass) {
+        return readCollection(json, ArrayList.class, itemClass);
     }
 
     /**
      * 解析set json
      *
-     * @param jsonStr   json字符串
+     * @param json   json字符串
      * @param itemClass 元素类型
      */
     @SuppressWarnings("unchecked")
-    public static <T> Set<T> readSet(String jsonStr, Class<T> itemClass) {
-        return readCollection(jsonStr, HashSet.class, itemClass);
+    public static <T> Set<T> readSet(String json, Class<T> itemClass) {
+        return readCollection(json, HashSet.class, itemClass);
     }
 
     /**
      * 解析集合类json
      *
-     * @param jsonStr         json字符串
+     * @param json         json字符串
      * @param collectionClass 集合类型
      * @param itemClass       元素类型
      */
-    public static <C extends Collection<T>, T> C readCollection(String jsonStr, Class<C> collectionClass, Class<T> itemClass) {
+    public static <C extends Collection<T>, T> C readCollection(String json, Class<C> collectionClass, Class<T> itemClass) {
         JavaType collectionType = PARSER.getTypeFactory().constructCollectionLikeType(collectionClass, itemClass);
         try {
-            return PARSER.readValue(jsonStr, collectionType);
+            return PARSER.readValue(json, collectionType);
         } catch (JsonProcessingException e) {
             ExceptionUtils.throwExt(e);
         }
@@ -168,14 +169,14 @@ public class JSON {
     /**
      * 解析map json
      *
-     * @param jsonStr    json字符串
+     * @param json    json字符串
      * @param keyClass   key类型
      * @param valueClass value类型
      */
-    public static <K, V> C readMap(String jsonStr, Class<K> keyClass, Class<V> valueClass) {
+    public static <K, V> C readMap(String json, Class<K> keyClass, Class<V> valueClass) {
         JavaType mapType = PARSER.getTypeFactory().constructMapType(HashMap.class, keyClass, valueClass);
         try {
-            return PARSER.readValue(jsonStr, mapType);
+            return PARSER.readValue(json, mapType);
         } catch (JsonProcessingException e) {
             ExceptionUtils.throwExt(e);
         }
@@ -204,9 +205,9 @@ public class JSON {
     /**
      * 从json字符串字段数据更新现有Obj实例中的字段值
      */
-    public static void updateFieldValue(String text, Object object) {
+    public static void updateFieldValue(String str, Object object) {
         try {
-            PARSER.readerForUpdating(object).readValue(text);
+            PARSER.readerForUpdating(object).readValue(str);
         } catch (JsonProcessingException e) {
             ExceptionUtils.throwExt(e);
         }

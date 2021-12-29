@@ -18,13 +18,15 @@ public class JSONTest {
         String json = JSON.write(params);
         System.out.println(json);
         System.out.println(params);
-        System.out.println(JSON.read(json, Map.class));
+        Map<String, Object> map = JSON.read(json, Map.class);
+        System.out.println(map);
 
         String strListJson = "[1,2,3,4,5]";
         List<String> stringList = JSON.readList(strListJson, String.class);
-        System.out.println(stringList.get(0).getClass());
+        System.out.println(stringList.get(0));
 
-        System.out.println(JSON.read("null", Integer.class));
+        Integer i = JSON.read("null", Integer.class);
+        System.out.println(i);
         Map<String, Object> d1MapData = new HashMap<>();
         d1MapData.put("f1", 1);
         d1MapData.put("f2", 1000000000L);
