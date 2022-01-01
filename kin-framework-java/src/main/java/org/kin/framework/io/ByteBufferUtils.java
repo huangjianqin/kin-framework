@@ -16,27 +16,64 @@ public final class ByteBufferUtils {
      * {@param target}本身要处于write mode, 不然存在数据丢失
      * 比如read了一点点数据, 再调用该方法, buffer本身只能再读之前读过的数据
      */
-    public static void toReadMode(ByteBuffer target) {
+    public static ByteBuffer toReadMode(ByteBuffer target) {
         //change read
         target.flip();
+        return target;
     }
 
     /**
      * 切换为写模式, 以当前limit开始写数据, 直至达到capacity
      */
-    public static void toWriteMode(ByteBuffer target) {
-        target.position(target.limit());
+    public static ByteBuffer toWriteMode(ByteBuffer target) {
+        toWriteMode(target, false);
+        return target;
+    }
+
+    /**
+     * 切换为写模式
+     * if({@code discard}==true){
+     * 移除所有已读bytes, 把未读bytes移动到buffer最前面, 然后从未读bytes后面开始写bytes
+     * }else{
+     * 以当前limit开始写数据, 直至达到capacity
+     * }
+     *
+     * @param discard 是否移除所有mark以及已读bytes
+     */
+    public static ByteBuffer toWriteMode(ByteBuffer target, boolean discard) {
+        if (target.position() == 0 && target.limit() == target.capacity()) {
+            //new buffer, do nothing
+            return target;
+        }
+        if (discard) {
+            target.compact();
+        } else {
+            target.position(target.limit());
+            target.limit(target.capacity());
+        }
+        return target;
+    }
+
+    /**
+     * 切换为覆盖写模式
+     */
+    public static ByteBuffer toOverWriteMode(ByteBuffer target) {
+        target.position(0);
         target.limit(target.capacity());
+        return target;
     }
 
     /**
      * 将{@param src}内容复制到{@param target}
+     *
+     * @return 目标 {@link ByteBuffer}
      */
-    public static void copy(ByteBuffer target, ByteBuffer src) {
+    public static ByteBuffer copy(ByteBuffer target, ByteBuffer src) {
         toWriteMode(target);
         toReadMode(src);
 
         target.put(src);
+        return target;
     }
 
     /**
