@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -79,7 +78,7 @@ public class JSON {
      * 解析json
      *
      * @param bytes json bytes
-     * @param type 反序列化类型
+     * @param type  反序列化类型
      */
     public static <T> T read(byte[] bytes, Type type) {
         try {
@@ -94,7 +93,7 @@ public class JSON {
     /**
      * 解析含范型参数类型的json
      *
-     * @param json          json字符串
+     * @param json             json字符串
      * @param parametrized     反序列化类
      * @param parameterClasses 范型参数类型
      * @param <T>              类型参数
@@ -113,7 +112,7 @@ public class JSON {
     /**
      * 解析含范型参数类型的json
      *
-     * @param json       json字符串
+     * @param json          json字符串
      * @param typeReference 类型
      */
     public static <T> T read(String json, TypeReference<T> typeReference) {
@@ -129,7 +128,7 @@ public class JSON {
     /**
      * 解析list json
      *
-     * @param json   json字符串
+     * @param json      json字符串
      * @param itemClass 元素类型
      */
     @SuppressWarnings("unchecked")
@@ -140,7 +139,7 @@ public class JSON {
     /**
      * 解析set json
      *
-     * @param json   json字符串
+     * @param json      json字符串
      * @param itemClass 元素类型
      */
     @SuppressWarnings("unchecked")
@@ -151,7 +150,7 @@ public class JSON {
     /**
      * 解析集合类json
      *
-     * @param json         json字符串
+     * @param json            json字符串
      * @param collectionClass 集合类型
      * @param itemClass       元素类型
      */
@@ -169,11 +168,11 @@ public class JSON {
     /**
      * 解析map json
      *
-     * @param json    json字符串
+     * @param json       json字符串
      * @param keyClass   key类型
      * @param valueClass value类型
      */
-    public static <K, V> C readMap(String json, Class<K> keyClass, Class<V> valueClass) {
+    public static <K, V> Map<K, V> readMap(String json, Class<K> keyClass, Class<V> valueClass) {
         JavaType mapType = PARSER.getTypeFactory().constructMapType(HashMap.class, keyClass, valueClass);
         try {
             return PARSER.readValue(json, mapType);
