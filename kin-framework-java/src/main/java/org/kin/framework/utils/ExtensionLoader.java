@@ -228,7 +228,7 @@ public class ExtensionLoader {
                         extension2ImplClasses.putAll(extensionClassName, filtered);
                     } else {
                         //只有key, 没有value, 则是没有配置class name或class key, 仅仅配置了implement class name
-                        extension2ImplClasses.put(fileName, extensionClassName);
+                        log.warn("key '{}' doesn't has implement classes", extensionClassName);
                     }
                 }
             }
