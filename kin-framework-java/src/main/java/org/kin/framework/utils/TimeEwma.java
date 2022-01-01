@@ -12,11 +12,12 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 public class TimeEwma extends AbstractEwma {
     private static final AtomicLongFieldUpdater<TimeEwma> STAMP = AtomicLongFieldUpdater.newUpdater(TimeEwma.class, "stamp");
 
+    /** (希腊字母)为EWMA的时间常量 */
     private final long tau;
     private volatile long stamp;
 
     /**
-     * @param halfLife     控制β(like most decay process)
+     * @param halfLife     speed of convergence，即收敛的速度, 控制β(like most decay process)
      * @param unit         {@code halfLife}时间单位
      * @param initialValue 初始ewma值
      */
@@ -30,6 +31,7 @@ public class TimeEwma extends AbstractEwma {
     @Override
     public synchronized void insert(double x) {
         long now = now();
+        //距离上次计算逝去的时间
         double elapsed = Math.max(0, now - stamp);
 
         STAMP.lazySet(this, now);

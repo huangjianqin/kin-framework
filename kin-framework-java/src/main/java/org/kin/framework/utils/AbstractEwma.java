@@ -1,7 +1,7 @@
 package org.kin.framework.utils;
 
 /**
- * 指数移动加权平均较传统的平均法来说, 一是不需要保存过去所有的数值；二是计算量显著减小.
+ * 指数移动加权平均(Exponentially Weighted Moving Average)较传统的平均法来说, 一是不需要保存过去所有的数值；二是计算量显著减小.
  * vt=βvt−1+(1−β)θt
  * vt即t时的ewma值, 则vt−1表示t-1时的ewma值
  * θt即t时反应的真实值(不同使用场景, 表示的值不太一样)
