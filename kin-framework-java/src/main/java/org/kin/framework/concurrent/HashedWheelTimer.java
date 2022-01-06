@@ -16,7 +16,10 @@
 package org.kin.framework.concurrent;
 
 import com.google.common.base.Preconditions;
+import org.jctools.queues.MpscUnboundedArrayQueue;
+import org.jctools.queues.atomic.MpscUnboundedAtomicArrayQueue;
 import org.kin.framework.utils.SysUtils;
+import org.kin.framework.utils.UnsafeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +34,14 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 1. wheel timer slot: 链表结构
+ * 2. {@link #newTimeout(TimerTask, long, TimeUnit)}并不会把task插入wheel timer slot
+ * 3. 每个wheel timer带一个worker, 其核心逻辑如下:
+ *      1. {@link Worker#processCancelledTasks()}, 将cancelled task从wheel timer slot上移除. 由此看出, cancel task并不会马上从wheel timer slot移除, 而已缓存在一个queue里面
+ *      2. 寻找本次tick的slot, 即{@link HashedWheelBucket}
+ *      3. {@link Worker#transferTimeoutsToBuckets()}, 将new task插入wheel timer slot链表中, 并且硬编码写死最多处理10000个new task. 由此看出, 如果延迟task很多的话, task过期处理可能并不`及时`
+ *      4. {@link HashedWheelBucket#expireTimeouts(long)}, 遍历所有task, 移除过期task并执行相对expire逻辑和移除cancelled task.
+ *
  * A {@link Timer} optimized for approximated I/O timeout scheduling.
  *
  * <h3>Tick Duration</h3>
@@ -97,8 +108,8 @@ public class HashedWheelTimer implements Timer {
     private final HashedWheelBucket[] wheel;
     private final int mask;
     private final CountDownLatch startTimeInitialized = new CountDownLatch(1);
-    private final Queue<HashedWheelTimeout> timeouts = new LinkedBlockingQueue<>();
-    private final Queue<HashedWheelTimeout> cancelledTimeouts = new LinkedBlockingQueue<>();
+    private final Queue<HashedWheelTimeout> timeouts = UnsafeUtil.hasUnsafe() ? new MpscUnboundedArrayQueue<>(1024) : new MpscUnboundedAtomicArrayQueue<>(1024);
+    private final Queue<HashedWheelTimeout> cancelledTimeouts = UnsafeUtil.hasUnsafe() ? new MpscUnboundedArrayQueue<>(1024) : new MpscUnboundedAtomicArrayQueue<>(1024);
     private final AtomicLong pendingTimeouts = new AtomicLong(0);
     private final long maxPendingTimeouts;
 

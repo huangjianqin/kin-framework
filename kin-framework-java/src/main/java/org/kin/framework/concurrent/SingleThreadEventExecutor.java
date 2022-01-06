@@ -271,7 +271,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
         boolean timed = timeout > 0;
         long nanos = Objects.nonNull(unit) ? unit.toNanos(timeout) : 0;
         int ntasks = tasks.size();
-        ArrayList<Future<T>> futures = new ArrayList<Future<T>>(ntasks);
+        ArrayList<Future<T>> futures = new ArrayList<>(ntasks);
         ExecutorCompletionService<T> ecs =
                 new ExecutorCompletionService<T>(this);
 
@@ -442,9 +442,7 @@ public class SingleThreadEventExecutor implements EventExecutor, LoggerOprs {
             scheduledTaskQueue.add(task);
         } else {
             //not in event loop, just execute and in event loop
-            execute(() -> {
-                schedule(task);
-            });
+            execute(() -> schedule(task));
         }
 
         return task;

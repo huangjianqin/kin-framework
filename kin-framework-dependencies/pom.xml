@@ -39,6 +39,8 @@
         <eclipse-collections.version>10.4.0</eclipse-collections.version>
         <micrometer.version>1.7.3</micrometer.version>
         <jsr305.version>3.0.2</jsr305.version>
+        <disruptor.version>3.3.7</disruptor.version>
+        <jctools.version>3.3.0</jctools.version>
     </properties>
 
     <dependencyManagement>
@@ -255,6 +257,20 @@
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>jsr305</artifactId>
                 <version>${jsr305.version}</version>
+            </dependency>
+
+            <!-- disruptor -->
+            <dependency>
+                <groupId>com.lmax</groupId>
+                <artifactId>disruptor</artifactId>
+                <version>${disruptor.version}</version>
+            </dependency>
+
+            <!-- 提供Map以及Queue的非阻塞并发数据结构 -->
+            <dependency>
+                <groupId>org.jctools</groupId>
+                <artifactId>jctools-core</artifactId>
+                <version>${jctools.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
