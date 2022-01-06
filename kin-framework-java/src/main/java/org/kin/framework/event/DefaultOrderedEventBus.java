@@ -2,16 +2,13 @@ package org.kin.framework.event;
 
 import org.kin.framework.concurrent.DefaultPartitionExecutor;
 import org.kin.framework.concurrent.EfficientHashPartitioner;
-import org.kin.framework.concurrent.HashedWheelTimer;
-import org.kin.framework.concurrent.Timeout;
+import org.kin.framework.concurrent.SimpleThreadFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -27,8 +24,8 @@ public class DefaultOrderedEventBus extends DefaultEventBus implements Scheduled
     protected final DefaultPartitionExecutor<Integer> executor;
     /** 事件合并上下文 */
     protected final ConcurrentHashMap<Class<?>, EventMergeContext> mergeContexts = new ConcurrentHashMap<>();
-    /** 时间轮, 用于控制事件合并window */
-    protected final HashedWheelTimer wheelTimer = new HashedWheelTimer();
+    /** scheduler */
+    protected final ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1, new SimpleThreadFactory("orderedEventBus-scheduler"));
 
     public DefaultOrderedEventBus(int parallelism) {
         this(parallelism, true);
@@ -37,7 +34,7 @@ public class DefaultOrderedEventBus extends DefaultEventBus implements Scheduled
     @SuppressWarnings({"unchecked", "rawtypes"})
     public DefaultOrderedEventBus(int parallelism, boolean isEnhance) {
         super(isEnhance);
-        executor = new DefaultPartitionExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "OrderedEventBus");
+        executor = new DefaultPartitionExecutor<>(parallelism, EfficientHashPartitioner.INSTANCE, "orderedEventBus");
     }
 
     /**
@@ -109,7 +106,7 @@ public class DefaultOrderedEventBus extends DefaultEventBus implements Scheduled
     @Override
     public final void shutdown() {
         executor.shutdown();
-        wheelTimer.stop();
+        scheduler.shutdown();
         mergeContexts.clear();
 
         super.shutdown();
@@ -127,8 +124,8 @@ public class DefaultOrderedEventBus extends DefaultEventBus implements Scheduled
         private final EventMerge eventMerge;
         /** 事件类型 */
         private final Class<?> eventClass;
-        /** 窗口标识 */
-        private Timeout timeout;
+        /** {@link Future} */
+        private Future<?> future;
 
         EventMergeContext(Class<?> eventClass, EventMerge eventMerge) {
             this.eventClass = eventClass;
@@ -173,8 +170,8 @@ public class DefaultOrderedEventBus extends DefaultEventBus implements Scheduled
          */
         private void mergeWindowEvent(EventContext eventContext) {
             //启动window
-            if (Objects.isNull(timeout)) {
-                timeout = wheelTimer.newTimeout(t -> triggerMergedEvents(), eventMerge.window(), eventMerge.unit());
+            if (Objects.isNull(future)) {
+                future = scheduler.schedule(this::triggerMergedEvents, eventMerge.window(), eventMerge.unit());
             }
 
             eventContexts.add(eventContext);
@@ -185,11 +182,11 @@ public class DefaultOrderedEventBus extends DefaultEventBus implements Scheduled
          */
         private void mergeDebounceEvent(EventContext eventContext) {
             //启动window
-            if (Objects.nonNull(timeout)) {
+            if (Objects.nonNull(future)) {
                 //重置
-                timeout.cancel();
+                future.cancel(true);
             }
-            timeout = wheelTimer.newTimeout(t -> triggerMergedEvents(), eventMerge.window(), eventMerge.unit());
+            future = scheduler.schedule(this::triggerMergedEvents, eventMerge.window(), eventMerge.unit());
 
             eventContexts.add(eventContext);
         }
