@@ -11,16 +11,17 @@ import java.util.concurrent.TimeUnit;
 public class HashedWheelTimerTest {
     public static void main(String[] args) throws InterruptedException {
         HashedWheelTimer wheelTimer = new HashedWheelTimer();
-        wheelTimer.start();
 
         Timeout test1 = wheelTimer.newTimeout(t -> System.out.println(TimeUtils.timestamp() + "-test1"), 2, TimeUnit.SECONDS);
         Timeout test2 = wheelTimer.newTimeout(t -> System.out.println(TimeUtils.timestamp() + "-test2"), 2, TimeUnit.SECONDS);
         Timeout test3 = wheelTimer.newTimeout(t -> System.out.println(TimeUtils.timestamp() + "-test3"), 2, TimeUnit.SECONDS);
+        Timeout test4 = wheelTimer.newTimeout(t -> System.out.println(TimeUtils.timestamp() + "-test4"), 10, TimeUnit.SECONDS);
 
         test2.cancel();
         System.out.println(TimeUtils.timestamp());
         System.out.println("test2 cancelled");
         Thread.sleep(5_000);
-        wheelTimer.stop();
+        System.out.println(wheelTimer.stop());
+        ;
     }
 }

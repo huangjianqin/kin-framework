@@ -34,7 +34,8 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 1. wheel timer slot: 链表结构
+ * 1. wheel timer slot: 链表结构, O(1), 相比, {@link java.util.concurrent.DelayQueue}和{@link java.util.Timer}, O(log n)
+ *      插入和删除调度任务的性能更高.
  * 2. {@link #newTimeout(TimerTask, long, TimeUnit)}并不会把task插入wheel timer slot
  * 3. 每个wheel timer带一个worker, 其核心逻辑如下:
  *      1. {@link Worker#processCancelledTasks()}, 将cancelled task从wheel timer slot上移除. 由此看出, cancel task并不会马上从wheel timer slot移除, 而已缓存在一个queue里面
@@ -102,7 +103,8 @@ public class HashedWheelTimer implements Timer {
     public static final int WORKER_STATE_STARTED = 1;
     public static final int WORKER_STATE_SHUTDOWN = 2;
     @SuppressWarnings({"unused", "FieldMayBeFinal"})
-    private volatile int workerState; // 0 - init, 1 - started, 2 - shut down
+    // 0 - init, 1 - started, 2 - shut down
+    private volatile int workerState;
 
     private final long tickDuration;
     private final HashedWheelBucket[] wheel;
@@ -190,9 +192,6 @@ public class HashedWheelTimer implements Timer {
      * @param tickDuration  the duration between tick
      * @param unit          the time unit of the {@code tickDuration}
      * @param ticksPerWheel the size of the wheel
-     * @param leakDetection {@code true} if leak detection should be enabled always,
-     *                      if false it will only be enabled if the worker thread is not
-     *                      a daemon thread.
      * @throws NullPointerException     if either of {@code threadFactory} and {@code unit} is {@code null}
      * @throws IllegalArgumentException if either of {@code tickDuration} and {@code ticksPerWheel} is &lt;= 0
      */
@@ -274,7 +273,7 @@ public class HashedWheelTimer implements Timer {
         }
     }
 
-    private static HashedWheelBucket[] createWheel(int ticksPerWheel) {
+    private HashedWheelBucket[] createWheel(int ticksPerWheel) {
         if (ticksPerWheel <= 0) {
             throw new IllegalArgumentException(
                     "ticksPerWheel must be greater than 0: " + ticksPerWheel);
@@ -292,12 +291,21 @@ public class HashedWheelTimer implements Timer {
         return wheel;
     }
 
-    private static int normalizeTicksPerWheel(int ticksPerWheel) {
+    private int normalizeTicksPerWheel(int ticksPerWheel) {
         int normalizedTicksPerWheel = 1;
         while (normalizedTicksPerWheel < ticksPerWheel) {
             normalizedTicksPerWheel <<= 1;
         }
         return normalizedTicksPerWheel;
+    }
+
+    private void reportTooManyInstances() {
+        if (log.isErrorEnabled()) {
+            String resourceType = HashedWheelTimer.class.getName();
+            log.error("You are creating too many " + resourceType + " instances. " +
+                    resourceType + " is a shared resource that must be reused across the JVM, " +
+                    "so that only a few instances are created.");
+        }
     }
 
     /**
@@ -307,7 +315,7 @@ public class HashedWheelTimer implements Timer {
      * @throws IllegalStateException if this timer has been
      *                               {@linkplain #stop() stopped} already
      */
-    public void start() {
+    private void start() {
         switch (WORKER_STATE_UPDATER.get(this)) {
             case WORKER_STATE_INIT:
                 if (WORKER_STATE_UPDATER.compareAndSet(this, WORKER_STATE_INIT, WORKER_STATE_STARTED)) {
@@ -404,15 +412,6 @@ public class HashedWheelTimer implements Timer {
      */
     public long pendingTimeouts() {
         return pendingTimeouts.get();
-    }
-
-    private static void reportTooManyInstances() {
-        if (log.isErrorEnabled()) {
-            String resourceType = HashedWheelTimer.class.getName();
-            log.error("You are creating too many " + resourceType + " instances. " +
-                    resourceType + " is a shared resource that must be reused across the JVM, " +
-                    "so that only a few instances are created.");
-        }
     }
 
     private final class Worker implements Runnable {
@@ -547,135 +546,8 @@ public class HashedWheelTimer implements Timer {
             }
         }
 
-        public Set<Timeout> unprocessedTimeouts() {
+        Set<Timeout> unprocessedTimeouts() {
             return Collections.unmodifiableSet(unprocessedTimeouts);
-        }
-    }
-
-    private static final class HashedWheelTimeout implements Timeout {
-
-        private static final int ST_INIT = 0;
-        private static final int ST_CANCELLED = 1;
-        private static final int ST_EXPIRED = 2;
-        private static final AtomicIntegerFieldUpdater<HashedWheelTimeout> STATE_UPDATER =
-                AtomicIntegerFieldUpdater.newUpdater(HashedWheelTimeout.class, "state");
-
-        private final HashedWheelTimer timer;
-        private final TimerTask task;
-        private final long deadline;
-
-        @SuppressWarnings({"unused", "FieldMayBeFinal", "RedundantFieldInitialization"})
-        private volatile int state = ST_INIT;
-
-        // remainingRounds will be calculated and set by Worker.transferTimeoutsToBuckets() before the
-        // HashedWheelTimeout will be added to the correct HashedWheelBucket.
-        long remainingRounds;
-
-        // This will be used to chain timeouts in HashedWheelTimerBucket via a double-linked-list.
-        // As only the workerThread will act on it there is no need for synchronization / volatile.
-        HashedWheelTimeout next;
-        HashedWheelTimeout prev;
-
-        // The bucket to which the timeout was added
-        HashedWheelBucket bucket;
-
-        HashedWheelTimeout(HashedWheelTimer timer, TimerTask task, long deadline) {
-            this.timer = timer;
-            this.task = task;
-            this.deadline = deadline;
-        }
-
-        @Override
-        public Timer timer() {
-            return timer;
-        }
-
-        @Override
-        public TimerTask task() {
-            return task;
-        }
-
-        @Override
-        public boolean cancel() {
-            // only update the state it will be removed from HashedWheelBucket on next tick.
-            if (!compareAndSetState(ST_INIT, ST_CANCELLED)) {
-                return false;
-            }
-            // If a task should be canceled we put this to another queue which will be processed on each tick.
-            // So this means that we will have a GC latency of max. 1 tick duration which is good enough. This way
-            // we can make again use of our MpscLinkedQueue and so minimize the locking / overhead as much as possible.
-            timer.cancelledTimeouts.add(this);
-            return true;
-        }
-
-        void remove() {
-            HashedWheelBucket bucket = this.bucket;
-            if (bucket != null) {
-                bucket.remove(this);
-            } else {
-                timer.pendingTimeouts.decrementAndGet();
-            }
-        }
-
-        public boolean compareAndSetState(int expected, int state) {
-            return STATE_UPDATER.compareAndSet(this, expected, state);
-        }
-
-        public int state() {
-            return state;
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return state() == ST_CANCELLED;
-        }
-
-        @Override
-        public boolean isExpired() {
-            return state() == ST_EXPIRED;
-        }
-
-        public void expire() {
-            if (!compareAndSetState(ST_INIT, ST_EXPIRED)) {
-                return;
-            }
-
-            try {
-                task.run(this);
-            } catch (Throwable t) {
-                if (log.isWarnEnabled()) {
-                    log.warn("An exception was thrown by " + TimerTask.class.getSimpleName() + '.', t);
-                }
-            }
-        }
-
-        @Override
-        public String toString() {
-            final long currentTime = System.nanoTime();
-            long remaining = deadline - currentTime + timer.startTime;
-
-            StringBuilder buf = new StringBuilder(192)
-                    .append(this.getClass().getSimpleName())
-                    .append('(')
-                    .append("deadline: ");
-            if (remaining > 0) {
-                buf.append(remaining)
-                        .append(" ns later");
-            } else if (remaining < 0) {
-                buf.append(-remaining)
-                        .append(" ns ago");
-            } else {
-                buf.append("now");
-            }
-
-            if (isCancelled()) {
-                buf.append(", cancelled");
-            }
-
-            return buf.append(", task: ")
-                    .append(task())
-                    .append(')')
-                    .toString();
         }
     }
 
@@ -692,7 +564,7 @@ public class HashedWheelTimer implements Timer {
         /**
          * Add {@link HashedWheelTimeout} to this bucket.
          */
-        public void addTimeout(HashedWheelTimeout timeout) {
+        void addTimeout(HashedWheelTimeout timeout) {
             assert timeout.bucket == null;
             timeout.bucket = this;
             if (head == null) {
@@ -707,7 +579,7 @@ public class HashedWheelTimer implements Timer {
         /**
          * Expire all {@link HashedWheelTimeout}s for the given {@code deadline}.
          */
-        public void expireTimeouts(long deadline) {
+        void expireTimeouts(long deadline) {
             HashedWheelTimeout timeout = head;
 
             // process all timeouts
@@ -731,7 +603,7 @@ public class HashedWheelTimer implements Timer {
             }
         }
 
-        public HashedWheelTimeout remove(HashedWheelTimeout timeout) {
+        HashedWheelTimeout remove(HashedWheelTimeout timeout) {
             HashedWheelTimeout next = timeout.next;
             // remove timeout that was either processed or cancelled by updating the linked-list
             if (timeout.prev != null) {
@@ -764,7 +636,7 @@ public class HashedWheelTimer implements Timer {
         /**
          * Clear this bucket and return all not expired / cancelled {@link Timeout}s.
          */
-        public void clearTimeouts(Set<Timeout> set) {
+        void clearTimeouts(Set<Timeout> set) {
             for (; ; ) {
                 HashedWheelTimeout timeout = pollTimeout();
                 if (timeout == null) {
@@ -795,6 +667,133 @@ public class HashedWheelTimer implements Timer {
             head.prev = null;
             head.bucket = null;
             return head;
+        }
+    }
+
+    private static final class HashedWheelTimeout implements Timeout {
+
+        private static final int ST_INIT = 0;
+        private static final int ST_CANCELLED = 1;
+        private static final int ST_EXPIRED = 2;
+        private static final AtomicIntegerFieldUpdater<HashedWheelTimeout> STATE_UPDATER =
+                AtomicIntegerFieldUpdater.newUpdater(HashedWheelTimeout.class, "state");
+
+        private final HashedWheelTimer timer;
+        private final TimerTask task;
+        private final long deadline;
+
+        @SuppressWarnings({"unused", "FieldMayBeFinal", "RedundantFieldInitialization"})
+        private volatile int state = ST_INIT;
+
+        // remainingRounds will be calculated and set by Worker.transferTimeoutsToBuckets() before the
+        // HashedWheelTimeout will be added to the correct HashedWheelBucket.
+        private long remainingRounds;
+
+        // This will be used to chain timeouts in HashedWheelTimerBucket via a double-linked-list.
+        // As only the workerThread will act on it there is no need for synchronization / volatile.
+        private HashedWheelTimeout next;
+        private HashedWheelTimeout prev;
+
+        // The bucket to which the timeout was added
+        private HashedWheelBucket bucket;
+
+        HashedWheelTimeout(HashedWheelTimer timer, TimerTask task, long deadline) {
+            this.timer = timer;
+            this.task = task;
+            this.deadline = deadline;
+        }
+
+        void remove() {
+            HashedWheelBucket bucket = this.bucket;
+            if (bucket != null) {
+                bucket.remove(this);
+            } else {
+                timer.pendingTimeouts.decrementAndGet();
+            }
+        }
+
+        void expire() {
+            if (!compareAndSetState(ST_INIT, ST_EXPIRED)) {
+                return;
+            }
+
+            try {
+                task.run(this);
+            } catch (Throwable t) {
+                if (log.isWarnEnabled()) {
+                    log.warn("An exception was thrown by " + TimerTask.class.getSimpleName() + '.', t);
+                }
+            }
+        }
+
+        int state() {
+            return state;
+        }
+
+        @Override
+        public Timer timer() {
+            return timer;
+        }
+
+        @Override
+        public TimerTask task() {
+            return task;
+        }
+
+        @Override
+        public boolean cancel() {
+            // only update the state it will be removed from HashedWheelBucket on next tick.
+            if (!compareAndSetState(ST_INIT, ST_CANCELLED)) {
+                return false;
+            }
+            // If a task should be canceled we put this to another queue which will be processed on each tick.
+            // So this means that we will have a GC latency of max. 1 tick duration which is good enough. This way
+            // we can make again use of our MpscLinkedQueue and so minimize the locking / overhead as much as possible.
+            timer.cancelledTimeouts.add(this);
+            return true;
+        }
+
+        private boolean compareAndSetState(int expected, int state) {
+            return STATE_UPDATER.compareAndSet(this, expected, state);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return state() == ST_CANCELLED;
+        }
+
+        @Override
+        public boolean isExpired() {
+            return state() == ST_EXPIRED;
+        }
+
+        @Override
+        public String toString() {
+            final long currentTime = System.nanoTime();
+            long remaining = deadline - currentTime + timer.startTime;
+
+            StringBuilder buf = new StringBuilder(192)
+                    .append(this.getClass().getSimpleName())
+                    .append('(')
+                    .append("deadline: ");
+            if (remaining > 0) {
+                buf.append(remaining)
+                        .append(" ns later");
+            } else if (remaining < 0) {
+                buf.append(-remaining)
+                        .append(" ns ago");
+            } else {
+                buf.append("now");
+            }
+
+            if (isCancelled()) {
+                buf.append(", cancelled");
+            }
+
+            return buf.append(", task: ")
+                    .append(task())
+                    .append(')')
+                    .toString();
         }
     }
 }
