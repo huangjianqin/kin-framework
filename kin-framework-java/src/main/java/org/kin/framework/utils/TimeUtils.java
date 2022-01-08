@@ -16,6 +16,13 @@ public class TimeUtils {
     //-------------------------------------------------------get------------------------------------------------------
 
     /**
+     * 由{@link System#nanoTime()}转换成milliseconds
+     */
+    public static long nanoTimeMs() {
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
+    }
+
+    /**
      * 返回时间戳
      *
      * @return 时间戳
