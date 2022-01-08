@@ -34,6 +34,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * 当bound比较小时, 性能会好一点, bound值越小越性能越好
  * 但当bound大于Integer.MAX_VALUE时, 性能会大打折扣, bound值越大越差
  *
+ * 注意: 看到netty PlatformDependent里面, >=jdk7, 默认使用jdk自带的{@link java.util.concurrent.ThreadLocalRandom},
+ * 估计jdk7后, {@link java.util.concurrent.ThreadLocalRandom}性能更佳
+ *
  * A random number generator isolated to the current thread.  Like the
  * global {@link java.util.Random} generator used by the {@link
  * java.lang.Math} class, a {@code ThreadLocalRandom} is initialized
