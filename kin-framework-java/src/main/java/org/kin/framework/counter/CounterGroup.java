@@ -1,6 +1,8 @@
 package org.kin.framework.counter;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * counter组
@@ -11,7 +13,7 @@ import java.util.*;
 public class CounterGroup {
     private final String group;
     /** counters */
-    private volatile Map<String, Counter> counters = Collections.emptyMap();
+    private volatile Map<String, Counter> counters = new ConcurrentHashMap<>();
 
     public CounterGroup(String group) {
         this.group = group;
@@ -19,26 +21,11 @@ public class CounterGroup {
 
     /**
      * 不存在, 则创建新的
-     * 基于copy-on-write update
      *
      * @return 指定counter
      */
     public Counter counter(String uuid) {
-        Counter counter = counters.get(uuid);
-        if (Objects.isNull(counter)) {
-            synchronized (this) {
-                counter = counters.get(uuid);
-                if (Objects.nonNull(counter)) {
-                    return counter;
-                }
-
-                Map<String, Counter> counters = new HashMap<>(this.counters);
-                counter = new Counter(uuid);
-                counters.put(uuid, counter);
-                this.counters = counters;
-            }
-        }
-        return counter;
+        return counters.computeIfAbsent(uuid, k -> new Counter(uuid));
     }
 
     /**
