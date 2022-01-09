@@ -1,7 +1,6 @@
 package org.kin.framework.counter;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 /**
  * counter 对外api
@@ -10,14 +9,32 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2020/9/2
  */
 public class Counters {
-    /** counter */
-    static final Map<String, CounterGroup> counterGroups = new ConcurrentHashMap<>();
+    /** counter groups */
+    private static volatile Map<String, CounterGroup> counterGroups = Collections.emptyMap();
 
     /**
-     * @return 指定counter group, 不存在, 则创建新的
+     * 不存在, 则创建新的
+     * 基于copy-on-write update
+     *
+     * @return 指定counter group
      */
     public static CounterGroup counterGroup(String group) {
-        return counterGroups.computeIfAbsent(group, k -> new CounterGroup(group));
+        CounterGroup counterGroup = Counters.counterGroups.get(group);
+        if (Objects.isNull(counterGroup)) {
+            synchronized (CounterGroup.class) {
+                counterGroup = Counters.counterGroups.get(group);
+                if (Objects.nonNull(counterGroup)) {
+                    return counterGroup;
+                }
+
+                Map<String, CounterGroup> counterGroups = new HashMap<>(Counters.counterGroups);
+                counterGroup = new CounterGroup(group);
+                counterGroups.put(group, counterGroup);
+                Counters.counterGroups = counterGroups;
+            }
+        }
+
+        return counterGroup;
     }
 
     /**
@@ -37,7 +54,14 @@ public class Counters {
     /**
      * 重置counter
      */
-    public static void reset() {
+    public static synchronized void reset() {
         counterGroups.values().forEach(CounterGroup::reset);
+    }
+
+    /**
+     * 获取所有counter group
+     */
+    public static synchronized Collection<CounterGroup> getAllGroup() {
+        return counterGroups.values();
     }
 }

@@ -1,6 +1,6 @@
 package org.kin.framework.counter;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * 计数器
@@ -13,29 +13,30 @@ public class Counter implements Reporter {
     /** uuid */
     private final String uuid;
     /** count */
-    private final AtomicLong count;
+    private final LongAdder count;
 
     Counter(String uuid) {
         this.uuid = uuid;
-        this.count = new AtomicLong(0);
+        this.count = new LongAdder();
     }
 
     /**
-     * 增量
+     * 递增
      *
      * @return 当前计数值
      */
     public long increment() {
-        return increment(0L);
+        return increment(1L);
     }
 
     /**
-     * 增量
+     * 增加{@code value}
      *
      * @return 当前计数值
      */
-    public long increment(long amount) {
-        return count.addAndGet(amount);
+    public long increment(long value) {
+        count.add(value);
+        return count();
     }
 
     /**
@@ -44,20 +45,20 @@ public class Counter implements Reporter {
      * @return 当前计数值
      */
     public long reset() {
-        return count.getAndSet(0);
+        return count.sumThenReset();
     }
 
     /**
      * @return 当前计数值
      */
     public long count() {
-        return count.get();
+        return count.sum();
     }
 
     @Override
     public String report() {
         //上报后会重置
-        long count = this.count.getAndSet(0);
+        long count = this.count.sumThenReset();
         return uuid.concat("-").concat(String.valueOf(count));
     }
 }

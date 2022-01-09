@@ -12,13 +12,11 @@ public class Reporters {
         StringBuilder out = new StringBuilder();
         out.append("-------------------------------counter report-------------------------------");
         out.append(System.lineSeparator());
-        for (CounterGroup counterGroup : Counters.counterGroups.values()) {
-            out.append("<<<").append(counterGroup.getGroup()).append(">>>").append(System.lineSeparator());
-            for (Counter value : counterGroup.getCounters().values()) {
-                out.append(value.report()).append(System.lineSeparator());
+        for (CounterGroup group : Counters.getAllGroup()) {
+            out.append(String.format("----------------------group: %s----------------------", group.getGroup())).append(System.lineSeparator());
+            for (Counter counter : group.getCounters()) {
+                out.append(counter.report()).append(System.lineSeparator());
             }
-            out.append("<<<<<<");
-            out.append(System.lineSeparator());
         }
         out.append("----------------------------------------------------------------------------");
         return out.toString();
