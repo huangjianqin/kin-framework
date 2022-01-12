@@ -1,5 +1,7 @@
 package org.kin.framework.io;
 
+import org.kin.framework.utils.Maths;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -31,7 +33,7 @@ public final class ScalableByteBufferOutputStream extends OutputStream {
     public void write(int b) throws IOException {
         if (!sink.hasRemaining()) {
             //double
-            sink = ByteBufferUtils.ensureWritableBytes(sink, sink.capacity());
+            sink = ByteBufferUtils.ensureWritableBytes(sink, sink.capacity() * 2);
         }
 
         sink.put((byte) b);
@@ -39,14 +41,22 @@ public final class ScalableByteBufferOutputStream extends OutputStream {
 
     @Override
     public void write(byte[] bytes, int offset, int length) throws IOException {
-        if (sink.remaining() < length) {
-            if (sink.capacity() * 2 < length) {
-                //as need
-                sink = ByteBufferUtils.ensureWritableBytes(sink, length);
+        //当前可写最大字节数
+        int nowWritableBytes = ByteBufferUtils.getWritableBytes(sink);
+        if (nowWritableBytes < length) {
+            //空间不足
+            //两倍容量
+            int doubleCapacity = sink.capacity() * 2;
+            //新容量
+            int newCapacity;
+            if (doubleCapacity < length) {
+                //> double, length round to power2
+                newCapacity = Maths.round2Power2(length);
             } else {
                 //double
-                sink = ByteBufferUtils.ensureWritableBytes(sink, sink.capacity());
+                newCapacity = doubleCapacity;
             }
+            sink = ByteBufferUtils.ensureCapacity(sink, newCapacity);
         }
 
         sink.put(bytes, offset, length);

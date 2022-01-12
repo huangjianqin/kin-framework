@@ -112,22 +112,37 @@ public final class ByteBufferUtils {
      * 保证指定{@link ByteBuffer}实例拥有指定可写字节数{@code writableBytes}, 不足则会扩容
      */
     public static ByteBuffer ensureWritableBytes(ByteBuffer source, int writableBytes) {
-        int maxWritableBytes = getWritableBytes(source);
-        if (maxWritableBytes >= writableBytes) {
+        //当前可写最大字节数
+        int nowWritableBytes = getWritableBytes(source);
+        if (nowWritableBytes >= writableBytes) {
             return source;
         }
 
+        //当前容量
         int capacity = source.capacity();
         int position = source.position();
-        int newCapacity = capacity + writableBytes - maxWritableBytes;
+        //新容量
+        int newCapacity = capacity + writableBytes - nowWritableBytes;
+        //create new
         ByteBuffer ret = source.isDirect() ? ByteBuffer.allocateDirect(newCapacity) :
                 ByteBuffer.allocate(newCapacity);
 
+        //移动source指针
         source.position(0).limit(capacity);
+        //复制内容, 并修正ret指针
         ret.position(0);
         ret.put(source);
         ret.position(position);
         ret.order(source.order());
         return ret;
+    }
+
+    /**
+     * 将{@link ByteBuffer} {@code source}扩容至{@code capacity}
+     *
+     * @param capacity 新容量
+     */
+    public static ByteBuffer ensureCapacity(ByteBuffer source, int capacity) {
+        return ensureWritableBytes(source, capacity - source.capacity() + getWritableBytes(source));
     }
 }
