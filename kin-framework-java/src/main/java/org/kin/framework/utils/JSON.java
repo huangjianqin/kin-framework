@@ -1,13 +1,16 @@
 package org.kin.framework.utils;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -17,10 +20,24 @@ import java.util.*;
  */
 public class JSON {
     public static final ObjectMapper PARSER = new ObjectMapper();
+    /** json array抽象类型 */
+    private static final TypeReference<List<JsonNode>> TYPE_JSON_NODE_LIST = new TypeReference<List<JsonNode>>() {
+    };
 
     static {
         PARSER.setTypeFactory(TypeFactory.defaultInstance());
         PARSER.findAndRegisterModules();
+        //允许json中含有指定对象未包含的字段
+        PARSER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        //允许序列化空对象
+        PARSER.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        //不序列化默认值, 0,false,[],{}等等, 减少json长度
+        PARSER.setDefaultPropertyInclusion(JsonInclude.Include.NON_DEFAULT);
+        //只认field, 那些get set is开头的方法不生成字段
+        PARSER.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        PARSER.setVisibility(PropertyAccessor.SETTER, JsonAutoDetect.Visibility.NONE);
+        PARSER.setVisibility(PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+        PARSER.setVisibility(PropertyAccessor.IS_GETTER, JsonAutoDetect.Visibility.NONE);
     }
 
     private JSON() {
@@ -210,5 +227,17 @@ public class JSON {
         } catch (JsonProcessingException e) {
             ExceptionUtils.throwExt(e);
         }
+    }
+
+    /**
+     * 按数组形式读取json, 然后再根据指定class反序列每个item
+     */
+    public static Object[] readJsonArray(InputStream is, Class<?>[] targetClasses) throws IOException {
+        Object[] targets = new Object[targetClasses.length];
+        List<JsonNode> jsonNodes = PARSER.readValue(is, TYPE_JSON_NODE_LIST);
+        for (int i = 0; i < targetClasses.length; i++) {
+            targets[i] = PARSER.treeToValue(jsonNodes.get(i), targetClasses[i]);
+        }
+        return targets;
     }
 }
