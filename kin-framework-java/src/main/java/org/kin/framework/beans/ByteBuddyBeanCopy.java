@@ -75,7 +75,7 @@ public final class ByteBuddyBeanCopy extends PolymorphicCopy {
      * 获取{@link Copy}实现类类名
      */
     private String copyClassName(Class<?> sourceClass, Class<?> targetClass) {
-        return sourceClass.getCanonicalName().concat("$").concat(targetClass.getCanonicalName()).concat("$").concat(Copy.class.getSimpleName());
+        return sourceClass.getName().concat("$").concat(targetClass.getName()).concat("$").concat(Copy.class.getSimpleName());
     }
 
     /**

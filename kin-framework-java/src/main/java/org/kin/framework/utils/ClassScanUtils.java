@@ -99,17 +99,17 @@ public final class ClassScanUtils {
     }
 
     private static <T> ClassInfoList getClassInfoList(Class<T> claxx, ScanResult scanResult) {
-        String canonicalName = claxx.getCanonicalName();
+        String className = claxx.getName();
         ClassInfoList classInfoList;
         if (claxx.isAnnotation()) {
             //注解
-            classInfoList = scanResult.getClassesWithAnnotation(canonicalName);
+            classInfoList = scanResult.getClassesWithAnnotation(className);
         } else if (claxx.isInterface()) {
             //接口实现类
-            classInfoList = scanResult.getClassesImplementing(canonicalName);
+            classInfoList = scanResult.getClassesImplementing(className);
         } else {
             //继承
-            classInfoList = scanResult.getSubclasses(canonicalName);
+            classInfoList = scanResult.getSubclasses(className);
         }
         return classInfoList;
     }

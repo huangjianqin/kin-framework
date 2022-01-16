@@ -107,6 +107,6 @@ abstract class PolymorphicCopy implements Copy<Object, Object> {
      */
     protected int cacheKey(Class<?> sourceClass, Class<?> targetClass) {
         //使用hashcode, 节省内存
-        return sourceClass.getCanonicalName().concat("=>").concat(targetClass.getCanonicalName()).hashCode();
+        return sourceClass.getName().concat("=>").concat(targetClass.getName()).hashCode();
     }
 }

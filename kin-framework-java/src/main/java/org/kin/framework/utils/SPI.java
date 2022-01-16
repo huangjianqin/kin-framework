@@ -20,7 +20,7 @@ public @interface SPI {
     String value() default "";
 
     /**
-     * extension class别名, 默认使用{@link Class#getCanonicalName()}
+     * extension class别名, 默认使用{@link Class#getName()}
      */
     String alias() default "";
 

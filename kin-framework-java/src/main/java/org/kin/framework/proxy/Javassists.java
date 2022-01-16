@@ -17,7 +17,7 @@ import java.util.Objects;
  */
 public class Javassists {
     /**
-     * POOL.get()方法必须使用的是Class.getName(), 不能是Class.getCanonicalName()
+     * POOL.get()方法必须使用的是{@link Class#getName()}, 不能是{@link Class#getCanonicalName()}
      */
     private static final ClassPool POOL = ClassPool.getDefault();
     /** ctclass缓存 */

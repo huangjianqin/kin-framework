@@ -255,7 +255,7 @@ public class ExtensionLoader {
         checkSupport(spiClass);
 
         //1. 从 接口名 获取该接口实现类
-        HashSet<String> filteredSources = new HashSet<>(extension2ImplClasses.get(spiClass.getCanonicalName()));
+        HashSet<String> filteredSources = new HashSet<>(extension2ImplClasses.get(spiClass.getName()));
         //2. 从 @SPI注解的提供的value 获取该接口实现类
         SPI spi = spiClass.getAnnotation(SPI.class);
         if (Objects.nonNull(spi)) {
