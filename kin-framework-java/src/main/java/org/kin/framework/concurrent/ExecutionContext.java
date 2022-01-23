@@ -28,7 +28,7 @@ public class ExecutionContext implements ScheduledExecutorService {
     }
 
     public ExecutionContext(ExecutorService worker, int scheduleParallelism) {
-        this(worker, scheduleParallelism, new SimpleThreadFactory("default-schedule-thread-manager"));
+        this(worker, scheduleParallelism, new SimpleThreadFactory("default".concat(DEFAULT_SCHEDULER_NAME)));
     }
 
     public ExecutionContext(ExecutorService worker, int scheduleParallelism, String schedulerPrefix) {

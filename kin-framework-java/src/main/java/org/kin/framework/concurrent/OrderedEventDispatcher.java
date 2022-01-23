@@ -28,7 +28,7 @@ public final class OrderedEventDispatcher<KEY, MSG> extends AbstractDispatcher<K
     public OrderedEventDispatcher(int parallelism, String workerNamePrefix) {
         super(ExecutionContext.elastic(
                 Math.min(parallelism, SysUtils.CPU_NUM * 10), SysUtils.CPU_NUM * 10, workerNamePrefix,
-                SysUtils.CPU_NUM / 2 + 1, workerNamePrefix.concat("-schedule")));
+                SysUtils.CPU_NUM / 2 + 1));
         group = new CachedOrderedEventLoopGroup(executionContext, OrderedEventLoop::new);
     }
 

@@ -39,7 +39,7 @@ public final class DefaultPartitionExecutor<KEY> implements ScheduledPartitionEx
 
         this.partitionNum = partitionNum;
         this.executors = new FixOrderedEventLoopGroup(partitionNum,
-                ExecutionContext.fix(partitionNum, workerNamePrefix, 2, workerNamePrefix.concat("-scheduled")),
+                ExecutionContext.fix(partitionNum, workerNamePrefix, 2),
                 OrderedEventLoop::new);
         this.partitioner = partitioner;
     }

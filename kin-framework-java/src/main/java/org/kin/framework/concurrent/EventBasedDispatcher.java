@@ -36,7 +36,7 @@ public final class EventBasedDispatcher<KEY, MSG> extends AbstractDispatcher<KEY
     public EventBasedDispatcher(int parallelism) {
         super(ExecutionContext.forkjoin(
                 parallelism, "eventBasedDispatcher",
-                SysUtils.CPU_NUM / 2 + 1, "eventBasedDispatcher-scheduler"));
+                SysUtils.CPU_NUM / 2 + 1));
         this.parallelism = parallelism;
     }
 

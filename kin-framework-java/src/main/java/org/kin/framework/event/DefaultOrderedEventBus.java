@@ -142,7 +142,7 @@ public class DefaultOrderedEventBus extends DefaultEventBus implements Scheduled
             } else if (MergeType.DEBOUNCE.equals(type)) {
                 mergeDebounceEvent(eventContext);
             } else {
-                throw new UnsupportedOperationException(String.format("unsupport merge type '%s'", type));
+                throw new UnsupportedOperationException(String.format("doesn't support merge type '%s'", type));
             }
         }
 
