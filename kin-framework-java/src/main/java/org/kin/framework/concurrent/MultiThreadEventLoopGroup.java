@@ -9,36 +9,36 @@ import java.util.concurrent.ThreadFactory;
  * @author huangjianqin
  * @date 2021/3/10
  */
-public class SingleThreadEventLoopGroup extends SingleThreadEventExecutorPool implements EventLoopGroup<SingleThreadEventLoop> {
-    public SingleThreadEventLoopGroup(int coreSize) {
+public class MultiThreadEventLoopGroup extends MultiThreadEventExecutorPool implements EventLoopGroup<SingleThreadEventLoop> {
+    public MultiThreadEventLoopGroup(int coreSize) {
         super(coreSize);
     }
 
-    public SingleThreadEventLoopGroup(int coreSize, EventExecutorChooser chooser) {
+    public MultiThreadEventLoopGroup(int coreSize, EventExecutorChooser chooser) {
         super(coreSize, chooser);
     }
 
-    public SingleThreadEventLoopGroup(int coreSize, EventExecutorChooser chooser, String workerNamePrefix) {
+    public MultiThreadEventLoopGroup(int coreSize, EventExecutorChooser chooser, String workerNamePrefix) {
         super(coreSize, chooser, workerNamePrefix);
     }
 
-    public SingleThreadEventLoopGroup(int coreSize, EventExecutorChooser chooser, ThreadFactory threadFactory) {
+    public MultiThreadEventLoopGroup(int coreSize, EventExecutorChooser chooser, ThreadFactory threadFactory) {
         super(coreSize, chooser, threadFactory);
     }
 
-    public SingleThreadEventLoopGroup(int coreSize, EventExecutorChooser chooser, ExecutorService executor) {
+    public MultiThreadEventLoopGroup(int coreSize, EventExecutorChooser chooser, ExecutorService executor) {
         super(coreSize, chooser, executor);
     }
 
-    public SingleThreadEventLoopGroup(int coreSize, String workerNamePrefix) {
+    public MultiThreadEventLoopGroup(int coreSize, String workerNamePrefix) {
         super(coreSize, workerNamePrefix);
     }
 
-    public SingleThreadEventLoopGroup(int coreSize, ThreadFactory threadFactory) {
+    public MultiThreadEventLoopGroup(int coreSize, ThreadFactory threadFactory) {
         super(coreSize, threadFactory);
     }
 
-    public SingleThreadEventLoopGroup(int coreSize, ExecutorService executor) {
+    public MultiThreadEventLoopGroup(int coreSize, ExecutorService executor) {
         super(coreSize, executor);
     }
 

@@ -1,5 +1,7 @@
 package org.kin.framework.concurrent;
 
+import com.google.common.base.Preconditions;
+
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,16 +16,22 @@ import java.util.concurrent.TimeUnit;
  * @date 2021/1/26
  */
 public final class FixOrderedEventLoopGroup<P extends OrderedEventLoop<P>> implements EventLoopGroup<P> {
+    /** 默认scheduler线程数 */
+    private static final int DEFAULT_SCHEDULER_PARALLELISM = 5;
     /** 线程池 */
     private final ExecutionContext executionContext;
-    /** OrderedEventLoop缓存 */
+    /** {@link OrderedEventLoop}缓存 */
     private final List<P> executors;
 
-    @SuppressWarnings("unchecked")
-    public FixOrderedEventLoopGroup(int parallelism, ExecutionContext ec, OrderedEventLoopBuilder<P> builder) {
+    public FixOrderedEventLoopGroup(int executorSize, String workerNamePrefix, OrderedEventLoopBuilder<P> builder) {
+        this(executorSize, ExecutionContext.fix(executorSize, workerNamePrefix, DEFAULT_SCHEDULER_PARALLELISM), builder);
+    }
+
+    public FixOrderedEventLoopGroup(int executorSize, ExecutionContext ec, OrderedEventLoopBuilder<P> builder) {
+        Preconditions.checkArgument(ec.withSchedule(), "execution context must be with scheduler");
         this.executionContext = ec;
-        List<P> executors = new ArrayList<>(parallelism);
-        for (int i = 0; i < parallelism; i++) {
+        List<P> executors = new ArrayList<>(executorSize);
+        for (int i = 0; i < executorSize; i++) {
             executors.add(builder.build(this, this.executionContext));
         }
         this.executors = Collections.unmodifiableList(executors);

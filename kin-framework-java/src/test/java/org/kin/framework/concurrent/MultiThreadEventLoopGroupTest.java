@@ -11,12 +11,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author huangjianqin
  * @date 2020/11/23
  */
-public class SingleThreadLoopTest {
+public class MultiThreadEventLoopGroupTest {
     private static volatile int counter = 0;
 
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutionContext executionContext = ExecutionContext.cache("worker");
-        SingleThreadEventLoopGroup eventLoopGroup = new SingleThreadEventLoopGroup(5);
+        MultiThreadEventLoopGroup eventLoopGroup = new MultiThreadEventLoopGroup(5);
         SingleThreadEventLoop eventLoop = eventLoopGroup.next();
 
         Stopwatch watch = Stopwatch.createStarted();

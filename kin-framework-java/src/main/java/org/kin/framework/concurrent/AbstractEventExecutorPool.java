@@ -1,7 +1,6 @@
 package org.kin.framework.concurrent;
 
 import org.kin.framework.utils.Maths;
-import org.kin.framework.utils.StringUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -42,12 +41,11 @@ public abstract class AbstractEventExecutorPool implements EventExecutorGroup {
     private final EventExecutor[] eventExecutors;
 
     public AbstractEventExecutorPool(int coreSize) {
-        this(coreSize, getDefaultChooser(coreSize),
-                StringUtils.firstLowerCase("EventExecutorPool"));
+        this(coreSize, getDefaultChooser(coreSize), "eventExecutorPool");
     }
 
     public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser) {
-        this(coreSize, chooser, StringUtils.firstLowerCase("EventExecutorPool"));
+        this(coreSize, chooser, "eventExecutorPool");
     }
 
     public AbstractEventExecutorPool(int coreSize, EventExecutorChooser chooser, String workerNamePrefix) {

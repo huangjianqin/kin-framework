@@ -13,7 +13,7 @@ import java.util.concurrent.ForkJoinPool;
 public class PromiseTest {
     public static void main(String[] args) throws InterruptedException {
         ExecutorService executor = Executors.newCachedThreadPool();
-        SingleThreadEventLoopGroup eventLoopGroup = new SingleThreadEventLoopGroup(5);
+        MultiThreadEventLoopGroup eventLoopGroup = new MultiThreadEventLoopGroup(5);
 
         Promise<Integer> promise1 = test(null);
         promise1.addListener((p) -> {
