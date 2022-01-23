@@ -25,7 +25,7 @@ import java.util.Optional;
  * @author huangjianqin
  * @date 2020/12/22
  */
-final class ByteBuddyFactory implements ProxyFactory {
+public final class ByteBuddyFactory implements ProxyFactory {
     /** 单例 */
     public static final ByteBuddyFactory INSTANCE = new ByteBuddyFactory();
     /** 代理类中, 实现类默认字段名 */

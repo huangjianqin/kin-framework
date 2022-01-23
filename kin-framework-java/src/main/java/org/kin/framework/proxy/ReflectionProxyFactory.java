@@ -10,7 +10,7 @@ import java.lang.reflect.Proxy;
  * @author huangjianqin
  * @date 2020/12/24
  */
-final class ReflectionProxyFactory implements ProxyFactory {
+public final class ReflectionProxyFactory implements ProxyFactory {
     /** 单例 */
     public static final ReflectionProxyFactory INSTANCE = new ReflectionProxyFactory();
 

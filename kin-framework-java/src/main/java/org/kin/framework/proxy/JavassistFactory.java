@@ -14,7 +14,7 @@ import java.util.StringJoiner;
  * @author huangjianqin
  * @date 2020-01-11
  */
-final class JavassistFactory implements ProxyFactory {
+public final class JavassistFactory implements ProxyFactory {
     /** 单例 */
     public static final JavassistFactory INSTANCE = new JavassistFactory();
 
