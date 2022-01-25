@@ -6,6 +6,7 @@ import org.kin.framework.utils.StringUtils;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -239,6 +240,10 @@ public class ExecutionContext implements ScheduledExecutorService {
 
     @Override
     public void shutdown() {
+        if (isStopped) {
+            return;
+        }
+
         isStopped = true;
         worker.shutdown();
         if (scheduler != null) {
@@ -248,6 +253,10 @@ public class ExecutionContext implements ScheduledExecutorService {
 
     @Override
     public List<Runnable> shutdownNow() {
+        if (isStopped) {
+            return Collections.emptyList();
+        }
+
         isStopped = true;
         List<Runnable> tasks = Lists.newArrayList();
         tasks.addAll(worker.shutdownNow());

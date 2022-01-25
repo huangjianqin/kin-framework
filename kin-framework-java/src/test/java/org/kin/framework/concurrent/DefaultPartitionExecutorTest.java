@@ -9,7 +9,7 @@ import java.util.concurrent.*;
  * @author huangjianqin
  * @date 2020-05-18
  */
-public class PartitionExecutorTest {
+public class DefaultPartitionExecutorTest {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         ExecutionContext executionContext = ExecutionContext.fix(10, "dispatcher-test");
 
@@ -36,9 +36,11 @@ public class PartitionExecutorTest {
         latch.await();
 
         //schedule
-        Callable<Integer> callable = () -> ThreadLocalRandom.current().nextInt(num);
-        Future<Integer> future = executor.schedule(1, callable, 3, TimeUnit.SECONDS);
+        Callable<String> callable = () -> System.currentTimeMillis() + "--" + ThreadLocalRandom.current().nextInt(num);
+        Future<String> future = executor.schedule(1, callable, 3, TimeUnit.SECONDS);
         System.out.println(future.get());
+
+        Thread.sleep(2_980);
 
         executionContext.shutdown();
         executor.shutdown();

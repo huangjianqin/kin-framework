@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class FixOrderedEventLoopGroup<P extends OrderedEventLoop<P>> implements EventLoopGroup<P> {
     /** 默认scheduler线程数 */
-    private static final int DEFAULT_SCHEDULER_PARALLELISM = 5;
+    private static final int DEFAULT_SCHEDULER_PARALLELISM = 3;
     /** 线程池 */
     private final ExecutionContext executionContext;
     /** {@link OrderedEventLoop}缓存 */
