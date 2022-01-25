@@ -100,7 +100,7 @@ public class LevelWheelTimer implements Timer {
         Preconditions.checkArgument(wheelSize > 0, "wheelSize must be greater than 0");
         Preconditions.checkArgument(timeoutMs > 0, "timeoutMs must be greater than 0");
         executionContext = ExecutionContext.fix(parallelism + 1, executorName);
-        wheelTimer = new WheelTimer(tickMs, wheelSize, TimeUtils.nanoTimeMs(), taskCounter, queue);
+        wheelTimer = new WheelTimer(tickMs, wheelSize, TimeUtils.millisFromNanoTime(), taskCounter, queue);
         this.timeoutMs = timeoutMs;
     }
 
@@ -136,7 +136,7 @@ public class LevelWheelTimer implements Timer {
             //创建timeout
             LevelWheelTimeout timeout = new LevelWheelTimeout(this, task);
             //添加到时间轮
-            reAddEntryIfNotRunTask(new TimerTaskEntry(timeout, TimeUtils.nanoTimeMs() + unit.toMillis(delay)));
+            reAddEntryIfNotRunTask(new TimerTaskEntry(timeout, TimeUtils.millisFromNanoTime() + unit.toMillis(delay)));
             //尝试启动worker
             tryStartWorker();
             return timeout;
@@ -463,7 +463,7 @@ public class LevelWheelTimer implements Timer {
 
         @Override
         public long getDelay(TimeUnit unit) {
-            return unit.convert(Math.max(getExpiration() - TimeUtils.nanoTimeMs(), 0), TimeUnit.MILLISECONDS);
+            return unit.convert(Math.max(getExpiration() - TimeUtils.millisFromNanoTime(), 0), TimeUnit.MILLISECONDS);
         }
 
         @Override
