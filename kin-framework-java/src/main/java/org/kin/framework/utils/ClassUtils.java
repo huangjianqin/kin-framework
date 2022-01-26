@@ -843,9 +843,7 @@ public class ClassUtils {
         for (Class<?> paramType : paramTypes) {
             paramsJoiner.add(paramType.getTypeName());
         }
-        sb.append(paramsJoiner.toString());
-
-        sb.append("$");
+        sb.append(paramsJoiner);
         return sb.toString();
     }
 
