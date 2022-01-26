@@ -7,6 +7,7 @@ import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.classfile.ClassFile;
 import com.sun.tools.classfile.ConstantPoolException;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.Symbols;
 import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +103,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
         // 可执行jar包运行的结果里包含".jar"
         if (filePath.endsWith(JAR_SUFFIX)) {
             // 截取路径中的jar包名
-            filePath = filePath.substring(0, filePath.lastIndexOf("/") + 1);
+            filePath = filePath.substring(0, filePath.lastIndexOf(Symbols.DIVIDE) + 1);
         }
 
         File file = new File(filePath);
@@ -134,7 +135,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                     String className = null;
                     try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes))) {
                         ClassFile cf = ClassFile.read(dis);
-                        className = cf.getName().replaceAll("/", "\\.");
+                        className = cf.getName().replaceAll(Symbols.DIVIDE, "\\.");
                     } catch (IOException | ConstantPoolException e) {
                         ExceptionUtils.throwExt(e);
                     }

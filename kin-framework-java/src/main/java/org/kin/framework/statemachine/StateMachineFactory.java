@@ -2,6 +2,7 @@ package org.kin.framework.statemachine;
 
 import com.google.common.collect.Maps;
 import org.kin.framework.utils.StringUtils;
+import org.kin.framework.utils.Symbols;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -355,7 +356,7 @@ public class StateMachineFactory<OPERAND, STATE extends Enum<STATE>, EVENTTYPE e
                     sb.append(String.format("trigger event: '%s'", typeParameter[3].getName())).append(System.lineSeparator());
                     sb.append("to state: ");
                     for (STATE postState : transition.getPostStates()) {
-                        sb.append(postState).append(",");
+                        sb.append(postState).append(Symbols.COMMA);
                     }
                     sb.append(System.lineSeparator());
                 }

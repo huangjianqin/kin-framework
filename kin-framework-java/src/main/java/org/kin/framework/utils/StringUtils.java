@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
  * @date 2018/5/25
  */
 public class StringUtils {
-    private static final String DELIMITER = ",";
-    private static final String KV_DELIMITER = "=";
+    private static final String DELIMITER = Symbols.COMMA;
+    private static final String KV_DELIMITER = Symbols.EQUAL;
 
     /**
      * 字符串是否为空(null or 空串)

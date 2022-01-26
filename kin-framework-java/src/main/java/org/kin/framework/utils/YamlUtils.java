@@ -61,7 +61,7 @@ public class YamlUtils {
         for (String key : yaml.keySet()) {
             Object value = yaml.get(key);
 
-            String propertiesKey = StringUtils.isBlank(keyHead) ? key : keyHead + "." + key;
+            String propertiesKey = StringUtils.isBlank(keyHead) ? key : keyHead + Symbols.PERIOD + key;
             if (value instanceof Map) {
                 transfer2Properties((Map<String, Object>) value, properties, propertiesKey);
             } else {

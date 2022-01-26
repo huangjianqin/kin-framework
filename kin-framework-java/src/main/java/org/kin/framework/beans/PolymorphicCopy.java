@@ -3,6 +3,7 @@ package org.kin.framework.beans;
 import org.kin.framework.collection.CollectionFactories;
 import org.kin.framework.collection.MapFactories;
 import org.kin.framework.utils.ClassUtils;
+import org.kin.framework.utils.Symbols;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -107,6 +108,6 @@ abstract class PolymorphicCopy implements Copy<Object, Object> {
      */
     protected int cacheKey(Class<?> sourceClass, Class<?> targetClass) {
         //使用hashcode, 节省内存
-        return sourceClass.getName().concat("=>").concat(targetClass.getName()).hashCode();
+        return sourceClass.getName().concat(Symbols.DOLLAR).concat(targetClass.getName()).hashCode();
     }
 }

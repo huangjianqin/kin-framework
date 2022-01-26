@@ -31,7 +31,7 @@ public final class ClassScanUtils {
      * @param consumer 扫描到的class的处理逻辑
      */
     public static <T> void scan(Class<T> claxx, Consumer<Class<?>> consumer) {
-        scan("*", claxx, consumer);
+        scan(Symbols.STAR, claxx, consumer);
     }
 
     /**
@@ -70,7 +70,7 @@ public final class ClassScanUtils {
      * @param claxx 接口 | 注解 | 父类
      */
     public static <T> List<Class<?>> scan(Class<T> claxx) {
-        return scan("*", claxx);
+        return scan(Symbols.STAR, claxx);
     }
 
     /**
@@ -125,7 +125,7 @@ public final class ClassScanUtils {
      * @param consumer 扫描到的class的处理逻辑
      */
     public static <T> void scanAsync(Class<T> claxx, Consumer<Class<?>> consumer) {
-        scanAsync("*", claxx, consumer);
+        scanAsync(Symbols.STAR, claxx, consumer);
     }
 
     /**
@@ -154,7 +154,7 @@ public final class ClassScanUtils {
      * @param consumer 扫描到的class的处理逻辑
      */
     public static <T> void scanAsync(Class<T> claxx, Consumer<Class<?>> consumer, ClassGraph.FailureHandler failureHandler) {
-        scanAsync("*", claxx, consumer, failureHandler);
+        scanAsync(Symbols.STAR, claxx, consumer, failureHandler);
     }
 
     /**

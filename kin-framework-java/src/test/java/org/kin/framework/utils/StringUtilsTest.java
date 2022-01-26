@@ -27,7 +27,7 @@ public class StringUtilsTest {
         System.out.println(url.equals(url2));
 
         System.out.println("-------------------------------------------------------------");
-        System.out.println(StringUtils.mkString(";", "127.0.0.1:16888", "127.0.0.2:16888"));
+        System.out.println(StringUtils.mkString(Symbols.SEMICOLON, "127.0.0.1:16888", "127.0.0.2:16888"));
         System.out.println(StringUtils.mkString(Arrays.asList(1, 2, 3, 4)));
         System.out.println(StringUtils.mkString(Arrays.asList(1, 2, 3, 4).stream().collect(Collectors.toMap(item -> item, item -> item + 1)),
                 "->", k -> String.valueOf(k + 1), v -> String.valueOf(v + 1)));

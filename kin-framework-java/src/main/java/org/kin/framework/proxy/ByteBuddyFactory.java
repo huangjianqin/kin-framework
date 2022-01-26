@@ -10,6 +10,7 @@ import net.bytebuddy.implementation.MethodCall;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.Symbols;
 import org.kin.framework.utils.SysUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -46,7 +47,7 @@ public final class ByteBuddyFactory implements ProxyFactory {
         Class<?> serviceClass = service.getClass();
         Method target = definition.getMethod();
         String packageName = serviceClass.getPackage().getName();
-        String className = packageName.concat(".").concat(serviceClass.getSimpleName().concat("$").concat(target.getName())).concat("$ByteBuddyProxy");
+        String className = packageName.concat(Symbols.PERIOD).concat(serviceClass.getSimpleName().concat(Symbols.DOLLAR).concat(target.getName())).concat("$ByteBuddyProxy");
         ;
         try {
             //设置泛型ProxyInvoker接口
@@ -109,7 +110,7 @@ public final class ByteBuddyFactory implements ProxyFactory {
             throw new IllegalArgumentException(serviceClass.getCanonicalName() + " is not implement " + interfaceClass.getName());
         }
 
-        String proxyClassName = packageName.concat(".").concat(interfaceClass.getSimpleName()).concat("$ByteBuddyProxy");
+        String proxyClassName = packageName.concat(Symbols.PERIOD).concat(interfaceClass.getSimpleName()).concat("$ByteBuddyProxy");
         try {
             ByteBuddy byteBuddy = new ByteBuddy(ClassFileVersion.ofThisVm(ClassFileVersion.JAVA_V8));
             Class<?> supperClass;

@@ -196,7 +196,7 @@ public class ClassUtils {
     public static <T> Set<Class<T>> scanClasspathAndFindMatch(ClassLoader contextClassLoader, String packageName, Class<T> c, Matcher matcher, boolean isIncludeJar) {
         Set<Class<T>> subClasses = Sets.newLinkedHashSet();
 
-        String packageResource = packageName.replaceAll("\\.", "/");
+        String packageResource = packageName.replaceAll("\\.", Symbols.DIVIDE);
         try {
             Enumeration<URL> urls = contextClassLoader.getResources(packageResource);
             while (urls.hasMoreElements()) {
@@ -216,10 +216,10 @@ public class ClassUtils {
                                     int endIndex = origin.lastIndexOf(CLASS_SUFFIX);
                                     className = origin.substring(0, endIndex);
                                     //把/替换成.
-                                    className = className.replaceAll("/", ".");
+                                    className = className.replaceAll(Symbols.DIVIDE, Symbols.PERIOD);
                                 } else {
                                     //把/替换成.
-                                    origin = origin.replaceAll("/", ".");
+                                    origin = origin.replaceAll(Symbols.DIVIDE, Symbols.PERIOD);
                                     int startIndex = origin.lastIndexOf(packageName);
                                     int endIndex = origin.lastIndexOf(CLASS_SUFFIX);
                                     className = origin.substring(startIndex, endIndex);
@@ -227,7 +227,7 @@ public class ClassUtils {
 
                                 if (StringUtils.isNotBlank(className) &&
                                         !INNER_PATTERN.matcher(className).find() &&
-                                        (className.indexOf("$") <= 0)) {
+                                        (className.indexOf(Symbols.DOLLAR) <= 0)) {
                                     try {
                                         return (Class<T>) contextClassLoader.loadClass(className);
                                     } catch (ClassNotFoundException e) {
@@ -251,15 +251,15 @@ public class ClassUtils {
                             continue;
                         }
 
-                        if (entryName.endsWith("/") || !entryName.endsWith(CLASS_SUFFIX)) {
+                        if (entryName.endsWith(Symbols.DIVIDE) || !entryName.endsWith(CLASS_SUFFIX)) {
                             continue;
                         }
 
-                        if (INNER_PATTERN.matcher(entryName).find() || entryName.indexOf("$") > 0) {
+                        if (INNER_PATTERN.matcher(entryName).find() || entryName.indexOf(Symbols.DOLLAR) > 0) {
                             continue;
                         }
 
-                        String className = entryName.replaceAll("/", ".");
+                        String className = entryName.replaceAll(Symbols.DIVIDE, Symbols.PERIOD);
                         className = className.substring(0, entryName.lastIndexOf(".class"));
 
                         try {
@@ -837,15 +837,15 @@ public class ClassUtils {
 
         Class<?>[] paramTypes = method.getParameterTypes();
         if (CollectionUtils.isNonEmpty(paramTypes)) {
-            sb.append("$");
+            sb.append(Symbols.DOLLAR);
         }
-        StringJoiner paramsJoiner = new StringJoiner("$");
+        StringJoiner paramsJoiner = new StringJoiner(Symbols.DOLLAR);
         for (Class<?> paramType : paramTypes) {
             paramsJoiner.add(paramType.getTypeName());
         }
-        sb.append(paramsJoiner.toString());
+        sb.append(paramsJoiner);
 
-        sb.append("$");
+        sb.append(Symbols.DOLLAR);
         return sb.toString();
     }
 

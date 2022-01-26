@@ -2,6 +2,7 @@ package org.kin.framework.proxy;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
+import org.kin.framework.utils.Symbols;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +27,9 @@ public class TimeLogAdvice {
         //本质上还是在PointcutInstance作用域范围内, 不能访问PointcutInstance作用域外的非public字段方法
         Logger logger = LoggerFactory.getLogger(TimeLogAdvice.class);
         if (Objects.nonNull(throwable)) {
-            logger.error("方法('{}')执行异常, 耗时{}, ", method.getDeclaringClass().getCanonicalName().concat("#").concat(method.getName()), System.currentTimeMillis() - startTime, throwable);
+            logger.error("方法('{}')执行异常, 耗时{}, ", method.getDeclaringClass().getCanonicalName().concat(Symbols.POUND).concat(method.getName()), System.currentTimeMillis() - startTime, throwable);
         } else {
-            logger.info("方法('{}')执行正常, 结果{}, 耗时{}", method.getDeclaringClass().getCanonicalName().concat("#").concat(method.getName()), result, System.currentTimeMillis() - startTime);
+            logger.info("方法('{}')执行正常, 结果{}, 耗时{}", method.getDeclaringClass().getCanonicalName().concat(Symbols.POUND).concat(method.getName()), result, System.currentTimeMillis() - startTime);
         }
     }
 }

@@ -3,6 +3,7 @@ package org.kin.framework.log.log4j;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.PropertyConfigurator;
+import org.kin.framework.utils.Symbols;
 
 import java.util.Properties;
 
@@ -65,7 +66,7 @@ public class Log4jLoggerBinder {
     public Log4jLoggerBinder setRootCategory(Level level, String... appenders) {
         StringBuilder value = new StringBuilder(level.toString());
         for (String appender : appenders) {
-            value.append(",").append(appender);
+            value.append(Symbols.COMMA).append(appender);
         }
 
         properties.setProperty(ROOT_CATEGORY, value.toString());
@@ -75,7 +76,7 @@ public class Log4jLoggerBinder {
     public Log4jLoggerBinder setRootLogger(Level level, String... appenders) {
         StringBuilder value = new StringBuilder(level.toString());
         for (String appender : appenders) {
-            value.append(",").append(appender);
+            value.append(Symbols.COMMA).append(appender);
         }
 
         properties.setProperty(ROOT_LOGGER, value.toString());
@@ -85,7 +86,7 @@ public class Log4jLoggerBinder {
     public Log4jLoggerBinder setLogger(Level level, String logger, String... appenders) {
         StringBuilder value = new StringBuilder(level.toString());
         for (String appender : appenders) {
-            value.append(",").append(appender);
+            value.append(Symbols.COMMA).append(appender);
         }
 
         properties.setProperty(String.format(LOGGER, logger), value.toString());

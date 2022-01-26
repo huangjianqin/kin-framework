@@ -224,7 +224,7 @@ public class ExtensionLoader {
                 for (String extensionClassName : properties.stringPropertyNames()) {
                     String implementClassNames = properties.getProperty(extensionClassName);
                     if (StringUtils.isNotBlank(implementClassNames)) {
-                        HashSet<String> filtered = new HashSet<>(Arrays.asList(implementClassNames.split(",")));
+                        HashSet<String> filtered = new HashSet<>(Arrays.asList(implementClassNames.split(Symbols.COMMA)));
                         extension2ImplClasses.putAll(extensionClassName, filtered);
                     } else {
                         //只有key, 没有value, 则是没有配置class name或class key, 仅仅配置了implement class name
@@ -551,9 +551,9 @@ public class ExtensionLoader {
             //默认认为是简称
             availableNames.add(name.toLowerCase());
             //extension simple class name
-            availableNames.add(spiClass.getPackage().getName().concat(".").concat(name).toLowerCase());
+            availableNames.add(spiClass.getPackage().getName().concat(Symbols.PERIOD).concat(name).toLowerCase());
             //extension class name
-            availableNames.add(spiClass.getPackage().getName().concat(".").concat(name).concat(spiClass.getSimpleName()).toLowerCase());
+            availableNames.add(spiClass.getPackage().getName().concat(Symbols.PERIOD).concat(name).concat(spiClass.getSimpleName()).toLowerCase());
 
             for (String availableName : availableNames) {
                 ExtensionMetaData<E> defaultExtensionMetaData = name2ExtensionMetaData.get(availableName);

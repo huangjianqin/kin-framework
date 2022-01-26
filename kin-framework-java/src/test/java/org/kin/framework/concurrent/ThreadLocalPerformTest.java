@@ -1,6 +1,7 @@
 package org.kin.framework.concurrent;
 
 import com.google.common.base.Stopwatch;
+import org.kin.framework.utils.Symbols;
 import org.kin.framework.utils.SysUtils;
 import org.kin.framework.utils.TimeUtils;
 
@@ -50,7 +51,7 @@ public class ThreadLocalPerformTest {
         while (!ec1.isTerminated() || !ec2.isTerminated()) {
             Thread.sleep(3 * 1000);
             if (TimeUtils.timestamp() - now % 60 == 0) {
-                System.out.print(".");
+                System.out.print(Symbols.PERIOD);
             }
         }
         System.out.println();

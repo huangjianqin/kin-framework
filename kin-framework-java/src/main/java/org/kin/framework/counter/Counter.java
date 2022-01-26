@@ -1,5 +1,7 @@
 package org.kin.framework.counter;
 
+import org.kin.framework.utils.Symbols;
+
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -59,6 +61,6 @@ public class Counter implements Reporter {
     public String report() {
         //上报后会重置
         long count = this.count.sumThenReset();
-        return uuid.concat("-").concat(String.valueOf(count));
+        return uuid.concat(Symbols.HYPHEN).concat(String.valueOf(count));
     }
 }
