@@ -3,7 +3,6 @@ package org.kin.framework.proxy;
 import javassist.*;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.framework.utils.Symbols;
 
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -22,7 +21,7 @@ public final class JavassistFactory implements ProxyFactory {
     /** 代理类中, 实现类默认字段名 */
     public static final String DEFAULT_INSTANCE_FIELD_NAME = "inst";
     /** 代理类中, 方法参数命名, $1, $2, $3==, $0=this */
-    public static final String METHOD_DECLARATION_PARAM_NAME = Symbols.DOLLAR;
+    public static final String METHOD_DECLARATION_PARAM_NAME = "$";
 
     private static final ClassPool POOL = Javassists.getPool();
 
@@ -44,7 +43,7 @@ public final class JavassistFactory implements ProxyFactory {
         }
 
         StringBuilder oneLineCode = new StringBuilder();
-        oneLineCode.append(serviceFieldName.concat(Symbols.PERIOD).concat(target.getName()).concat("("));
+        oneLineCode.append(serviceFieldName.concat(".").concat(target.getName()).concat("("));
 
         Class<?>[] paramTypes = target.getParameterTypes();
         StringJoiner paramBody = new StringJoiner(", ");
@@ -57,7 +56,7 @@ public final class JavassistFactory implements ProxyFactory {
         oneLineCode.append(")");
 
         invokeCode.append(org.kin.framework.utils.ClassUtils.primitivePackage(returnType, oneLineCode.toString()));
-        invokeCode.append(Symbols.SEMICOLON);
+        invokeCode.append(";");
 
         return invokeCode.toString();
     }
@@ -151,7 +150,7 @@ public final class JavassistFactory implements ProxyFactory {
         } else {
             packageName = target.getDeclaringClass().getPackage().getName();
         }
-        String proxyCtClassName = packageName.concat(Symbols.PERIOD).concat(serviceClass.getSimpleName().concat(Symbols.DOLLAR).concat(ClassUtils.getUniqueName(target))).concat("$JavassistProxy");
+        String proxyCtClassName = packageName.concat(".").concat(serviceClass.getSimpleName().concat("$").concat(ClassUtils.getUniqueName(target))).concat("$JavassistProxy");
 
         Class<?> realProxyClass = null;
         try {
@@ -194,7 +193,7 @@ public final class JavassistFactory implements ProxyFactory {
         }
 
         StringBuilder oneLineCode = new StringBuilder();
-        oneLineCode.append(serviceFieldName.concat(Symbols.PERIOD).concat(target.getName()).concat("("));
+        oneLineCode.append(serviceFieldName.concat(".").concat(target.getName()).concat("("));
 
         Class<?>[] paramTypes = target.getParameterTypes();
         StringJoiner paramBody = new StringJoiner(", ");
@@ -216,7 +215,7 @@ public final class JavassistFactory implements ProxyFactory {
         } else {
             methodBody.append(ClassUtils.primitivePackage(target.getReturnType(), oneLineCode.toString()));
         }
-        methodBody.append(Symbols.SEMICOLON);
+        methodBody.append(";");
 
         return methodBody.toString();
     }
@@ -328,7 +327,7 @@ public final class JavassistFactory implements ProxyFactory {
         Class<?> serviceClass = service.getClass();
         Class<?> interfaceClass = definition.getInterfaceClass();
         String packageName = interfaceClass.getPackage().getName();
-        String proxyCtClassName = packageName.concat(Symbols.PERIOD).concat(interfaceClass.getSimpleName()).concat("$JavassistProxy");
+        String proxyCtClassName = packageName.concat(".").concat(interfaceClass.getSimpleName()).concat("$JavassistProxy");
 
         if (!interfaceClass.isAssignableFrom(serviceClass)) {
             throw new IllegalArgumentException(serviceClass.getCanonicalName() + " is not implement " + interfaceClass.getName());

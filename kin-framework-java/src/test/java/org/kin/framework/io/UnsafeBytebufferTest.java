@@ -1,7 +1,5 @@
 package org.kin.framework.io;
 
-import org.kin.framework.utils.Symbols;
-
 import java.nio.ByteBuffer;
 
 /**
@@ -21,7 +19,7 @@ public class UnsafeBytebufferTest {
 
         UnsafeByteBufferInput input = new UnsafeByteBufferInput(byteBuffer);
         for (int i = 0; i < 64; i++) {
-            System.out.print(input.readByte() + Symbols.COMMA);
+            System.out.print(input.readByte() + ",");
         }
         System.out.println("");
     }

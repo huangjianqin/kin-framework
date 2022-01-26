@@ -170,7 +170,7 @@ public class NetUtils {
         if (ip == null) {
             return null;
         }
-        return ip.concat(Symbols.COLON).concat(String.valueOf(port));
+        return ip.concat(":").concat(String.valueOf(port));
     }
 
     public static String getIpPort2(int port) {
@@ -184,7 +184,7 @@ public class NetUtils {
     }
 
     public static Object[] parseIpPort(String address) {
-        String[] array = address.split(Symbols.COLON);
+        String[] array = address.split(":");
 
         String host = array[0];
         int port = Integer.parseInt(array[1]);
@@ -294,7 +294,7 @@ public class NetUtils {
      * hash ip
      */
     public static long ipHashCode(String ip) {
-        String[] splits = ip.split(Symbols.DIVIDE);
+        String[] splits = ip.split("/");
         if (splits.length > 1) {
             ip = splits[splits.length - 1];
         }

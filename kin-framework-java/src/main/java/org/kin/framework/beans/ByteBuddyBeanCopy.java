@@ -10,7 +10,6 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.framework.utils.Symbols;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
@@ -76,7 +75,7 @@ public final class ByteBuddyBeanCopy extends PolymorphicCopy {
      * 获取{@link Copy}实现类类名
      */
     private String copyClassName(Class<?> sourceClass, Class<?> targetClass) {
-        return sourceClass.getName().concat(Symbols.DOLLAR).concat(targetClass.getName()).concat("$").concat(Copy.class.getSimpleName());
+        return sourceClass.getName().concat("$").concat(targetClass.getName()).concat("$").concat(Copy.class.getSimpleName());
     }
 
     /**
