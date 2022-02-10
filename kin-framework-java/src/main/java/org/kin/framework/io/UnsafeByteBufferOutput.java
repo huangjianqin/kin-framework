@@ -46,7 +46,7 @@ public final class UnsafeByteBufferOutput extends ByteBufferOutput {
      */
     private void ensureWritableBytes(int size) {
         ByteBuffer oldByteBuffer = byteBuffer;
-        byteBuffer = ByteBufferUtils.ensureMinWritableBytes(oldByteBuffer, size);
+        byteBuffer = ByteBufferUtils.ensureWritableBytes(oldByteBuffer, size);
         if (oldByteBuffer != byteBuffer) {
             //扩容
             updateBufferAddress();

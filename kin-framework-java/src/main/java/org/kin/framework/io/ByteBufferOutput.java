@@ -26,7 +26,7 @@ public class ByteBufferOutput implements Output {
 
     @Override
     public void writeBytes(byte[] value, int startIdx, int len) {
-        byteBuffer = ByteBufferUtils.ensureMinWritableBytes(byteBuffer, len);
+        byteBuffer = ByteBufferUtils.ensureWritableBytes(byteBuffer, len);
         byteBuffer.put(value, startIdx, len);
     }
 

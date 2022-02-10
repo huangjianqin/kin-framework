@@ -1,5 +1,7 @@
 package org.kin.framework.io;
 
+import org.kin.framework.utils.Maths;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -109,34 +111,21 @@ public final class ByteBufferUtils {
     }
 
     /**
-     * 保证指定{@link ByteBuffer}实例拥有指定可写字节数{@code writableBytes}, 不足则会扩容
+     * 保证指定{@link ByteBuffer}实例拥有指定可写字节数{@code minWritableBytes}, 不足则会扩容, 新容量将是向上取最接近的2的n次方, 故最终可写字节数可能>={@code minWritableBytes}
      */
-    public static ByteBuffer ensureWritableBytes(ByteBuffer source, int writableBytes) {
-        //当前可写最大字节数
-        int nowWritableBytes = getWritableBytes(source);
-        if (nowWritableBytes >= writableBytes) {
-            return source;
-        }
-
-        //当前容量
-        int capacity = source.capacity();
-        //新容量
-        int newCapacity = capacity + writableBytes - nowWritableBytes;
-        //扩容
-        return expandCapacity(source, newCapacity);
-    }
-
-    /**
-     * 保证指定{@link ByteBuffer}实例至少拥有指定可写字节数{@code minWritableBytes}, 不足则会将可写字节数扩大至{@link ByteBuffer#position()}+{@code minWritableBytes}
-     */
-    public static ByteBuffer ensureMinWritableBytes(ByteBuffer source, int minWritableBytes) {
+    public static ByteBuffer ensureWritableBytes(ByteBuffer source, int minWritableBytes) {
         //当前可写最大字节数
         int nowWritableBytes = getWritableBytes(source);
         if (nowWritableBytes >= minWritableBytes) {
             return source;
         }
 
-        return ensureWritableBytes(source, source.position() + minWritableBytes);
+        //当前容量
+        int capacity = source.capacity();
+        //新容量
+        int newCapacity = Maths.round2Power2(capacity + minWritableBytes - nowWritableBytes);
+        //扩容
+        return expandCapacity(source, newCapacity);
     }
 
     /**
