@@ -33,7 +33,7 @@ public final class ScalableByteBufferOutputStream extends OutputStream {
     public void write(int b) throws IOException {
         if (!sink.hasRemaining()) {
             //double
-            sink = ByteBufferUtils.ensureWritableBytes(sink, sink.capacity() * 2);
+            sink = ByteBufferUtils.expandCapacity(sink, sink.capacity() * 2);
         }
 
         sink.put((byte) b);
@@ -56,7 +56,7 @@ public final class ScalableByteBufferOutputStream extends OutputStream {
                 //double
                 newCapacity = doubleCapacity;
             }
-            sink = ByteBufferUtils.ensureCapacity(sink, newCapacity);
+            sink = ByteBufferUtils.expandCapacity(sink, newCapacity);
         }
 
         sink.put(bytes, offset, length);

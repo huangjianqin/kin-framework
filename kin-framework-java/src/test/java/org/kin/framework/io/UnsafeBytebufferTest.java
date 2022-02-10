@@ -17,6 +17,10 @@ public class UnsafeBytebufferTest {
         byteBuffer = output.getByteBuffer();
         ByteBufferUtils.toReadMode(byteBuffer);
 
+        System.out.println("bytebuffer position:" + byteBuffer.position());
+        System.out.println("bytebuffer limit:" + byteBuffer.limit());
+        System.out.println("bytebuffer capacity:" + byteBuffer.capacity());
+
         UnsafeByteBufferInput input = new UnsafeByteBufferInput(byteBuffer);
         for (int i = 0; i < 64; i++) {
             System.out.print(input.readByte() + ",");

@@ -120,29 +120,44 @@ public final class ByteBufferUtils {
 
         //当前容量
         int capacity = source.capacity();
-        int position = source.position();
         //新容量
         int newCapacity = capacity + writableBytes - nowWritableBytes;
+        //扩容
+        return expandCapacity(source, newCapacity);
+    }
+
+    /**
+     * 保证指定{@link ByteBuffer}实例至少拥有指定可写字节数{@code minWritableBytes}, 不足则会将可写字节数扩大至{@link ByteBuffer#position()}+{@code minWritableBytes}
+     */
+    public static ByteBuffer ensureMinWritableBytes(ByteBuffer source, int minWritableBytes) {
+        //当前可写最大字节数
+        int nowWritableBytes = getWritableBytes(source);
+        if (nowWritableBytes >= minWritableBytes) {
+            return source;
+        }
+
+        return ensureWritableBytes(source, source.position() + minWritableBytes);
+    }
+
+    /**
+     * 将{@link ByteBuffer} {@code source}扩容至{@code newCapacity}
+     *
+     * @param newCapacity 新容量
+     */
+    public static ByteBuffer expandCapacity(ByteBuffer source, int newCapacity) {
+        //当前容量
+        int capacity = source.capacity();
+        int position = source.position();
         //create new
         ByteBuffer ret = source.isDirect() ? ByteBuffer.allocateDirect(newCapacity) :
                 ByteBuffer.allocate(newCapacity);
-
-        //移动source指针
+        //source移动指针, 准备好复制
         source.position(0).limit(capacity);
-        //复制内容, 并修正ret指针
+        //复制source内容到ret, 并修正position
         ret.position(0);
         ret.put(source);
         ret.position(position);
         ret.order(source.order());
         return ret;
-    }
-
-    /**
-     * 将{@link ByteBuffer} {@code source}扩容至{@code capacity}
-     *
-     * @param capacity 新容量
-     */
-    public static ByteBuffer ensureCapacity(ByteBuffer source, int capacity) {
-        return ensureWritableBytes(source, capacity - source.capacity() + getWritableBytes(source));
     }
 }

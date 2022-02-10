@@ -17,13 +17,16 @@ public class ByteBufferOutput implements Output {
 
     @Override
     public void writeByte(int value) {
-        byteBuffer = ByteBufferUtils.ensureWritableBytes(this.byteBuffer, 1);
+        if (!byteBuffer.hasRemaining()) {
+            //double
+            byteBuffer = ByteBufferUtils.expandCapacity(byteBuffer, byteBuffer.capacity() * 2);
+        }
         byteBuffer.put((byte) value);
     }
 
     @Override
     public void writeBytes(byte[] value, int startIdx, int len) {
-        byteBuffer = ByteBufferUtils.ensureWritableBytes(this.byteBuffer, len);
+        byteBuffer = ByteBufferUtils.ensureMinWritableBytes(byteBuffer, len);
         byteBuffer.put(value, startIdx, len);
     }
 
