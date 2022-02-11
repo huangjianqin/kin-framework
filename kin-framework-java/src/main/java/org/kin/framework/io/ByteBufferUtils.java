@@ -1,7 +1,5 @@
 package org.kin.framework.io;
 
-import org.kin.framework.utils.Maths;
-
 import java.nio.ByteBuffer;
 
 /**
@@ -11,6 +9,9 @@ import java.nio.ByteBuffer;
 public final class ByteBufferUtils {
     private ByteBufferUtils() {
     }
+
+    /** {@link ByteBuffer}扩容阈值, 4MB */
+    private static final int CAPACITY_THRESHOLD = 4 * 1024 * 1024;
 
     /**
      * 切换为读模式
@@ -123,7 +124,25 @@ public final class ByteBufferUtils {
         //当前容量
         int capacity = source.capacity();
         //新容量
-        int newCapacity = Maths.round2Power2(capacity + minWritableBytes - nowWritableBytes);
+        int minNewCapacity = capacity + minWritableBytes - nowWritableBytes;
+
+        if (minNewCapacity == CAPACITY_THRESHOLD) {
+            return expandCapacity(source, minNewCapacity);
+        }
+
+        //如果新容量大于4MB, 则不双倍递增, 则是仅仅 If over threshold, do not double but just increase by threshold.
+        if (minNewCapacity > CAPACITY_THRESHOLD) {
+            //round to 4MB
+            minNewCapacity = (minNewCapacity / CAPACITY_THRESHOLD + 1) * CAPACITY_THRESHOLD;
+            return expandCapacity(source, minNewCapacity);
+        }
+
+        //如果新容量小于4MB. 从64B开始, 双倍递增
+        int newCapacity = 64;
+        while (newCapacity < minNewCapacity) {
+            newCapacity <<= 1;
+        }
+
         //扩容
         return expandCapacity(source, newCapacity);
     }
