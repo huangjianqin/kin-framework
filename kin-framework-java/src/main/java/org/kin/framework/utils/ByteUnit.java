@@ -1,6 +1,7 @@
 package org.kin.framework.utils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * @author huangjianqin
@@ -10,102 +11,171 @@ public enum ByteUnit {
     /**
      * b
      */
-    BIT {
+    BIT("bit") {
         @Override
-        public int pow() {
+        int power() {
             return 0;
         }
     },
     /**
      * B
      */
-    BYTE {
+    BYTE("B") {
         @Override
-        public int pow() {
-            return BIT.pow() + 3;
+        int power() {
+            return BIT.power() + 3;
         }
     },
     /**
      * KB
      */
-    KILOBYTE {
+    KILOBYTE("KB") {
         @Override
-        public int pow() {
-            return BYTE.pow() + 10;
+        int power() {
+            return BYTE.power() + 10;
         }
     },
     /**
      * MB
      */
-    MEGABYTE {
+    MEGABYTE("MB") {
         @Override
-        public int pow() {
-            return BYTE.pow() + 20;
+        int power() {
+            return BYTE.power() + 20;
         }
     },
     /**
      * GB
      */
-    GIGABYTE {
+    GIGABYTE("GB") {
         @Override
-        public int pow() {
-            return BYTE.pow() + 30;
+        int power() {
+            return BYTE.power() + 30;
         }
     },
     /**
      * TB
      */
-    TERABYTE {
+    TERABYTE("TB") {
         @Override
-        public int pow() {
-            return BYTE.pow() + 40;
+        int power() {
+            return BYTE.power() + 40;
         }
     },
     /**
      * PB
      */
-    PETABYTE {
+    PETABYTE("PB") {
         @Override
-        public int pow() {
-            return BYTE.pow() + 50;
+        int power() {
+            return BYTE.power() + 50;
         }
     },
 
     ;
+    private static final ByteUnit[] VALUES = values();
 
-    public abstract int pow();
+    /** 单位缩写 */
+    private final String abbreviation;
 
-    public String convert(long source, ByteUnit sourceUnit) {
+    ByteUnit(String abbreviation) {
+        this.abbreviation = abbreviation;
+    }
+
+    /**
+     * 返回2的n次方
+     */
+    abstract int power();
+
+    public String getAbbreviation() {
+        return abbreviation;
+    }
+
+    /**
+     * 单位转换格式
+     *
+     * @param source     字节数
+     * @param sourceUnit 原单位
+     * @return 新单位所表示的字节数
+     */
+    public double convert(long source, ByteUnit sourceUnit) {
         return convert(source, sourceUnit, this);
     }
 
-    public String convert(double source, ByteUnit sourceUnit) {
-        return convert(source, sourceUnit, this);
-    }
-
-    public String convert(BigDecimal source, ByteUnit sourceUnit) {
+    /**
+     * 单位转换格式
+     *
+     * @param source     字节数
+     * @param sourceUnit 原单位
+     * @return 新单位所表示的字节数
+     */
+    public BigDecimal convert(BigDecimal source, ByteUnit sourceUnit) {
         return convert(source, sourceUnit, this);
     }
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public static String convert(long source, ByteUnit sourceUnit, ByteUnit targetUnit) {
-        return convert(BigDecimal.valueOf(source), sourceUnit, targetUnit);
+    public static double convert(long source, ByteUnit sourceUnit, ByteUnit targetUnit) {
+        return convert(BigDecimal.valueOf(source), sourceUnit, targetUnit).doubleValue();
     }
 
-    public static String convert(double source, ByteUnit sourceUnit, ByteUnit targetUnit) {
-        return convert(BigDecimal.valueOf(source), sourceUnit, targetUnit);
+    public static double byte2Other(long source, ByteUnit targetUnit) {
+        return convert(BigDecimal.valueOf(source), BYTE, targetUnit).doubleValue();
     }
 
-    public static String convert(BigDecimal source, ByteUnit sourceUnit, ByteUnit targetUnit) {
-        int dis = targetUnit.pow() - sourceUnit.pow();
+    public static BigDecimal byte2Other(BigDecimal source, ByteUnit targetUnit) {
+        return convert(source, BYTE, targetUnit);
+    }
+
+    public static BigDecimal convert(BigDecimal source, ByteUnit sourceUnit, ByteUnit targetUnit) {
+        int dis = targetUnit.power() - sourceUnit.power();
         BigDecimal base = BigDecimal.valueOf(2);
         if (dis >= 0) {
             base = base.pow(dis);
-            return source.divide(base, BigDecimal.ROUND_DOWN).toString();
+            //保留两位小数
+            return source.divide(base, 2, RoundingMode.DOWN);
         } else {
             base = base.pow(-dis);
-            return source.multiply(base).toString();
+            return source.multiply(base);
         }
+    }
+
+    /**
+     * 字节显示格式化
+     */
+    public static String format(long source) {
+        return format(source, BYTE);
+    }
+
+    /**
+     * 字节显示格式化
+     */
+    public static String format(long source, ByteUnit sourceUnit) {
+        BigDecimal decimal = BigDecimal.valueOf(source);
+        ByteUnit formatUnit = sourceUnit;
+        //查找原单位index
+        int idx = -1;
+        for (int i = 0; i < VALUES.length; i++) {
+            if (sourceUnit == VALUES[i]) {
+                idx = i;
+                break;
+            }
+        }
+
+        BigDecimal base = BigDecimal.valueOf(2);
+        //找到一个单位转换为显示>0, 并返回对应的字符串
+        for (int i = idx + 1; i < VALUES.length; i++) {
+            ByteUnit unit = VALUES[i];
+            int power = unit.power() - formatUnit.power();
+            //保留两位小数
+            BigDecimal nextDecimal = decimal.divide(base.pow(power), 2, RoundingMode.DOWN);
+            if (nextDecimal.longValue() <= 0) {
+                return decimal.doubleValue() + formatUnit.getAbbreviation();
+            }
+            decimal = nextDecimal;
+            formatUnit = unit;
+        }
+
+        return source + formatUnit.getAbbreviation();
     }
 }
