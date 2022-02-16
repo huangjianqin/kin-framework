@@ -232,6 +232,7 @@
                 <version>${qdox.version}</version>
             </dependency>
 
+            <!-- java文件解析 -->
             <dependency>
                 <groupId>com.github.javaparser</groupId>
                 <artifactId>javaparser-symbol-solver-core</artifactId>
