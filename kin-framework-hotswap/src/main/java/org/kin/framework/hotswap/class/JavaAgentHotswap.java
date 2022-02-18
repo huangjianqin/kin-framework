@@ -5,7 +5,6 @@ import com.sun.tools.attach.AgentLoadException;
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.classfile.ClassFile;
-import com.sun.tools.classfile.ConstantPoolException;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
@@ -27,12 +26,10 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * 单例模式
- *
  * @author huangjianqin
  * @date 2018/2/3
  */
-public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
+public final class JavaAgentHotswap implements org.kin.framework.hotswap.agent.JavaAgentHotswapMBean {
     private static final Logger log = LoggerFactory.getLogger(JavaAgentHotswap.class);
     /** jar包后缀 */
     private static final String JAR_SUFFIX = ".jar";
@@ -45,8 +42,8 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
      * java agent jar路径
      */
     public static final String AGENT_PATH;
-    private volatile boolean isInit;
-    private final Map<String, ClassFileInfo> filePath2ClassFileInfo = new HashMap<>();
+    /** 热加载过的class文件信息 */
+    private final Map<String, org.kin.framework.hotswap.agent.ClassFileInfo> filePath2ClassFileInfo = new HashMap<>();
 
     static {
         CLASSPATH = SysUtils.getSysProperty("kin.hotswap.classpath", "hotswap/classes");
@@ -56,6 +53,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
         log.info("java agent:jarPath:{}", AGENT_PATH);
     }
 
+    /** 单例 */
     private static JavaAgentHotswap INSTANCE;
 
     public static JavaAgentHotswap instance() {
@@ -71,10 +69,13 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
     }
 
     private JavaAgentHotswap() {
-        init();
+        initMBean();
     }
 
-    private void init() {
+    /**
+     * 初始化JMX监控
+     */
+    private void initMBean() {
         try {
             MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
             ObjectName name = new ObjectName(this + ":type=JavaAgentHotswap");
@@ -112,56 +113,67 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
     }
 
     /**
-     * 热更逻辑
+     * 热更新逻辑
      */
     public synchronized boolean hotswap(List<Path> changedPaths) {
+        //开始时间
         long startTime = System.currentTimeMillis();
-        log.info("开始热更类...");
+        log.info("hotswap start...");
         try {
-            Map<String, ClassFileInfo> newFilePath2ClassFileInfo = new HashMap<>(changedPaths.size());
+            Map<String, org.kin.framework.hotswap.agent.ClassFileInfo> newFilePath2ClassFileInfo = new HashMap<>(changedPaths.size());
             List<ClassDefinition> classDefList = new ArrayList<>(changedPaths.size());
             for (Path changedPath : changedPaths) {
+                //class文件路径
                 String classFilePath = changedPath.toString();
-                ClassFileInfo old = filePath2ClassFileInfo.get(classFilePath);
-                //过滤没有变化的文件(通过文件修改时间)
-                long classFileLastModifiedTime = Files.getLastModifiedTime(changedPath).toMillis();
-                if (old == null || old.getLastModifyTime() != classFileLastModifiedTime) {
-                    log.info("开始检查文件'{}'", classFilePath);
-                    boolean checkClassName = false;
+                try {
+                    log.info("file '{}' checking...", classFilePath);
+                    //原class文件信息
+                    org.kin.framework.hotswap.agent.ClassFileInfo old = filePath2ClassFileInfo.get(classFilePath);
+                    //过滤没有变化的文件(通过文件修改时间)
+                    long classFileLastModifiedTime = Files.getLastModifiedTime(changedPath).toMillis();
+                    if (old != null && old.getLastModifyTime() == classFileLastModifiedTime) {
+                        log.info("file '{}' is ignored, because it's file modified time is not changed", classFilePath);
+                        continue;
+                    }
+
                     byte[] bytes = Files.readAllBytes(changedPath);
 
                     //从class文件字节码中读取className
-                    String className = null;
-                    try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes))) {
-                        ClassFile cf = ClassFile.read(dis);
-                        className = cf.getName().replaceAll("/", "\\.");
-                    } catch (IOException | ConstantPoolException e) {
-                        ExceptionUtils.throwExt(e);
-                    }
+                    DataInputStream dis = new DataInputStream(new ByteArrayInputStream(bytes));
+                    ClassFile cf = ClassFile.read(dis);
+                    String className = cf.getName().replaceAll("/", "\\.");
+                    dis.close();
 
-                    ClassFileInfo cfi = new ClassFileInfo(classFilePath, className, bytes, classFileLastModifiedTime);
+                    //封装成class文件信息
+                    org.kin.framework.hotswap.agent.ClassFileInfo cfi = new org.kin.framework.hotswap.agent.ClassFileInfo(classFilePath, className, bytes, classFileLastModifiedTime);
                     //检查类名
-                    if (old == null || old.getClassName().equals(cfi.getClassName())) {
-                        log.info("文件'{}' 类'{}'检查成功", classFilePath, className);
-                        checkClassName = true;
-                        newFilePath2ClassFileInfo.put(classFilePath, cfi);
+                    if (old != null && !old.getClassName().equals(cfi.getClassName())) {
+                        log.info("file '{}' is ignored, because it's class name is not the same with the origin", classFilePath);
+                        continue;
                     }
 
-                    if (checkClassName) {
-                        Class<?> c = Class.forName(className);
-                        ClassDefinition classDefinition = new ClassDefinition(c, bytes);
-
-                        classDefList.add(classDefinition);
-                    } else {
-                        throw new IllegalStateException("因为文件 '" + classFilePath + "' 解析失败, 故热更失败");
+                    //检查内容
+                    if (old != null && !old.getMd5().equals(cfi.getMd5())) {
+                        log.info("file '{}' is ignored, because it's content is not changed", classFilePath);
+                        continue;
                     }
+
+                    log.info("file '{}' pass check, it's class name is {}", classFilePath, className);
+                    newFilePath2ClassFileInfo.put(classFilePath, cfi);
+
+                    Class<?> c = Class.forName(className);
+                    ClassDefinition classDefinition = new ClassDefinition(c, bytes);
+
+                    classDefList.add(classDefinition);
+                } catch (Exception e) {
+                    throw new IllegalStateException(String.format("file '%s' parse error, hotswap fail", classFilePath), e);
                 }
             }
 
             // 当前进程pid
             String name = ManagementFactory.getRuntimeMXBean().getName();
             String pid = name.split("@")[0];
-            log.debug("当前进程pid：{}", pid);
+            log.debug("now pid is '{}'", pid);
 
             // 虚拟机加载
             VirtualMachine vm = null;
@@ -188,7 +200,7 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                 });
                 return true;
             } catch (AttachNotSupportedException | AgentLoadException | AgentInitializationException | IOException e) {
-                log.error("热更失败", e);
+                log.error("hotswap fail, due to", e);
             } finally {
                 if (vm != null) {
                     try {
@@ -198,18 +210,19 @@ public final class JavaAgentHotswap implements JavaAgentHotswapMBean {
                     }
                 }
             }
-        } catch (IOException | UnmodifiableClassException | ClassNotFoundException e) {
-            log.error("热更失败", e);
+        } catch (UnmodifiableClassException | ClassNotFoundException e) {
+            log.error("hotswap fail, due to", e);
         } finally {
+            //结束时间
             long endTime = System.currentTimeMillis();
-            log.info("...热更类结束, 耗时 {} ms", endTime - startTime);
+            log.info("...hotswap finish, cost {} ms", endTime - startTime);
         }
 
         return false;
     }
 
     @Override
-    public List<ClassFileInfo> getClassFileInfo() {
+    public List<org.kin.framework.hotswap.agent.ClassFileInfo> getClassFileInfo() {
         return new ArrayList<>(filePath2ClassFileInfo.values());
     }
 }

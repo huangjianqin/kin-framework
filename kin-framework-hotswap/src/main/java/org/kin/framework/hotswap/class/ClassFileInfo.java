@@ -11,9 +11,13 @@ import java.security.NoSuchAlgorithmException;
  * @date 2019/3/1
  */
 public class ClassFileInfo {
+    /** class文件路径 */
     private final String filePath;
+    /** class name, 从class文件解析出来 */
     private final String className;
+    /** class文件修改时间 */
     private final long lastModifyTime;
+    /** class文件内容md5编码 */
     private final String md5;
 
     public ClassFileInfo(String filePath, String className, byte[] bytes, long lastModifyTime) {

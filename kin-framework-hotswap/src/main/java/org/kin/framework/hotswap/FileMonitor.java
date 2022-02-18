@@ -18,7 +18,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 文件监听器   单例模式
+ * 文件监听器
+ * 单例模式
  * 利用nio 新api监听文件变换
  * 该api底层本质上是监听了操作系统的文件系统触发的文件更改事件
  * <p>
@@ -39,31 +40,22 @@ public class FileMonitor extends Thread implements Closeable {
     /** 热更新listeners */
     private final List<HotswapListener> listeners = ExtensionLoader.common().getExtensions(HotswapListener.class);
 
-    public FileMonitor() {
-        this("hotSwapFileMonitor", null);
+    /** 单例 */
+    private static final FileMonitor DEFAULT = new FileMonitor();
+
+    public static FileMonitor common() {
+        return DEFAULT;
     }
 
-    public FileMonitor(String name) {
-        this(name, null);
-    }
-
-    public FileMonitor(ExecutionContext executionContext) {
-        this("hotSwapFileMonitor", executionContext);
-    }
-
-    public FileMonitor(String name, ExecutionContext executionContext) {
-        super(name);
-        this.executionContext = executionContext;
+    private FileMonitor() {
+        super("fileMonitor");
     }
 
     private void init() throws IOException {
         watchService = FileSystems.getDefault().newWatchService();
 
         monitorItems = new ConcurrentHashMap<>();
-        if (executionContext == null) {
-            //默认设置
-            this.executionContext = ExecutionContext.elastic(0, SysUtils.CPU_NUM, "file-monitor");
-        }
+        executionContext = ExecutionContext.elastic(1, SysUtils.CPU_NUM, "fileReload");
 
         //监听热更class存储目录
         Path classesPath = Paths.get(JavaAgentHotswap.CLASSPATH);
@@ -98,7 +90,7 @@ public class FileMonitor extends Thread implements Closeable {
                     int hashKey = itemName.hashCode();
                     //真实路径
                     Path childPath = Paths.get(parentPath.toString(), itemName);
-                    log.debug("'{}' changed", childPath);
+                    log.info("'{}' changed", childPath);
                     if (!Files.isDirectory(childPath)) {
                         //非文件夹
                         if (itemName.endsWith(ClassUtils.CLASS_SUFFIX)) {
@@ -115,9 +107,9 @@ public class FileMonitor extends Thread implements Closeable {
                                             fileReloadable.reload(is);
                                         }
                                         long endTime = System.currentTimeMillis();
-                                        log.info("hotswap file '{}' finished, time cost {} ms", childPath, endTime - startTime);
+                                        log.info("file reload '{}' finished, time cost {} ms", childPath, endTime - startTime);
                                     } catch (IOException e) {
-                                        log.error("", e);
+                                        log.error(String.format("file '%s' reload encounter error", childPath), e);
                                     }
                                 });
                             }
@@ -127,7 +119,7 @@ public class FileMonitor extends Thread implements Closeable {
                 //重置状态，让key等待事件
                 key.reset();
             } catch (InterruptedException e) {
-                //do nothing
+                Thread.currentThread().interrupt();
             }
 
             if (changedClasses.size() > 0) {
@@ -151,39 +143,52 @@ public class FileMonitor extends Thread implements Closeable {
                 });
             }
         }
-        log.info("file monitor end");
+        log.info("file monitor shutdown");
     }
 
+    /**
+     * shutdown
+     */
     public void shutdown() {
-        if (!isStopped) {
-            isStopped = true;
-            try {
-                watchService.close();
-            } catch (IOException e) {
-                ExceptionUtils.throwExt(e);
-            }
-            executionContext.shutdown();
-            //help GC
-            monitorItems = null;
-
-            //中断监控线程, 让本线程退出
-            interrupt();
+        if (isStopped) {
+            return;
         }
+
+        isStopped = true;
+        try {
+            watchService.close();
+        } catch (IOException e) {
+            ExceptionUtils.throwExt(e);
+        }
+        executionContext.shutdown();
+        //help GC
+        monitorItems = null;
+
+        //中断监控线程, 让本线程退出
+        interrupt();
     }
 
-    //--------------------------------------------------API---------------------------------------------------------------
+    /**
+     * 状态检查
+     */
     private void checkStatus() {
         if (isStopped) {
-            throw new IllegalStateException("file monitor has shutdowned");
+            throw new IllegalStateException("file monitor has been shutdown");
         }
     }
 
+    /**
+     * 监听文件变化
+     */
     public void monitorFile(String pathStr, AbstractFileReloadable fileReloadable) {
         checkStatus();
         Path path = Paths.get(pathStr);
         monitorFile(path, fileReloadable);
     }
 
+    /**
+     * 监听文件变化
+     */
     public void monitorFile(Path path, AbstractFileReloadable fileReloadable) {
         checkStatus();
         if (!Files.isDirectory(path)) {
@@ -193,7 +198,7 @@ public class FileMonitor extends Thread implements Closeable {
                 ExceptionUtils.throwExt(e);
             }
         } else {
-            throw new IllegalStateException("monitor file dir error");
+            throw new IllegalStateException("monitor file is a directory");
         }
     }
 
@@ -201,7 +206,6 @@ public class FileMonitor extends Thread implements Closeable {
      * 监听文件变化
      */
     private void monitorFile0(Path file, String itemName, AbstractFileReloadable fileReloadable) throws IOException {
-
         int key = itemName.hashCode();
         AbstractFileReloadable old = monitorItems.putIfAbsent(key, fileReloadable);
         if (Objects.nonNull(old)) {

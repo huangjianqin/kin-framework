@@ -12,5 +12,5 @@ public interface JavaAgentHotswapMBean {
      *
      * @return 返回类信息
      */
-    List<ClassFileInfo> getClassFileInfo();
+    List<org.kin.framework.hotswap.agent.ClassFileInfo> getClassFileInfo();
 }

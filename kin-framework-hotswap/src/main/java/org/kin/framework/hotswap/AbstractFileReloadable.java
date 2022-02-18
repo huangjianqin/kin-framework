@@ -11,13 +11,10 @@ import java.io.InputStream;
 public abstract class AbstractFileReloadable implements Reloadable {
     /** 文件路径 */
     private final String filePath;
-    /** 文件监听实例 */
-    private final FileMonitor fileMonitor;
 
-    public AbstractFileReloadable(String filePath, FileMonitor fileMonitor) {
+    public AbstractFileReloadable(String filePath) {
         this.filePath = filePath;
-        this.fileMonitor = fileMonitor;
-        this.fileMonitor.monitorFile(filePath, this);
+        FileMonitor.common().monitorFile(filePath, this);
     }
 
     public String getFilePath() {

@@ -1,12 +1,14 @@
 /**
  * Created by huangjianqin on 2018/2/2.
  */
-package org.kin.framework.hotswap.agent;
 
 /*
-     在MANNIFEST.MF设置
-     Agent-Class: JavaDynamicAgent.jar
-     Can-Redefine-Classes: true
+     打包的时候记得要设置MANIFEST.MF
+     <manifestEntries>
+        <Agent-Class>org.kin.framework.hotswap.agent.JavaDynamicAgent</Premain-Class>
+        <Can-Redefine-Classes>true</Can-Redefine-Classes>
+        <Can-Retransform-Classes>true</Can-Retransform-Classes>
+     </manifestEntries>
 
      实现原理是：
      1. 通过pid获得虚拟机对象
@@ -23,8 +25,9 @@ package org.kin.framework.hotswap.agent;
 
     不适用的情况:
         1. 实例方法签名修改(增删方法, 参数数量或类型改变)
-        2. java compiler会编译生成实例放的lambda
+        2. java compiler会编译生成实例方法的lambda
 
     适用情况(特殊):
         1. import原本没有的类, 并实例化
+        2. 修改static方法
  */
