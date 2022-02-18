@@ -41,14 +41,14 @@ public class FileMonitor extends Thread implements Closeable {
     private final List<HotswapListener> listeners = ExtensionLoader.common().getExtensions(HotswapListener.class);
 
     /** 单例 */
-    private static final FileMonitor DEFAULT = new FileMonitor();
+    private static final FileMonitor INSTANCE = new FileMonitor();
 
     static {
-        DEFAULT.start();
+        INSTANCE.start();
     }
 
-    public static FileMonitor common() {
-        return DEFAULT;
+    public static FileMonitor instance() {
+        return INSTANCE;
     }
 
     private FileMonitor() {

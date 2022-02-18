@@ -14,7 +14,7 @@ public abstract class AbstractFileReloadable implements Reloadable {
 
     public AbstractFileReloadable(String filePath) {
         this.filePath = filePath;
-        FileMonitor.common().monitorFile(filePath, this);
+        FileMonitor.instance().monitorFile(filePath, this);
     }
 
     public String getFilePath() {

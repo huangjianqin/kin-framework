@@ -27,7 +27,7 @@ public final class JvmCloseCleaner {
     /** 最高优先级 */
     public static final int MAX_PRIORITY = 10;
 
-    private static final JvmCloseCleaner DEFAULT = new JvmCloseCleaner();
+    private static final JvmCloseCleaner INSTANCE = new JvmCloseCleaner();
 
     private final List<DelegatingOrderedCloseable> orderedCloseableList = new CopyOnWriteArrayList<>();
 
@@ -72,8 +72,8 @@ public final class JvmCloseCleaner {
         this.orderedCloseableList.addAll(orderedCloseableList);
     }
 
-    public static JvmCloseCleaner common() {
-        return DEFAULT;
+    public static JvmCloseCleaner instance() {
+        return INSTANCE;
     }
 
     //---------------------------------------------------------------------------------------------------

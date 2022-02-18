@@ -18,7 +18,7 @@ public class Keeper {
     private static final Set<RunnableKeeperAction> RUNNABLE_KEEPER_ACTIONS = new CopyOnWriteArraySet<>();
 
     static {
-        JvmCloseCleaner.common().add(() -> {
+        JvmCloseCleaner.instance().add(() -> {
             EXECUTION_CONTEXT.shutdown();
             for (RunnableKeeperAction runnableKeeperAction : RUNNABLE_KEEPER_ACTIONS) {
                 runnableKeeperAction.stop();
