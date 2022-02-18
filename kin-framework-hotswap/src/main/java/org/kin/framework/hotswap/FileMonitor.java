@@ -43,6 +43,10 @@ public class FileMonitor extends Thread implements Closeable {
     /** 单例 */
     private static final FileMonitor DEFAULT = new FileMonitor();
 
+    static {
+        DEFAULT.start();
+    }
+
     public static FileMonitor common() {
         return DEFAULT;
     }
@@ -91,28 +95,38 @@ public class FileMonitor extends Thread implements Closeable {
                     //真实路径
                     Path childPath = Paths.get(parentPath.toString(), itemName);
                     log.info("'{}' changed", childPath);
-                    if (!Files.isDirectory(childPath)) {
-                        //非文件夹
-                        if (itemName.endsWith(ClassUtils.CLASS_SUFFIX)) {
-                            //处理类热更新
-                            changedClasses.add(childPath);
-                        } else {
-                            //处理文件热更新
-                            AbstractFileReloadable fileReloadable = monitorItems.get(hashKey);
-                            if (fileReloadable != null) {
-                                executionContext.execute(() -> {
-                                    try {
-                                        long startTime = System.currentTimeMillis();
-                                        try (InputStream is = new FileInputStream(childPath.toFile())) {
-                                            fileReloadable.reload(is);
-                                        }
-                                        long endTime = System.currentTimeMillis();
-                                        log.info("file reload '{}' finished, time cost {} ms", childPath, endTime - startTime);
-                                    } catch (IOException e) {
-                                        log.error(String.format("file '%s' reload encounter error", childPath), e);
+
+                    try {
+                        if (Files.isHidden(childPath) ||
+                                !Files.isReadable(childPath) ||
+                                Files.isDirectory(childPath)) {
+                            //过滤隐藏文件, 不可读文件和目录
+                            return;
+                        }
+                    } catch (IOException e) {
+                        ExceptionUtils.throwExt(e);
+                    }
+
+                    //非文件夹
+                    if (itemName.endsWith(ClassUtils.CLASS_SUFFIX)) {
+                        //处理类热更新
+                        changedClasses.add(childPath);
+                    } else {
+                        //处理文件热更新
+                        AbstractFileReloadable fileReloadable = monitorItems.get(hashKey);
+                        if (fileReloadable != null) {
+                            executionContext.execute(() -> {
+                                try {
+                                    long startTime = System.currentTimeMillis();
+                                    try (InputStream is = new FileInputStream(childPath.toFile())) {
+                                        fileReloadable.reload(is);
                                     }
-                                });
-                            }
+                                    long endTime = System.currentTimeMillis();
+                                    log.info("file reload '{}' finished, time cost {} ms", childPath, endTime - startTime);
+                                } catch (IOException e) {
+                                    log.error(String.format("file '%s' reload encounter error", childPath), e);
+                                }
+                            });
                         }
                     }
                 });
@@ -155,6 +169,8 @@ public class FileMonitor extends Thread implements Closeable {
         }
 
         isStopped = true;
+        //中断监控线程, 让本线程退出
+        interrupt();
         try {
             watchService.close();
         } catch (IOException e) {
@@ -163,9 +179,6 @@ public class FileMonitor extends Thread implements Closeable {
         executionContext.shutdown();
         //help GC
         monitorItems = null;
-
-        //中断监控线程, 让本线程退出
-        interrupt();
     }
 
     /**

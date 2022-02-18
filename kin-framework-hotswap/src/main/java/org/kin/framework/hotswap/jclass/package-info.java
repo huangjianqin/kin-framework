@@ -19,7 +19,7 @@
 
      因此，整个流程就是：
      1. 项目中引用 jdk/lib/tools.jar,否则无法使用VirtualMachine类
-     2. 项目中引用 JavaDynamicAgent.jar,它提供了agentmain接口
+     2. 项目中引用 kin-java-agent.jar,它提供了agentmain接口
      3. 代码实现动态增加JDK代理
 
 

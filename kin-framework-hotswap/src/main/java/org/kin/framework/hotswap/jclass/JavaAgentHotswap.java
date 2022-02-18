@@ -49,7 +49,7 @@ public final class JavaAgentHotswap implements org.kin.framework.hotswap.agent.J
         CLASSPATH = SysUtils.getSysProperty("kin.hotswap.classpath", "hotswap/classes");
         log.info("java agent:classpath:{}", CLASSPATH);
 
-        AGENT_PATH = SysUtils.getSysProperty("kin.hotswap.agent.dir", "hotswap/").concat("KinJavaAgent.jar");
+        AGENT_PATH = SysUtils.getSysProperty("kin.hotswap.agent.dir", "hotswap/").concat("kin-java-agent.jar");
         log.info("java agent:jarPath:{}", AGENT_PATH);
     }
 
