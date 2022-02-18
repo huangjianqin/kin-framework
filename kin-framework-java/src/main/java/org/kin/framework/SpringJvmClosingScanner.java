@@ -16,6 +16,6 @@ public class SpringJvmClosingScanner implements ApplicationContextAware {
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         Map<String, Closeable> beanMap = applicationContext.getBeansOfType(Closeable.class);
-        JvmCloseCleaner.DEFAULT().addAll(beanMap.values());
+        JvmCloseCleaner.common().addAll(beanMap.values());
     }
 }

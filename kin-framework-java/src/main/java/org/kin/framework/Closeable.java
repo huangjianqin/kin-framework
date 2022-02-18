@@ -14,6 +14,6 @@ public interface Closeable {
      * 默认方法, 绑定jvm shutdownhook close服务并释放资源
      */
     default void monitorJVMClose() {
-        JvmCloseCleaner.DEFAULT().add(this);
+        JvmCloseCleaner.common().add(this);
     }
 }

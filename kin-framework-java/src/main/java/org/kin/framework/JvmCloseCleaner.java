@@ -17,27 +17,29 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2019/2/28
  */
-public class JvmCloseCleaner {
+public final class JvmCloseCleaner {
     private final Logger log = LoggerFactory.getLogger(JvmCloseCleaner.class);
-    private List<CloseableWrapper> closeableWrappers = new CopyOnWriteArrayList<>();
-    private static final JvmCloseCleaner DEFAULT = new JvmCloseCleaner();
 
+    /** 最低优先级 */
     public static final int MIN_PRIORITY = 1;
+    /** 一般优先级 */
     public static final int MIDDLE_PRIORITY = 5;
+    /** 最高优先级 */
     public static final int MAX_PRIORITY = 10;
 
-    static {
-        DEFAULT.waitingClose();
-    }
+    private static final JvmCloseCleaner DEFAULT = new JvmCloseCleaner();
+
+    private final List<DelegatingOrderedCloseable> orderedCloseableList = new CopyOnWriteArrayList<>();
 
     private JvmCloseCleaner() {
+        waitingClose();
     }
 
     private void waitingClose() {
         //等spring容器完全初始化后执行
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            this.closeableWrappers.sort(Comparator.comparingInt(CloseableWrapper::getNPriority));
-            for (CloseableWrapper wrapper : this.closeableWrappers) {
+            this.orderedCloseableList.sort(Comparator.comparingInt(DelegatingOrderedCloseable::getNPriority));
+            for (DelegatingOrderedCloseable wrapper : this.orderedCloseableList) {
                 wrapper.close();
             }
         }));
@@ -66,36 +68,44 @@ public class JvmCloseCleaner {
 
     public void addAll(int priority, Collection<Closeable> closeables) {
         Preconditions.checkArgument(0 < priority && priority <= 10, "priority must be range from 1 to 10");
-        List<CloseableWrapper> wrappers = closeables.stream().map(c -> new CloseableWrapper(c, priority)).collect(Collectors.toList());
-        this.closeableWrappers.addAll(wrappers);
+        List<DelegatingOrderedCloseable> orderedCloseableList = closeables.stream().map(c -> new DelegatingOrderedCloseable(c, priority)).collect(Collectors.toList());
+        this.orderedCloseableList.addAll(orderedCloseableList);
     }
 
-    public static JvmCloseCleaner DEFAULT() {
+    public static JvmCloseCleaner common() {
         return DEFAULT;
     }
 
     //---------------------------------------------------------------------------------------------------
 
-    private class CloseableWrapper implements Closeable {
-        private Closeable closeable;
-        private int priority;
+    /**
+     * 支持带优先级的且委托其他{@link Closeable}执行close逻辑的{@link Closeable}实例
+     */
+    private class DelegatingOrderedCloseable implements Closeable {
+        /** 真正的{@link Closeable}实例 */
+        private final Closeable closeable;
+        /** 优先级 */
+        private final int priority;
 
-        public CloseableWrapper(Closeable closeable, int priority) {
+        public DelegatingOrderedCloseable(Closeable closeable, int priority) {
             this.closeable = closeable;
             this.priority = priority;
         }
 
+        /**
+         * 获取取反后的优先级
+         */
         public int getNPriority() {
             return -priority;
         }
 
         @Override
         public void close() {
-            log.info("{} closing...", closeable.getClass().getSimpleName());
+            log.info("{} closing...", closeable.getClass().getName());
             long startTime = System.currentTimeMillis();
             closeable.close();
             long endTime = System.currentTimeMillis();
-            log.info("{} close cost {} ms", closeable.getClass().getSimpleName(), endTime - startTime);
+            log.info("{} close cost {} ms", closeable.getClass().getName(), endTime - startTime);
         }
 
         //getter
