@@ -27,8 +27,8 @@ import java.util.*;
  * @author huangjianqin
  * @date 2018/2/3
  */
-public final class JavaAgentHotswap implements org.kin.framework.hotswap.agent.JavaAgentHotswapMBean {
-    private static final Logger log = LoggerFactory.getLogger(JavaAgentHotswap.class);
+public final class ClassHotswap implements org.kin.framework.hotswap.agent.ClassHotswapMBean {
+    private static final Logger log = LoggerFactory.getLogger(ClassHotswap.class);
     /** jar包后缀 */
     private static final String JAR_SUFFIX = ".jar";
     /**
@@ -52,21 +52,21 @@ public final class JavaAgentHotswap implements org.kin.framework.hotswap.agent.J
     }
 
     /** 单例 */
-    private static JavaAgentHotswap INSTANCE;
+    private static ClassHotswap INSTANCE;
 
-    public static JavaAgentHotswap instance() {
+    public static ClassHotswap instance() {
         if (Objects.isNull(INSTANCE)) {
-            synchronized (JavaAgentHotswap.class) {
+            synchronized (ClassHotswap.class) {
                 if (Objects.nonNull(INSTANCE)) {
                     return INSTANCE;
                 }
-                INSTANCE = new JavaAgentHotswap();
+                INSTANCE = new ClassHotswap();
             }
         }
         return INSTANCE;
     }
 
-    private JavaAgentHotswap() {
+    private ClassHotswap() {
         initMBean();
     }
 

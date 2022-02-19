@@ -2,7 +2,7 @@ package org.kin.framework.hotswap;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
-import org.kin.framework.hotswap.agent.JavaAgentHotswap;
+import org.kin.framework.hotswap.agent.ClassHotswap;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.ExtensionLoader;
@@ -62,7 +62,7 @@ public class FileMonitor extends Thread implements Closeable {
         executionContext = ExecutionContext.elastic(1, SysUtils.CPU_NUM, "fileReload");
 
         //监听热更class存储目录
-        Path classesPath = Paths.get(JavaAgentHotswap.CLASSPATH);
+        Path classesPath = Paths.get(ClassHotswap.CLASSPATH);
         classesPath.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
 
         monitorJVMClose();
@@ -139,7 +139,7 @@ public class FileMonitor extends Thread implements Closeable {
             if (changedClasses.size() > 0) {
                 //类热更新
                 executionContext.execute(() -> {
-                    if (JavaAgentHotswap.instance().hotswap(changedClasses)) {
+                    if (ClassHotswap.instance().hotswap(changedClasses)) {
                         //延迟5s执行
                         new Timer().schedule(new TimerTask() {
                             @Override

@@ -6,7 +6,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2019/3/1
  */
-public interface JavaAgentHotswapMBean {
+public interface ClassHotswapMBean {
     /**
      * 用于JMX监控
      *
