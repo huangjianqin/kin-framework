@@ -106,7 +106,7 @@
             <!--                        <manifestEntries>-->
             <!--                            &lt;!&ndash; manifest内自定义的key value&ndash;&gt;-->
             <!--                            <Agent-Class>-->
-            <!--                                org.kin.framework.hotswap.agent.JavaDynamicAgent-->
+            <!--                                org.kin.agent.JavaDynamicAgent-->
             <!--                            </Agent-Class>-->
             <!--                            <Can-Redefine-Classes>true</Can-Redefine-Classes>-->
             <!--                            <Can-Retransform-Classes>true</Can-Retransform-Classes>-->
@@ -141,7 +141,7 @@
             <!--                        </manifest>-->
             <!--                        <manifestEntries>-->
             <!--                            <Agent-Class>-->
-            <!--                                org.kin.framework.hotswap.agent.JavaDynamicAgent-->
+            <!--                                org.kin.agent.JavaDynamicAgent-->
             <!--                            </Agent-Class>-->
             <!--                            <Can-Redefine-Classes>true</Can-Redefine-Classes>-->
             <!--                            <Can-Retransform-Classes>true</Can-Retransform-Classes>-->
@@ -186,7 +186,7 @@
             <!--                        </manifest>-->
             <!--                        <manifestEntries>-->
             <!--                            <Agent-Class>-->
-            <!--                                org.kin.framework.hotswap.agent.JavaDynamicAgent-->
+            <!--                                org.kin.agent.JavaDynamicAgent-->
             <!--                            </Agent-Class>-->
             <!--                            <Can-Redefine-Classes>true</Can-Redefine-Classes>-->
             <!--                            <Can-Retransform-Classes>true</Can-Retransform-Classes>-->

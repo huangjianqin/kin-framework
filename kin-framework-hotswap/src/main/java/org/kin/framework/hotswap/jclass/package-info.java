@@ -5,7 +5,7 @@
 /*
      打包的时候记得要设置MANIFEST.MF
      <manifestEntries>
-        <Agent-Class>org.kin.framework.hotswap.agent.JavaDynamicAgent</Premain-Class>
+        <Agent-Class>org.kin.agent.JavaDynamicAgent</Premain-Class>
         <Can-Redefine-Classes>true</Can-Redefine-Classes>
         <Can-Retransform-Classes>true</Can-Retransform-Classes>
      </manifestEntries>

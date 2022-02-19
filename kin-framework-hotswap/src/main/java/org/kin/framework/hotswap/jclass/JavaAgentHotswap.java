@@ -5,6 +5,7 @@ import com.sun.tools.attach.AgentLoadException;
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.classfile.ClassFile;
+import org.kin.agent.JavaDynamicAgent;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
@@ -13,13 +14,10 @@ import org.slf4j.LoggerFactory;
 import javax.management.*;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.management.ManagementFactory;
-import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -83,33 +81,6 @@ public final class JavaAgentHotswap implements org.kin.framework.hotswap.agent.J
         } catch (MalformedObjectNameException | NotCompliantMBeanException | InstanceAlreadyExistsException | MBeanRegistrationException e) {
             ExceptionUtils.throwExt(e);
         }
-    }
-
-    /**
-     * 获取jar包路径
-     */
-    private static String getAgentPath() {
-        //JavaDynamicAgent是jar文件内容,也就是说jar必须包含JavaDynamicAgent
-        URL url = JavaDynamicAgent.class.getProtectionDomain().getCodeSource().getLocation();
-        String filePath;
-        try {
-            // 转化为utf-8编码
-            filePath = URLDecoder.decode(url.getPath(), "utf-8");
-        } catch (Exception e) {
-            ExceptionUtils.throwExt(e);
-            //理论上不会到这里
-            throw new IllegalStateException("encounter unknown error");
-        }
-        // 可执行jar包运行的结果里包含".jar"
-        if (filePath.endsWith(JAR_SUFFIX)) {
-            // 截取路径中的jar包名
-            filePath = filePath.substring(0, filePath.lastIndexOf("/") + 1);
-        }
-
-        File file = new File(filePath);
-
-        filePath = file.getAbsolutePath();
-        return filePath;
     }
 
     /**
