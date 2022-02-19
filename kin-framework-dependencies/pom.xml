@@ -41,6 +41,7 @@
         <jsr305.version>3.0.2</jsr305.version>
         <disruptor.version>3.3.7</disruptor.version>
         <jctools.version>3.3.0</jctools.version>
+        <commons-io.version>1.3.2</commons-io.version>
     </properties>
 
     <dependencyManagement>
@@ -272,6 +273,12 @@
                 <groupId>org.jctools</groupId>
                 <artifactId>jctools-core</artifactId>
                 <version>${jctools.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
