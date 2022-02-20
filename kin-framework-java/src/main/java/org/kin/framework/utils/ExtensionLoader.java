@@ -121,6 +121,7 @@ public class ExtensionLoader {
     public synchronized void load(String fileName) {
         Enumeration<URL> props;
         try {
+            //获取其余jar中的目标目录resource
             if (classLoader == null) {
                 props = ClassLoader.getSystemResources(fileName);
             } else {
@@ -142,7 +143,7 @@ public class ExtensionLoader {
                             return FileVisitResult.CONTINUE;
                         }
                         //解析文件
-                        //对于非file schema, 无法用path转换成File来获取文件名, 故通过通用抽象Path来获取
+                        //对于非file schema, 无法用path转换成File, 故通过抽象Path来获取
                         parse(extension2ImplClasses, path);
                         return FileVisitResult.CONTINUE;
                     }
@@ -152,6 +153,7 @@ public class ExtensionLoader {
                 FileSystem otherFs = null;
                 if (!scheme.equalsIgnoreCase("file")) {
                     //非file schema, 则需要手动加载其file system, 否则解析不出path, 然后就无法遍历目录了
+                    //比如jar, 想读取其他jar内的内容, 也不能通过new File读取
                     Map<String, String> env = new HashMap<>();
                     env.put("create", "true");
                     otherFs = FileSystems.newFileSystem(uri, env);
