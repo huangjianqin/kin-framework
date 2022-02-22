@@ -1,4 +1,4 @@
-package org.kin.framework.hotswap.agent;
+package org.kin.framework.hotswap.jclass;
 
 import java.util.List;
 
@@ -12,5 +12,5 @@ public interface ClassHotswapMBean {
      *
      * @return 返回类信息
      */
-    List<org.kin.framework.hotswap.agent.ClassFileInfo> getClassFileInfo();
+    List<ClassFileInfo> getClassFileInfo();
 }

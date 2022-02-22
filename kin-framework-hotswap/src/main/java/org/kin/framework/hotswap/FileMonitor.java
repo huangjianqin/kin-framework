@@ -2,8 +2,7 @@ package org.kin.framework.hotswap;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.concurrent.ExecutionContext;
-import org.kin.framework.hotswap.agent.ClassHotswap;
-import org.kin.framework.utils.ClassUtils;
+import org.kin.framework.hotswap.jclass.ClassHotswap;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.ExtensionLoader;
 import org.kin.framework.utils.SysUtils;
@@ -93,13 +92,14 @@ public class FileMonitor extends Thread implements Closeable {
                     String itemName = event.context().toString();
                     int hashKey = itemName.hashCode();
                     //真实路径
-                    Path childPath = Paths.get(parentPath.toString(), itemName);
-                    log.info("'{}' changed", childPath);
+                    String parentPathStr = parentPath.toString();
+                    Path path = Paths.get(parentPathStr, itemName);
+                    log.info("'{}' changed", path);
 
                     try {
-                        if (Files.isHidden(childPath) ||
-                                !Files.isReadable(childPath) ||
-                                Files.isDirectory(childPath)) {
+                        if (Files.isHidden(path) ||
+                                !Files.isReadable(path) ||
+                                Files.isDirectory(path)) {
                             //过滤隐藏文件, 不可读文件和目录
                             return;
                         }
@@ -107,10 +107,9 @@ public class FileMonitor extends Thread implements Closeable {
                         ExceptionUtils.throwExt(e);
                     }
 
-                    //非文件夹
-                    if (itemName.endsWith(ClassUtils.CLASS_SUFFIX)) {
-                        //处理类热更新
-                        changedClasses.add(childPath);
+                    if (parentPathStr.contains(ClassHotswap.CLASSPATH)) {
+                        //在热更类目录下, 都认为是待热更class文件或者含class文件的zip文件
+                        changedClasses.add(path);
                     } else {
                         //处理文件热更新
                         AbstractFileReloadable fileReloadable = monitorItems.get(hashKey);
@@ -118,13 +117,13 @@ public class FileMonitor extends Thread implements Closeable {
                             executionContext.execute(() -> {
                                 try {
                                     long startTime = System.currentTimeMillis();
-                                    try (InputStream is = new FileInputStream(childPath.toFile())) {
+                                    try (InputStream is = new FileInputStream(path.toFile())) {
                                         fileReloadable.reload(is);
                                     }
                                     long endTime = System.currentTimeMillis();
-                                    log.info("file reload '{}' finished, time cost {} ms", childPath, endTime - startTime);
+                                    log.info("file reload '{}' finished, time cost {} ms", path, endTime - startTime);
                                 } catch (IOException e) {
-                                    log.error(String.format("file '%s' reload encounter error", childPath), e);
+                                    log.error(String.format("file '%s' reload encounter error", path), e);
                                 }
                             });
                         }

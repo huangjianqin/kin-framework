@@ -1,4 +1,4 @@
-package org.kin.framework.hotswap.agent;
+package org.kin.framework.hotswap.jclass;
 
 import org.kin.framework.utils.ExceptionUtils;
 

@@ -1,3 +1,4 @@
+package org.kin.framework.hotswap.jclass;
 /**
  * Created by huangjianqin on 2018/2/2.
  */
