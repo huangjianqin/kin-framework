@@ -1,8 +1,5 @@
 package org.kin.framework.hotswap.jclass;
 
-import com.sun.tools.attach.AgentInitializationException;
-import com.sun.tools.attach.AgentLoadException;
-import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.classfile.ClassFile;
 import com.sun.tools.classfile.ConstantPoolException;
@@ -20,7 +17,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassDefinition;
-import java.lang.instrument.UnmodifiableClassException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -109,47 +105,52 @@ public final class ClassHotswap implements ClassHotswapMBean {
             //待热更新的class定义
             List<ClassDefinition> classDefinitions = new ArrayList<>(changedPaths.size());
             ByteArrayOutputStream baos = null;
-            for (Path changedPath : changedPaths) {
-                if (Files.isDirectory(changedPath) ||
-                        Files.isHidden(changedPath) ||
-                        !Files.isReadable(changedPath)) {
-                    //过滤目录, 隐藏文件, 不可读文件
-                    continue;
-                }
-
-                String changedFileName = changedPath.getFileName().toString();
-                if (!changedFileName.endsWith(CLASS_SUFFIX) && !changedFileName.endsWith(ZIP_SUFFIX)) {
-                    //只允许.class和.zip
-                    continue;
-                }
-
-                //文件路径
-                String filePath = changedPath.toString();
-                long fileLastModifiedMs = Files.getLastModifiedTime(changedPath).toMillis();
-                try {
-                    if (changedFileName.endsWith(ZIP_SUFFIX)) {
-                        if (Objects.isNull(baos)) {
-                            //default 64k
-                            baos = new ByteArrayOutputStream(65536);
-                        } else {
-                            //复用前先reset
-                            baos.reset();
+            try {
+                for (Path changedPath : changedPaths) {
+                    //文件路径
+                    String filePath = changedPath.toString();
+                    try {
+                        if (Files.isDirectory(changedPath) ||
+                                Files.isHidden(changedPath) ||
+                                !Files.isReadable(changedPath)) {
+                            //过滤目录, 隐藏文件, 不可读文件
+                            continue;
                         }
-                        parseZip(changedPath, baos, name2ClassFileInfo, classDefinitions, newClassNameAndBytesList);
-                    } else {
-                        byte[] bytes = Files.readAllBytes(changedPath);
-                        parseClassFile(filePath, fileLastModifiedMs, bytes, name2ClassFileInfo, classDefinitions, newClassNameAndBytesList);
-                    }
-                } catch (Exception e) {
-                    throw new IllegalStateException(String.format("file '%s' parse error, hotswap fail", filePath), e);
-                } finally {
-                    if (Objects.nonNull(baos)) {
-                        baos.close();
+
+                        String changedFileName = changedPath.getFileName().toString();
+                        if (!changedFileName.endsWith(CLASS_SUFFIX) && !changedFileName.endsWith(ZIP_SUFFIX)) {
+                            //只允许.class和.zip
+                            continue;
+                        }
+
+                        long fileLastModifiedMs = Files.getLastModifiedTime(changedPath).toMillis();
+
+                        if (changedFileName.endsWith(ZIP_SUFFIX)) {
+                            if (Objects.isNull(baos)) {
+                                //default 64k
+                                baos = new ByteArrayOutputStream(65536);
+                            } else {
+                                //复用前先reset
+                                baos.reset();
+                            }
+                            parseZip(changedPath, baos, name2ClassFileInfo, classDefinitions, newClassNameAndBytesList);
+                        } else {
+                            byte[] bytes = Files.readAllBytes(changedPath);
+                            parseClassFile(filePath, fileLastModifiedMs, bytes, name2ClassFileInfo, classDefinitions, newClassNameAndBytesList);
+                        }
+                    } catch (Exception e) {
+                        log.error(String.format("file '%s' parse error, hotswap fail", filePath), e);
+                        return false;
                     }
                 }
-            }
-            if (Objects.nonNull(baos)) {
-                baos.close();
+            } finally {
+                if (Objects.nonNull(baos)) {
+                    try {
+                        baos.close();
+                    } catch (IOException e) {
+                        log.error("", e);
+                    }
+                }
             }
 
             // 当前进程pid
@@ -193,7 +194,7 @@ public final class ClassHotswap implements ClassHotswapMBean {
                     }
                 });
                 return true;
-            } catch (AttachNotSupportedException | AgentLoadException | AgentInitializationException | IOException e) {
+            } catch (Exception e) {
                 log.error("hotswap fail, due to", e);
             } finally {
                 if (vm != null) {
@@ -204,8 +205,6 @@ public final class ClassHotswap implements ClassHotswapMBean {
                     }
                 }
             }
-        } catch (UnmodifiableClassException | ClassNotFoundException | IOException e) {
-            log.error("hotswap fail, due to", e);
         } finally {
             //结束时间
             long endTime = System.currentTimeMillis();
@@ -269,6 +268,7 @@ public final class ClassHotswap implements ClassHotswapMBean {
             c = Class.forName(className);
             classDefinitions.add(new ClassDefinition(c, bytes));
         } catch (ClassNotFoundException e) {
+            //load不到class, 则是新类
             newClassNameAndBytesList.add(new Tuple<>(className, bytes));
         }
     }
@@ -287,12 +287,14 @@ public final class ClassHotswap implements ClassHotswapMBean {
     private void parseZip(Path changedPath, ByteArrayOutputStream baos,
                           Map<String, ClassFileInfo> name2ClassFileInfo,
                           List<ClassDefinition> classDefinitions,
-                          List<Tuple<String, byte[]>> newClassNameAndBytesList) throws IOException, ConstantPoolException, ClassNotFoundException {
+                          List<Tuple<String, byte[]>> newClassNameAndBytesList) throws IOException, ConstantPoolException {
         String separator = changedPath.getFileSystem().getSeparator();
         //模拟uri的路径格式
         String zipFilePath = changedPath + "!" + separator;
+
         try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(changedPath))) {
             ZipEntry entry;
+            byte[] buffer = null;
             while (Objects.nonNull((entry = zis.getNextEntry()))) {
                 if (entry.isDirectory()) {
                     //过滤目录
@@ -306,6 +308,10 @@ public final class ClassHotswap implements ClassHotswapMBean {
                     zis.closeEntry();
                     continue;
                 }
+                if (Objects.isNull(buffer)) {
+                    //lazy init
+                    buffer = new byte[2048];
+                }
 
                 String classFilePath = zipFilePath + fileName;
                 //获取文件修改时间
@@ -313,7 +319,6 @@ public final class ClassHotswap implements ClassHotswapMBean {
 
                 //读取class文件内容
                 int len;
-                byte[] buffer = new byte[1024];
                 while ((len = zis.read(buffer)) > 0) {
                     baos.write(buffer, 0, len);
                 }
@@ -333,21 +338,15 @@ public final class ClassHotswap implements ClassHotswapMBean {
      *
      * @param newClassNameAndBytesList 新类和其class文件内容
      */
-    private void loadNewClass(List<Tuple<String, byte[]>> newClassNameAndBytesList) {
+    private void loadNewClass(List<Tuple<String, byte[]>> newClassNameAndBytesList) throws NoSuchMethodException {
         if (CollectionUtils.isEmpty(newClassNameAndBytesList)) {
             return;
         }
 
         //获取context class loader
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        Method defineClassCaller;
-        try {
-            //基于反射, 获取class loader定义class方法
-            defineClassCaller = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
-        } catch (NoSuchMethodException e) {
-            log.error("can not find 'ClassLoader#defineClass(String,byte[],int,int)' method through reflection", e);
-            return;
-        }
+        //基于反射, 获取class loader定义class方法
+        Method defineClassCaller = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
         if (!defineClassCaller.isAccessible()) {
             defineClassCaller.setAccessible(true);
         }
@@ -359,8 +358,7 @@ public final class ClassHotswap implements ClassHotswapMBean {
                 //load new class
                 defineClassCaller.invoke(classLoader, className, bytes, 0, bytes.length);
             } catch (Exception e) {
-                log.error(String.format("load new class '%s' error", className), e);
-                return;
+                throw new ClassHotswapException(String.format("load new class '%s' error", className), e);
             }
         }
     }
