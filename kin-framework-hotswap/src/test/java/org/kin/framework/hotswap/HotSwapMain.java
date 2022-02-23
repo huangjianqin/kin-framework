@@ -18,6 +18,14 @@ public class HotSwapMain {
                     test = new Test();
                     System.out.println("new obj");
                 }
+                try {
+                    Class<?> class2Class = Class.forName("org.kin.framework.hotswap.NewClass2");
+                    System.out.println(class2Class.newInstance());
+                } catch (ClassNotFoundException e) {
+                    System.err.println("找不到NewClass2");
+                } catch (InstantiationException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

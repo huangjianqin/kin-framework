@@ -7,12 +7,13 @@ import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.classfile.ClassFile;
 import com.sun.tools.classfile.ConstantPoolException;
 import org.kin.agent.JavaDynamicAgent;
+import org.kin.framework.collection.Tuple;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.SysUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import javax.management.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -100,8 +102,11 @@ public final class ClassHotswap implements ClassHotswapMBean {
         long startTime = System.currentTimeMillis();
         log.info("hotswap start...");
         try {
-            Map<String, ClassFileInfo> newName2ClassFileInfo = new HashMap<>(changedPaths.size());
-            //加载到的待热更新的class定义
+            //key -> class name, value -> 该类class文件信息
+            Map<String, ClassFileInfo> name2ClassFileInfo = new HashMap<>(changedPaths.size());
+            //新类和其class文件内容
+            List<Tuple<String, byte[]>> newClassNameAndBytesList = new ArrayList<>(changedPaths.size());
+            //待热更新的class定义
             List<ClassDefinition> classDefinitions = new ArrayList<>(changedPaths.size());
             ByteArrayOutputStream baos = null;
             for (Path changedPath : changedPaths) {
@@ -130,13 +135,10 @@ public final class ClassHotswap implements ClassHotswapMBean {
                             //复用前先reset
                             baos.reset();
                         }
-                        classDefinitions.addAll(parseZip(changedPath, baos, newName2ClassFileInfo));
+                        parseZip(changedPath, baos, name2ClassFileInfo, classDefinitions, newClassNameAndBytesList);
                     } else {
                         byte[] bytes = Files.readAllBytes(changedPath);
-                        ClassDefinition classDefinition = toClassDefinition(filePath, fileLastModifiedMs, bytes, newName2ClassFileInfo);
-                        if (Objects.nonNull(classDefinition)) {
-                            classDefinitions.add(classDefinition);
-                        }
+                        parseClassFile(filePath, fileLastModifiedMs, bytes, name2ClassFileInfo, classDefinitions, newClassNameAndBytesList);
                     }
                 } catch (Exception e) {
                     throw new IllegalStateException(String.format("file '%s' parse error, hotswap fail", filePath), e);
@@ -163,11 +165,23 @@ public final class ClassHotswap implements ClassHotswapMBean {
                 //app jar包与agent jar包同一路径
                 vm.loadAgent(AGENT_PATH);
 
+                //先加载新类
+                loadNewClass(newClassNameAndBytesList);
+
                 //重新定义类
                 JavaDynamicAgent.getInstrumentation().redefineClasses(classDefinitions.toArray(new ClassDefinition[0]));
 
                 //更新元数据
-                name2ClassFileInfo.putAll(newName2ClassFileInfo);
+                this.name2ClassFileInfo.putAll(name2ClassFileInfo);
+
+                //success log
+                for (Tuple<String, byte[]> tuple : newClassNameAndBytesList) {
+                    log.info("load new class '{}' success", tuple.first());
+                }
+
+                for (ClassDefinition classDefinition : classDefinitions) {
+                    log.info("redefine loaded class '{}' success", classDefinition.getDefinitionClass().getName());
+                }
 
                 //删除热更类文件
                 Path rootPath = Paths.get(CLASSPATH);
@@ -202,17 +216,21 @@ public final class ClassHotswap implements ClassHotswapMBean {
     }
 
     /**
-     * 根据规则过滤并将合法的class文件内容转换成{@link ClassDefinition}实例
+     * 解析class文件, 根据规则过滤并将合法的class文件内容转换成{@link ClassDefinition}实例, 并添加到{@code classDefinitions}
+     * 如果是新类, 则添加到{@code newClassNameAndBytesList}
      *
-     * @param classFilePath           class文件路径
-     * @param classFileLastModifiedMs class文件上次修改时间
-     * @param bytes                   class文件内容
-     * @param newName2ClassFileInfo   新的热加载过的class文件信息
-     * @return class定义
+     * @param classFilePath            class文件路径
+     * @param classFileLastModifiedMs  class文件上次修改时间
+     * @param bytes                    class文件内容
+     * @param name2ClassFileInfo       新的热加载过的class文件信息
+     * @param classDefinitions         待热更新的class定义
+     * @param newClassNameAndBytesList 新类和其class文件内容
      */
-    @Nullable
-    private ClassDefinition toClassDefinition(String classFilePath, long classFileLastModifiedMs,
-                                              byte[] bytes, Map<String, ClassFileInfo> newName2ClassFileInfo) throws ClassNotFoundException, ConstantPoolException, IOException {
+    private void parseClassFile(String classFilePath, long classFileLastModifiedMs,
+                                byte[] bytes,
+                                Map<String, ClassFileInfo> name2ClassFileInfo,
+                                List<ClassDefinition> classDefinitions,
+                                List<Tuple<String, byte[]>> newClassNameAndBytesList) throws ConstantPoolException, IOException {
         log.info("file '{}' checking...", classFilePath);
 
         //从class文件字节码中读取className
@@ -222,11 +240,11 @@ public final class ClassHotswap implements ClassHotswapMBean {
         dis.close();
 
         //原class文件信息
-        ClassFileInfo old = name2ClassFileInfo.get(className);
+        ClassFileInfo old = this.name2ClassFileInfo.get(className);
         //过滤没有变化的文件(通过文件修改时间)
         if (old != null && old.getLastModifyTime() == classFileLastModifiedMs) {
             log.info("file '{}' is ignored, because it's file modified time is not changed", classFilePath);
-            return null;
+            return;
         }
 
         //封装成class文件信息
@@ -234,20 +252,25 @@ public final class ClassHotswap implements ClassHotswapMBean {
         //检查类名
         if (old != null && !old.getClassName().equals(cfi.getClassName())) {
             log.info("file '{}' is ignored, because it's class name is not the same with the origin", classFilePath);
-            return null;
+            return;
         }
 
         //检查内容
         if (old != null && !old.getMd5().equals(cfi.getMd5())) {
             log.info("file '{}' is ignored, because it's content is not changed", classFilePath);
-            return null;
+            return;
         }
 
         log.info("file '{}' pass check, it's class name is {}", classFilePath, className);
-        newName2ClassFileInfo.put(className, cfi);
+        name2ClassFileInfo.put(className, cfi);
 
-        Class<?> c = Class.forName(className);
-        return new ClassDefinition(c, bytes);
+        Class<?> c;
+        try {
+            c = Class.forName(className);
+            classDefinitions.add(new ClassDefinition(c, bytes));
+        } catch (ClassNotFoundException e) {
+            newClassNameAndBytesList.add(new Tuple<>(className, bytes));
+        }
     }
 
     /**
@@ -255,16 +278,19 @@ public final class ClassHotswap implements ClassHotswapMBean {
      * 之所以需要打包成zip, 因为想批量redefine, 这样子可以保证同时热更新成功, 或者同时热更新失败, 不会污染运行时环境
      * 不打包成zip, 有可能因为网络传输延迟, 想要热更新的class文件, 分批到达, 这样子框架会认为是多次热更新, 这样子无法达到预期效果, 还很有可能污染运行时环境
      *
-     * @param changedPath           包含class文件的zip路径
-     * @param baos                  复用的{@link ByteArrayOutputStream}, 单线程操作, 复用可以减少内存分配
-     * @param newName2ClassFileInfo 新的热加载过的class文件信息
-     * @return 该zip包含的所有class定义
+     * @param changedPath              包含class文件的zip路径
+     * @param baos                     复用的{@link ByteArrayOutputStream}, 单线程操作, 复用可以减少内存分配
+     * @param name2ClassFileInfo       新的热加载过的class文件信息
+     * @param classDefinitions         待热更新的class定义
+     * @param newClassNameAndBytesList 新类和其class文件内容
      */
-    private List<ClassDefinition> parseZip(Path changedPath, ByteArrayOutputStream baos, Map<String, ClassFileInfo> newName2ClassFileInfo) throws IOException, ConstantPoolException, ClassNotFoundException {
+    private void parseZip(Path changedPath, ByteArrayOutputStream baos,
+                          Map<String, ClassFileInfo> name2ClassFileInfo,
+                          List<ClassDefinition> classDefinitions,
+                          List<Tuple<String, byte[]>> newClassNameAndBytesList) throws IOException, ConstantPoolException, ClassNotFoundException {
         String separator = changedPath.getFileSystem().getSeparator();
         //模拟uri的路径格式
         String zipFilePath = changedPath + "!" + separator;
-        List<ClassDefinition> classDefinitions = new ArrayList<>();
         try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(changedPath))) {
             ZipEntry entry;
             while (Objects.nonNull((entry = zis.getNextEntry()))) {
@@ -292,19 +318,51 @@ public final class ClassHotswap implements ClassHotswapMBean {
                     baos.write(buffer, 0, len);
                 }
 
-                //转换成ClassDefinition
-                ClassDefinition classDefinition = toClassDefinition(classFilePath, classFileLastModifiedMs, baos.toByteArray(), newName2ClassFileInfo);
-                if (Objects.nonNull(classDefinition)) {
-                    classDefinitions.add(classDefinition);
-                }
-
+                //解析class文件
+                parseClassFile(classFilePath, classFileLastModifiedMs, baos.toByteArray(), name2ClassFileInfo, classDefinitions, newClassNameAndBytesList);
+                //close zip entry
                 zis.closeEntry();
                 //重置
                 baos.reset();
             }
         }
+    }
 
-        return classDefinitions;
+    /**
+     * 加载新类
+     *
+     * @param newClassNameAndBytesList 新类和其class文件内容
+     */
+    private void loadNewClass(List<Tuple<String, byte[]>> newClassNameAndBytesList) {
+        if (CollectionUtils.isEmpty(newClassNameAndBytesList)) {
+            return;
+        }
+
+        //获取context class loader
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Method defineClassCaller;
+        try {
+            //基于反射, 获取class loader定义class方法
+            defineClassCaller = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
+        } catch (NoSuchMethodException e) {
+            log.error("can not find 'ClassLoader#defineClass(String,byte[],int,int)' method through reflection", e);
+            return;
+        }
+        if (!defineClassCaller.isAccessible()) {
+            defineClassCaller.setAccessible(true);
+        }
+
+        for (Tuple<String, byte[]> tuple : newClassNameAndBytesList) {
+            String className = tuple.first();
+            byte[] bytes = tuple.second();
+            try {
+                //load new class
+                defineClassCaller.invoke(classLoader, className, bytes, 0, bytes.length);
+            } catch (Exception e) {
+                log.error(String.format("load new class '%s' error", className), e);
+                return;
+            }
+        }
     }
 
     @Override
