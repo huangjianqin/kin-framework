@@ -1,7 +1,8 @@
 package org.kin.framework.utils;
 
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.SetMultimap;
 import com.sun.nio.zipfs.ZipFileSystem;
 import com.sun.nio.zipfs.ZipFileSystemProvider;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 /**
  * 类spi机制, 与spring.factories加载类似, 内容是properties格式
+ * !!!!注意, 不会加载java spi service
  *
  * @author huangjianqin
  * @date 2020/9/27
@@ -54,7 +56,7 @@ public class ExtensionLoader {
      * key -> extension class name || {@link SPI}注解的值, value -> extension implement class name
      * 一写多读
      */
-    private volatile Multimap<String, String> extension2ImplClasses = LinkedListMultimap.create();
+    private volatile SetMultimap<String, String> extension2ImplClasses = MultimapBuilder.hashKeys().hashSetValues().build();
     /** key -> spi class, value -> extension implement instance */
     private final Map<Class<?>, SpiMetaData<?>> spi2MetaData = new ConcurrentHashMap<>();
 
@@ -128,7 +130,7 @@ public class ExtensionLoader {
                 props = classLoader.getResources(fileName);
             }
 
-            Multimap<String, String> extension2ImplClasses = LinkedListMultimap.create();
+            SetMultimap<String, String> extension2ImplClasses = MultimapBuilder.hashKeys().hashSetValues().build();
             extension2ImplClasses.putAll(this.extension2ImplClasses);
 
             //遍历该url下所有items
@@ -224,13 +226,19 @@ public class ExtensionLoader {
                 //加载properties
                 properties.load(is);
                 for (String extensionClassName : properties.stringPropertyNames()) {
-                    String implementClassNames = properties.getProperty(extensionClassName);
-                    if (StringUtils.isNotBlank(implementClassNames)) {
-                        HashSet<String> filtered = new HashSet<>(Arrays.asList(implementClassNames.split(",")));
-                        extension2ImplClasses.putAll(extensionClassName, filtered);
+                    String implementClassNamesStr = properties.getProperty(extensionClassName);
+                    if (StringUtils.isNotBlank(implementClassNamesStr)) {
+                        List<String> implementClassNames = Arrays.asList(implementClassNamesStr.split(","));
+                        extension2ImplClasses.putAll(extensionClassName, implementClassNames);
+
+                        if (log.isDebugEnabled()) {
+                            for (String implementClassName : implementClassNames) {
+                                log.debug("found '{}' implement class '{}'", extensionClassName, implementClassName);
+                            }
+                        }
                     } else {
                         //只有key, 没有value, 则是没有配置class name或class key, 仅仅配置了implement class name
-                        log.warn("key '{}' doesn't has implement classes", extensionClassName);
+//                        log.warn("key '{}' doesn't has implement classes", extensionClassName);
                     }
                 }
             }

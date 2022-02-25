@@ -6,7 +6,7 @@ package org.kin.framework.utils;
  */
 public class ExtensionLoaderTest {
     public static void main(String[] args) {
-        ExtensionLoader loader = ExtensionLoader.load();
+        ExtensionLoader loader = ExtensionLoader.common();
         System.out.println(loader.getExtensions(KinService.class));
         System.out.println(loader.getExtension(KinService.class, (byte) 1));
         System.out.println(loader.getExtension(KinService.class, "E"));
