@@ -41,7 +41,8 @@
         <jsr305.version>3.0.2</jsr305.version>
         <disruptor.version>3.3.7</disruptor.version>
         <jctools.version>3.3.0</jctools.version>
-        <commons-io.version>1.3.2</commons-io.version>
+        <commons-lang.version>2.3</commons-lang.version>
+        <timeflake4j.version>1.4.0</timeflake4j.version>
     </properties>
 
     <dependencyManagement>
@@ -275,10 +276,18 @@
                 <version>${jctools.version}</version>
             </dependency>
 
+            <!-- java基础工具类 -->
             <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${commons-io.version}</version>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${commons-lang.version}</version>
+            </dependency>
+
+            <!-- Timeflake is a 128-bit, roughly-ordered, URL-safe UUID. Inspired by Twitter's Snowflake, Instagram's ID and Firebase's PushID. -->
+            <dependency>
+                <groupId>am.ik.timeflake</groupId>
+                <artifactId>timeflake4j</artifactId>
+                <version>${timeflake4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
