@@ -187,6 +187,8 @@ public class ExtensionLoader {
      * 因为需要扫描整个classpath的所有resources, 并且解析后, 这些数据是可以丢弃的,
      * 如果可以释放, 可以减少内存占用. 但是ZipFileSystemProvider并没有把相关方法开放出来(并不想开发者调用??),
      * 故使用反射从其FileSystem缓存中移除
+     * <p>
+     * TODO: 2022/3/1  兼容JDK17时需要修改该方法逻辑
      */
     @SuppressWarnings("JavaReflectionInvocation")
     private void removeFromZipProvider(URI uri, FileSystem fileSystem) {
