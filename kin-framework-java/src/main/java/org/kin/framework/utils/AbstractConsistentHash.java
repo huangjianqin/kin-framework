@@ -26,7 +26,8 @@ public abstract class AbstractConsistentHash<T> {
     protected AbstractConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
         Preconditions.checkArgument(replicaNum > 0, "replicaNum must be greater than 0");
         if (Objects.isNull(hashFunc)) {
-            hashFunc = Object::hashCode;
+            //使用MurmurHash3算法, 会使得hash值随机分布更好, 最终体现是节点hash值均匀散落在哈希环
+            hashFunc = o -> MurmurHash3.hash32(o.toString());
         }
         if (Objects.isNull(mapper)) {
             mapper = Object::toString;
