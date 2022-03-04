@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * hive的hash算法, 几乎所有语言都支持
+ * Murmur3变种
  * 优点:
  * 1. 速度快, 比安全散列算法快几十倍
  * 2. 随机分布特征表现更良好, 变化足够激烈，相似的字符串如“abc”和“abd”能够均匀散落在哈希环上
