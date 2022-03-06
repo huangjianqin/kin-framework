@@ -6,10 +6,9 @@ package org.kin.framework.utils;
  */
 public class ExtensionLoaderTest {
     public static void main(String[] args) {
-        ExtensionLoader loader = ExtensionLoader.common();
-        System.out.println(loader.getExtensions(KinService.class));
-        System.out.println(loader.getExtension(KinService.class, (byte) 1));
-        System.out.println(loader.getExtension(KinService.class, "E"));
-        System.out.println(loader.getExtensionOrDefault(KinService.class, "E"));
+        System.out.println(ExtensionLoader.getExtensions(KinService.class));
+        System.out.println(ExtensionLoader.getExtension(KinService.class, (byte) 1));
+        System.out.println(ExtensionLoader.getExtension(KinService.class, "E"));
+        System.out.println(ExtensionLoader.getExtensionOrDefault(KinService.class, "E"));
     }
 }

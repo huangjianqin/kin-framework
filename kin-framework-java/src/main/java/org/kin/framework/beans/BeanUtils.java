@@ -62,8 +62,8 @@ public final class BeanUtils {
         BEAN_INFO_FACTORIES.addAll(Arrays.asList(beanInfoFactories));
     }
 
-    public static void registerBeanInfoFactory(ExtensionLoader loader) {
-        BEAN_INFO_FACTORIES.addAll(loader.getExtensions(BeanInfoFactory.class));
+    public static void registerBeanInfoFactoryFromExtensions() {
+        BEAN_INFO_FACTORIES.addAll(ExtensionLoader.getExtensions(BeanInfoFactory.class));
     }
 
     //---------------------------------------------------------------------------------------------------------

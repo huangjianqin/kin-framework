@@ -44,7 +44,7 @@ public class MapFactories extends AbstractFactories<MapFactory<?>> {
         factories.put(Properties.class, Properties::new);
 
         //通过spi加载
-        for (MapFactory<?> factory : ExtensionLoader.common().getExtensions(MapFactory.class)) {
+        for (MapFactory<?> factory : ExtensionLoader.getExtensions(MapFactory.class)) {
             List<Type> actualTypes = ClassUtils.getSuperInterfacesGenericActualTypes(MapFactory.class, factory.getClass());
             factories.put((Class<?>) actualTypes.get(0), factory);
         }

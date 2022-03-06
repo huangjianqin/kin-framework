@@ -37,7 +37,7 @@ public class FileMonitor extends Thread implements Closeable {
     private ExecutionContext executionContext;
     private volatile boolean isStopped = false;
     /** 热更新listeners */
-    private final List<HotswapListener> listeners = ExtensionLoader.common().getExtensions(HotswapListener.class);
+    private final List<HotswapListener> listeners = ExtensionLoader.getExtensions(HotswapListener.class);
 
     /** 单例 */
     private static final FileMonitor INSTANCE = new FileMonitor();

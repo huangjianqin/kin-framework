@@ -14,13 +14,12 @@ import java.lang.annotation.*;
 @Inherited
 public @interface SPI {
     /**
-     * 默认扩展名
-     * 例如, extension class name | extension simple class name | 前缀 + extension simple class name | {@link Extension#value()
+     * 默认扩展名, 对应实现类的class name | simple class name | 前缀 + extension class simple name | {@link Extension#value()
      */
     String value() default "";
 
     /**
-     * extension class别名, 默认使用{@link Class#getName()}
+     * extension class别名, 默认使用{@link Class#getName()}和{@link Class#getSimpleName()}
      */
     String alias() default "";
 

@@ -16,14 +16,14 @@ public abstract class AbstractExtensionCache<K, S> {
     private final Class<S> extensionClass;
 
     @SuppressWarnings("unchecked")
-    public AbstractExtensionCache(ExtensionLoader loader) {
+    public AbstractExtensionCache() {
         List<Class<?>> classes = ClassUtils.getSuperClassGenericRawTypes(getClass());
         extensionClass = (Class<S>) classes.get(1);
 
         //init load
         Map<K, S> cache = new HashMap<>(4);
         //通过spi机制加载自定义的extension class instance
-        List<S> extensions = loader.getExtensions(extensionClass);
+        List<S> extensions = ExtensionLoader.getExtensions(extensionClass);
         for (S extension : extensions) {
             Class<?> claxx = extension.getClass();
             K[] keys = keys(extension);

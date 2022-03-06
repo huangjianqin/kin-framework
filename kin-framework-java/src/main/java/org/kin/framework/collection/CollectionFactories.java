@@ -56,7 +56,7 @@ public class CollectionFactories extends AbstractFactories<CollectionFactory<?>>
         factories.put(java.util.PriorityQueue.class, PriorityQueue::new);
 
         //通过spi加载
-        for (CollectionFactory<?> factory : ExtensionLoader.common().getExtensions(CollectionFactory.class)) {
+        for (CollectionFactory<?> factory : ExtensionLoader.getExtensions(CollectionFactory.class)) {
             List<Type> actualTypes = ClassUtils.getSuperInterfacesGenericActualTypes(CollectionFactory.class, factory.getClass());
             factories.put((Class<?>) actualTypes.get(0), factory);
         }
