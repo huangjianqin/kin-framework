@@ -470,9 +470,9 @@ public class ExtensionLoader {
                 } catch (ClassNotFoundException e) {
                     ExceptionUtils.throwExt(e);
                     //理论上不会到这里
-                    this.sortedExtensionMetaDatas = null;
-                    this.name2ExtensionMetaData = null;
-                    this.code2ExtensionMetaData = null;
+                    this.sortedExtensionMetaDatas = Collections.emptyList();
+                    this.name2ExtensionMetaData = Collections.emptyMap();
+                    this.code2ExtensionMetaData = Collections.emptyMap();
                     return;
                 }
 
@@ -536,7 +536,7 @@ public class ExtensionLoader {
             if (Objects.nonNull(code2ExtensionMetaData)) {
                 this.code2ExtensionMetaData = code2ExtensionMetaData;
             } else {
-                this.code2ExtensionMetaData = null;
+                this.code2ExtensionMetaData = Collections.emptyMap();
             }
         }
 
