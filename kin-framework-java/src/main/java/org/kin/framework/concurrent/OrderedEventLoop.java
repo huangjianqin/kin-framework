@@ -15,6 +15,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 推荐使用继承实现
  * 每个实例绑定一个线程处理消息, 支持阻塞(当然线程池需要足够大)
  * 这里保证的是message在同一线程下处理, 但不保证每次处理都是同一条线程, 即{@link ThreadLocal}是不可用的
+ * <p>
+ * 与{@link SingleThreadEventLoop}最大区别是{@link OrderedEventLoop}保证消息有序执行, 但不保证在同一线程执行,
+ * 而{@link SingleThreadEventLoop}不仅仅保证消息有序执行, 还保证在同一线程执行. 所以{@link SingleThreadEventLoop}处理的消息逻辑,
+ * 不建议会阻塞或者IO等比较耗时的操作, 而{@link OrderedEventLoop}允许这些操作, 但过大这些操作带有的后果就是可能创建过多线程, 并占用大量资源
  *
  * @author huangjianqin
  * @date 2019/7/9
