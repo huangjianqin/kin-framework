@@ -2,6 +2,7 @@ package org.kin.framework.utils;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author huangjianqin
@@ -29,8 +30,15 @@ public class StringUtilsTest {
         System.out.println("-------------------------------------------------------------");
         System.out.println(StringUtils.mkString(";", "127.0.0.1:16888", "127.0.0.2:16888"));
         System.out.println(StringUtils.mkString(Arrays.asList(1, 2, 3, 4)));
-        System.out.println(StringUtils.mkString(Arrays.asList(1, 2, 3, 4).stream().collect(Collectors.toMap(item -> item, item -> item + 1)),
+        System.out.println(StringUtils.mkString(Stream.of(1, 2, 3, 4).collect(Collectors.toMap(item -> item, item -> item + 1)),
                 "->", k -> String.valueOf(k + 1), v -> String.valueOf(v + 1)));
 
+        System.out.println("-------------------------------------------------------------");
+        System.out.println(StringUtils.isNumeric("1234123213"));
+        System.out.println(StringUtils.isNumeric("-1234123213"));
+        System.out.println(StringUtils.isNumeric("--1234123213"));
+        System.out.println(StringUtils.isNumeric("abc1234123213"));
+        System.out.println(StringUtils.isNumeric("12341abvas23213"));
+        System.out.println(StringUtils.isNumeric("--12341asgsa23213"));
     }
 }

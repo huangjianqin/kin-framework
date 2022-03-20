@@ -215,4 +215,25 @@ public class StringUtils {
             return origin;
         }
     }
+
+    /**
+     * 判断字符串是否为数字
+     */
+    public static boolean isNumeric(String str) {
+        char[] chars = str.toCharArray();
+        int idx = 0;
+        //判断第一个char是否是-, 因为存在可能是负数
+        char first = chars[idx];
+        if (first == '-') {
+            idx = 1;
+        }
+
+        for (int i = idx; i < chars.length; i++) {
+            if (!Character.isDigit(chars[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
