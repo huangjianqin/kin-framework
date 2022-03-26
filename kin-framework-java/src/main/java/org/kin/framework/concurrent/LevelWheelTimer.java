@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  * 1. wheel timer bucket: 链表结构, O(1), 相比, {@link java.util.concurrent.DelayQueue}和{@link java.util.Timer}, O(log n)
  * 插入和删除调度任务的性能更高.
  * 2. {@link #newTimeout(TimerTask, long, TimeUnit)}马上插入wheel timer bucket
- * 3. 利用层级关系来解决大于一轮的延迟时间({@link WheelTimer#interval})调度问题. 该灵感来自于现实世界的时钟, 60s为1min, 60min为1h.
+ * 3. 利用层级关系来解决大于一轮的延迟时间({@link WheelTimer#wheelSpan})调度问题. 该灵感来自于现实世界的时钟, 60s为1min, 60min为1h.
  * 具体实现逻辑¬是1层wheel timer是60 bucket | 1s/tick; 2层wheel timer是60 bucket | 1min/tick; 3层wheel timer是60 bucket | 1h/tick(n层, n越大, 层级越高).
  * 如果一个调度任务超过1层wheel timer最长延迟时间60s, 则会插入到更高层的wheel timer, 以此类推.
  * 4. 以bucket作为{@link DelayQueue}item, 并启动一个worker线程来推动{@link DelayQueue}, 达到调度延迟任务. 以bucket作为{@link DelayQueue}item,
@@ -259,7 +259,7 @@ public class LevelWheelTimer implements Timer {
         /** bucket delay queue */
         private final DelayQueue<TimerTaskList> queue;
         /** 时间轮时间长度 */
-        private final long interval;
+        private final long wheelSpan;
         /** bucket array */
         private final TimerTaskList[] buckets;
 
@@ -277,7 +277,7 @@ public class LevelWheelTimer implements Timer {
             this.startMs = startMs;
             this.taskCounter = taskCounter;
             this.queue = queue;
-            this.interval = tickMs * wheelSize;
+            this.wheelSpan = tickMs * wheelSize;
             this.buckets = new TimerTaskList[wheelSize];
             for (int i = 0; i < buckets.length; i++) {
                 buckets[i] = new TimerTaskList(this, taskCounter);
@@ -286,7 +286,7 @@ public class LevelWheelTimer implements Timer {
         }
 
         /**
-         * 因为延迟任务延迟时间大于时间轮长度{@link #interval}, 故需要创建上层时间轮
+         * 因为延迟任务延迟时间大于时间轮长度{@link #wheelSpan}, 故需要创建上层时间轮
          * 添加上层时间轮
          */
         private void addOverflowWheel() {
@@ -296,7 +296,7 @@ public class LevelWheelTimer implements Timer {
                     return;
                 }
 
-                overflowWheel = new WheelTimer(interval, wheelSize, currentTime, taskCounter, queue);
+                overflowWheel = new WheelTimer(wheelSpan, wheelSize, currentTime, taskCounter, queue);
             }
         }
 
@@ -313,7 +313,7 @@ public class LevelWheelTimer implements Timer {
             } else if (expirationMs < currentTime + tickMs) {
                 //already expired
                 return false;
-            } else if (expirationMs < currentTime + interval) {
+            } else if (expirationMs < currentTime + wheelSpan) {
                 //添加到对应bucket
                 long virtualId = expirationMs / tickMs;
                 TimerTaskList bucket = buckets[(int) virtualId % wheelSize];
