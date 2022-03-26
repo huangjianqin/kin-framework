@@ -5,6 +5,8 @@ import com.google.common.base.Preconditions;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 /**
@@ -16,29 +18,39 @@ import java.util.function.Function;
  * @date 2021/11/19
  */
 public abstract class AbstractConsistentHash<T> {
-    /** 自定义hash算法 */
-    protected final Function<Object, Integer> hashFunc;
     /** 自定义{@code T}对象映射逻辑, 映射function返回的结果会用于hash */
-    protected final Function<T, String> mapper;
+    private final Function<T, String> mapper;
+    /** hash环 */
+    private final SortedMap<Long, T> circle = new TreeMap<>();
     /** 虚拟节点数量, 用于节点分布更加均匀, 负载更加均衡 */
-    protected final int replicaNum;
+    private final int replicaNum;
+    /** 读写锁 */
+    private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+    private final Lock r = rwl.readLock();
+    private final Lock w = rwl.writeLock();
 
-    protected AbstractConsistentHash(Function<Object, Integer> hashFunc, Function<T, String> mapper, int replicaNum) {
+    public AbstractConsistentHash(Function<T, String> mapper, int replicaNum) {
         Preconditions.checkArgument(replicaNum > 0, "replicaNum must be greater than 0");
-        if (Objects.isNull(hashFunc)) {
-            //使用MurmurHash3算法, 会使得hash值随机分布更好, 最终体现是节点hash值均匀散落在哈希环
-            hashFunc = o -> MurmurHash3.hash32(o.toString());
-        }
         if (Objects.isNull(mapper)) {
             mapper = Object::toString;
         }
-        this.hashFunc = hashFunc;
         this.mapper = mapper;
         this.replicaNum = replicaNum;
     }
 
-    public void add(T obj) {
-        add(obj, 1);
+    /**
+     * 更新slot
+     *
+     * @param circle hash环
+     * @param s      node数据转换成的String
+     * @param node   node数据
+     */
+    protected void applySlot(SortedMap<Long, T> circle, String s, T node) {
+        circle.put(hash(s), node);
+    }
+
+    public final void add(T node) {
+        add(node, 1);
     }
 
     /**
@@ -49,21 +61,34 @@ public abstract class AbstractConsistentHash<T> {
      *
      * @param weight 权重, 用于外部干预默认虚拟节点数量
      */
-    public abstract void add(T obj, int weight);
-
-    protected final void add(TreeMap<Integer, T> circle, T obj, int weight) {
-        Preconditions.checkNotNull(obj);
+    public final void add(T node, int weight) {
+        Preconditions.checkNotNull(node);
         Preconditions.checkArgument(weight > 0, "weight must be greater than 0");
 
         int finalNum = replicaNum * weight;
         Preconditions.checkArgument(finalNum > 0, "replicaNum * weight must be greater than 0");
-        for (int i = 0; i < finalNum; i++) {
-            circle.put(hashFunc.apply(mapper.apply(obj) + i), obj);
+        w.lock();
+        try {
+            for (int i = 0; i < finalNum; i++) {
+                applySlot(circle, mapper.apply(node) + "-" + i, node);
+            }
+        } finally {
+            w.unlock();
         }
     }
 
-    public void remove(T obj) {
-        remove(obj, 1);
+    /**
+     * 移除slot
+     *
+     * @param circle hash环
+     * @param s      node数据转换成的String
+     */
+    protected void removeSlot(SortedMap<Long, T> circle, String s) {
+        circle.remove(hash(s));
+    }
+
+    public final void remove(T node) {
+        remove(node, 1);
     }
 
     /**
@@ -71,36 +96,56 @@ public abstract class AbstractConsistentHash<T> {
      *
      * @param weight 权重, 用于外部干预默认虚拟节点数量
      */
-    public abstract void remove(T obj, int weight);
-
-    protected final void remove(TreeMap<Integer, T> circle, T obj, int weight) {
-        Preconditions.checkNotNull(obj);
+    public final void remove(T node, int weight) {
+        Preconditions.checkNotNull(node);
         Preconditions.checkArgument(weight > 0, "weight must be greater than 0");
 
         int finalNum = replicaNum * weight;
         Preconditions.checkArgument(finalNum > 0, "replicaNum * weight must be greater than 0");
-        for (int i = 0; i < finalNum; i++) {
-            circle.remove(hashFunc.apply(mapper.apply(obj) + i));
+        w.lock();
+        try {
+            for (int i = 0; i < finalNum; i++) {
+                removeSlot(circle, mapper.apply(node) + "-" + i);
+            }
+        } finally {
+            w.unlock();
         }
     }
 
-    public abstract T get(Object o);
+    /**
+     * 计算hash值
+     */
+    protected abstract long hash(String s);
 
     /**
-     * 1. hash({@code o})
+     * 1. hash({@code k})
      * 2. 取得顺时针方向上最近的节点
      */
-    protected final T get(TreeMap<Integer, T> circle, Object o) {
+    public final T get(Object k) {
         if (circle.isEmpty()) {
             return null;
         }
-        int hash = hashFunc.apply(o);
-        if (!circle.containsKey(hash)) {
-            //返回此映射的部分视图，其键大于等于 hash
-            SortedMap<Integer, T> tailMap = circle.tailMap(hash);
-            hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
+
+        long hash = hash(k.toString());
+        r.lock();
+        try {
+            if (!circle.containsKey(hash)) {
+                //返回此映射的部分视图，其键大于等于 hash
+                SortedMap<Long, T> tailMap = circle.tailMap(hash);
+                hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
+            }
+            //正好命中
+            return circle.get(hash);
+        } finally {
+            r.unlock();
         }
-        //正好命中
-        return circle.get(hash);
+    }
+
+    @Override
+    public String toString() {
+        return "ConsistentHash{" +
+                "replicaNum=" + replicaNum +
+                ", circle=" + circle +
+                "} ";
     }
 }

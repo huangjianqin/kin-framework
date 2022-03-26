@@ -225,6 +225,17 @@ public final class MurmurHash3 {
     }
 
     /**
+     * Generates 64-bit hash from a string with the default seed.
+     *
+     * @param data - input string
+     * @return 64-bit hash
+     */
+    public static long hash64(final String data) {
+        final byte[] origin = data.getBytes(StandardCharsets.UTF_8);
+        return hash32(origin, 0, origin.length, DEFAULT_SEED);
+    }
+
+    /**
      * Murmur3 64-bit variant. This is essentially MSB 8 bytes of Murmur3 128-bit
      * variant.
      *
