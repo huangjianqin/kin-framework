@@ -9,7 +9,7 @@ import java.util.function.Function;
  * @author huangjianqin
  * @date 2022/3/26
  */
-public final class ConsistentHash<T> extends AbstractConsistentHash<T> {
+public class ConsistentHash<T> extends AbstractConsistentHash<T> {
     /** 基于murmur hash3的hash算法 */
     private static final Function<String, Long> MURMUR_HASH3 = MurmurHash3::hash64;
 
